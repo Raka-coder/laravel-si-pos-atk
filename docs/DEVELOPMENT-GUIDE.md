@@ -320,9 +320,8 @@
     ```
 
 2. **Roles**
-    - SUPER_ADMIN (semua akses)
-    - ADMIN (tanpa user management)
-    - KASIR (POS only)
+    - SUPER_ADMIN/Owner (semua akses)
+    - ADMIN/Kasir (POS only)
 
 3. **Permissions**
     - products.view, products.create, products.update, products.delete

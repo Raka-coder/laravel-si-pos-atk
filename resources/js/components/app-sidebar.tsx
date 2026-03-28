@@ -5,7 +5,9 @@ import {
     FolderGit2,
     LayoutGrid,
     Package,
+    ShoppingCart,
     Tags,
+    Wallet,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
@@ -28,6 +30,16 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         href: dashboard(),
         icon: LayoutGrid,
+    },
+    {
+        title: 'POS',
+        href: '/pos',
+        icon: ShoppingCart,
+    },
+    {
+        title: 'Transactions',
+        href: '/transactions',
+        icon: Wallet,
     },
     {
         title: 'Products',

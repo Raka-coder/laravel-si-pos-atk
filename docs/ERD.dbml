@@ -1,0 +1,330 @@
+// ============================================================
+// ATK-SYNC ERD - Laravel 13 + Inertia + React
+// Database Diagram for dbdiagram.io
+// ============================================================
+
+// ============================================================
+// ENUMS (defined as ENUM type in dbdiagram)
+// ============================================================
+
+Enum payment_method {
+  cash
+  qris
+  midtrans
+}
+
+Enum payment_status {
+  waiting
+  paid
+  cancelled
+  refunded
+}
+
+Enum movement_type {
+  in
+  out
+  adjustment
+  sale
+  return
+}
+
+Enum paper_size {
+  size_58mm
+  size_80mm
+}
+
+// ============================================================
+// USERS & AUTH (Laravel default + extensions)
+// ============================================================
+
+Table users {
+  id bigint [pk, increment]
+  name varchar(100)
+  email varchar(255) [unique]
+  email_verified_at timestamp
+  password varchar(255)
+  two_factor_secret text
+  two_factor_recovery_codes text
+  two_factor_confirmed_at timestamp
+  remember_token varchar(100)
+  current_team_id bigint
+  profile_photo_path varchar(2048)
+  created_at timestamp
+  updated_at timestamp
+  is_active boolean [default: true]
+  username varchar(50) [unique]
+  display_username varchar(50) [unique]
+}
+
+Table password_reset_tokens {
+  email varchar(255) [pk]
+  token varchar(255)
+  created_at timestamp
+}
+
+Table sessions {
+  id varchar(255) [pk]
+  user_id bigint
+  ip_address varchar(45)
+  user_agent text
+  payload text
+  last_activity int
+}
+
+Table personal_access_tokens {
+  id bigint [pk, increment]
+  tokenable_type varchar(255)
+  tokenable_id bigint
+  name varchar(255)
+  token varchar(64) [unique]
+  abilities text
+  last_used_at timestamp
+  expires_at timestamp
+  created_at timestamp
+  updated_at timestamp
+}
+
+// ============================================================
+// Laravel Permission Tables (Spatie)
+// ============================================================
+
+Table roles {
+  id bigint [pk, increment]
+  name varchar(255) [unique]
+  guard_name varchar(255)
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table permissions {
+  id bigint [pk, increment]
+  name varchar(255) [unique]
+  guard_name varchar(255)
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table model_has_roles {
+  role_id bigint
+  model_type varchar(255)
+  model_id bigint
+  
+  indexes {
+    (role_id, model_type, model_id) [pk]
+  }
+}
+
+Table model_has_permissions {
+  permission_id bigint
+  model_type varchar(255)
+  model_id bigint
+  
+  indexes {
+    (permission_id, model_type, model_id) [pk]
+  }
+}
+
+Table role_has_permissions {
+  permission_id bigint
+  role_id bigint
+  
+  indexes {
+    (permission_id, role_id) [pk]
+  }
+}
+
+// ============================================================
+// PRODUCT CATALOG
+// ============================================================
+
+Table categories {
+  id bigint [pk, increment]
+  name varchar(100)
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table units {
+  id bigint [pk, increment]
+  name varchar(50)
+  abbreviation varchar(10)
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table products {
+  id bigint [pk, increment]
+  category_id bigint
+  unit_id bigint
+  barcode varchar(100) [unique]
+  name varchar(255)
+  buy_price decimal(15, 2)
+  sell_price decimal(15, 2)
+  stock int
+  min_stock int
+  image varchar(500)
+  is_active boolean [default: true]
+  created_at timestamp
+  updated_at timestamp
+  
+  indexes {
+    category_id [name: 'products_category_id_index']
+    unit_id [name: 'products_unit_id_index']
+    barcode [name: 'products_barcode_index']
+    is_active [name: 'products_is_active_index']
+    name [name: 'products_name_index']
+  }
+}
+
+// ============================================================
+// INVENTORY
+// ============================================================
+
+Table stock_movements {
+  id bigint [pk, increment]
+  product_id bigint
+  user_id bigint
+  movement_type movement_type
+  qty int
+  stock_before int
+  stock_after int
+  reason varchar(255)
+  reference_id bigint
+  created_at timestamp
+  
+  indexes {
+    product_id [name: 'stock_movements_product_id_index']
+    user_id [name: 'stock_movements_user_id_index']
+    movement_type [name: 'stock_movements_movement_type_index']
+    created_at [name: 'stock_movements_created_at_index']
+  }
+}
+
+// ============================================================
+// TRANSACTIONS (POS)
+// ============================================================
+
+Table transactions {
+  id bigint [pk, increment]
+  user_id bigint
+  receipt_number varchar(50) [unique]
+  subtotal decimal(15, 2)
+  discount_amount decimal(15, 2)
+  tax_amount decimal(15, 2)
+  total_price decimal(15, 2)
+  payment_method payment_method
+  payment_status payment_status
+  payment_reference varchar(255)
+  amount_paid decimal(15, 2)
+  change_amount decimal(15, 2)
+  note text
+  transaction_date timestamp [default: `CURRENT_TIMESTAMP`]
+  created_at timestamp
+  updated_at timestamp
+  
+  indexes {
+    user_id [name: 'transactions_user_id_index']
+    payment_method [name: 'transactions_payment_method_index']
+    payment_status [name: 'transactions_payment_status_index']
+    transaction_date [name: 'transactions_transaction_date_index']
+    receipt_number [name: 'transactions_receipt_number_index']
+  }
+}
+
+Table transaction_items {
+  id bigint [pk, increment]
+  transaction_id bigint
+  product_id bigint
+  product_name varchar(255)
+  price_buy_snapshot decimal(15, 2)
+  price_sell decimal(15, 2)
+  quantity int
+  discount_amount decimal(15, 2)
+  subtotal decimal(15, 2)
+  created_at timestamp
+  updated_at timestamp
+  
+  indexes {
+    transaction_id [name: 'transaction_items_transaction_id_index']
+    product_id [name: 'transaction_items_product_id_index']
+  }
+}
+
+// ============================================================
+// EXPENSES
+// ============================================================
+
+Table expense_categories {
+  id bigint [pk, increment]
+  name varchar(100)
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table expenses {
+  id bigint [pk, increment]
+  user_id bigint
+  expense_category_id bigint
+  name varchar(255)
+  amount decimal(15, 2)
+  date date
+  note text
+  created_at timestamp
+  updated_at timestamp
+  
+  indexes {
+    user_id [name: 'expenses_user_id_index']
+    expense_category_id [name: 'expenses_expense_category_id_index']
+    date [name: 'expenses_date_index']
+  }
+}
+
+// ============================================================
+// SETTINGS
+// ============================================================
+
+Table shop_settings {
+  id bigint [pk, increment]
+  shop_name varchar(150)
+  address text
+  email varchar(255)
+  phone varchar(20)
+  npwp varchar(30)
+  logo_path varchar(500)
+  qris_image_path varchar(500)
+  midtrans_merchant_id varchar(100)
+  tax_rate decimal(5, 2)
+  receipt_footer varchar(500)
+  paper_size paper_size
+  created_at timestamp
+  updated_at timestamp
+}
+
+// ============================================================
+// RELATIONSHIPS (Foreign Keys)
+// ============================================================
+
+// User relationships
+Ref: users.id < transactions.user_id
+Ref: users.id < stock_movements.user_id
+Ref: users.id < expenses.user_id
+
+// Product catalog relationships
+Ref: categories.id < products.category_id
+Ref: units.id < products.unit_id
+
+// Transaction relationships
+Ref: transactions.id < transaction_items.transaction_id
+Ref: products.id < transaction_items.product_id
+
+// Inventory relationships
+Ref: products.id < stock_movements.product_id
+
+// Expense relationships
+Ref: expense_categories.id < expenses.expense_category_id
+
+// Spatie Permission relationships
+Ref: roles.id < model_has_roles.role_id
+Ref: roles.id < role_has_permissions.role_id
+Ref: permissions.id < model_has_permissions.permission_id
+Ref: permissions.id < role_has_permissions.permission_id

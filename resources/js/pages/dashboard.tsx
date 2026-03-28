@@ -1,5 +1,12 @@
 import { Head, usePage } from '@inertiajs/react';
-import { AlertTriangle, Box, Package, Tags } from 'lucide-react';
+import {
+    AlertTriangle,
+    Box,
+    Package,
+    Tags,
+    TrendingUp,
+    Wallet,
+} from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { dashboard } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
@@ -10,14 +17,34 @@ interface Stats {
     total_units: number;
     low_stock_products: number;
     active_products: number;
+    today_sales: number;
+    today_revenue: number;
+}
+
+interface Product {
+    id: number;
+    name: string;
+    stock: number;
+    min_stock: number;
+    category: { name: string } | null;
+    unit: { short_name: string } | null;
 }
 
 interface Props {
     stats: Stats;
+    lowStockProducts: Product[];
 }
 
+const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0,
+    }).format(value);
+};
+
 export default function Dashboard() {
-    const { stats } = usePage<Props>().props;
+    const { stats, lowStockProducts } = usePage<Props>().props;
 
     return (
         <>
@@ -25,20 +52,20 @@ export default function Dashboard() {
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <h1 className="text-2xl font-bold">Dashboard</h1>
 
-                <div className="grid auto-rows-min gap-4 md:grid-cols-3 lg:md:grid-cols-5">
+                <div className="grid auto-rows-min gap-4 md:grid-cols-2 lg:md:grid-cols-4">
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">
-                                Total Products
+                                Today's Sales
                             </CardTitle>
-                            <Package className="h-4 w-4 text-muted-foreground" />
+                            <TrendingUp className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">
-                                {stats.total_products}
+                                {stats.today_sales}
                             </div>
                             <p className="text-xs text-muted-foreground">
-                                {stats.active_products} active
+                                Transactions
                             </p>
                         </CardContent>
                     </Card>
@@ -46,33 +73,16 @@ export default function Dashboard() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">
-                                Categories
+                                Today's Revenue
                             </CardTitle>
-                            <Tags className="h-4 w-4 text-muted-foreground" />
+                            <Wallet className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">
-                                {stats.total_categories}
+                                {formatCurrency(stats.today_revenue)}
                             </div>
                             <p className="text-xs text-muted-foreground">
-                                Product categories
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Units
-                            </CardTitle>
-                            <Box className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">
-                                {stats.total_units}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                Measurement units
+                                Total income
                             </p>
                         </CardContent>
                     </Card>
@@ -105,48 +115,103 @@ export default function Dashboard() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">
-                                Active Products
+                                Total Products
                             </CardTitle>
                             <Package className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">
-                                {stats.active_products}
+                                {stats.total_products}
                             </div>
                             <p className="text-xs text-muted-foreground">
-                                Available for sale
+                                {stats.active_products} active
                             </p>
                         </CardContent>
                     </Card>
                 </div>
 
-                <div className="rounded-xl border border-sidebar-border/70 p-6">
-                    <h2 className="mb-4 text-lg font-semibold">
-                        Quick Actions
-                    </h2>
-                    <div className="flex gap-4">
-                        <a
-                            href="/products"
-                            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-                        >
-                            <Package className="mr-2 h-4 w-4" />
-                            Manage Products
-                        </a>
-                        <a
-                            href="/categories"
-                            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
-                        >
-                            <Tags className="mr-2 h-4 w-4" />
-                            Manage Categories
-                        </a>
-                        <a
-                            href="/units"
-                            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
-                        >
-                            <Box className="mr-2 h-4 w-4" />
-                            Manage Units
-                        </a>
-                    </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                    {lowStockProducts.length > 0 && (
+                        <Card className="border-red-500">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <AlertTriangle className="h-5 w-5 text-red-500" />
+                                    Low Stock Alert
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="rounded-md border">
+                                    <table className="w-full">
+                                        <thead className="border-b bg-muted/50">
+                                            <tr>
+                                                <th className="px-3 py-2 text-left text-xs font-medium">
+                                                    Product
+                                                </th>
+                                                <th className="px-3 py-2 text-right text-xs font-medium">
+                                                    Stock
+                                                </th>
+                                                <th className="px-3 py-2 text-right text-xs font-medium">
+                                                    Min
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y">
+                                            {lowStockProducts.map((product) => (
+                                                <tr key={product.id}>
+                                                    <td className="px-3 py-2 text-sm">
+                                                        {product.name}
+                                                    </td>
+                                                    <td className="px-3 py-2 text-right text-sm font-medium text-red-500">
+                                                        {product.stock}
+                                                    </td>
+                                                    <td className="px-3 py-2 text-right text-sm text-muted-foreground">
+                                                        {product.min_stock}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Quick Actions</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="flex flex-wrap gap-2">
+                                <a
+                                    href="/pos"
+                                    className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                                >
+                                    <TrendingUp className="mr-2 h-4 w-4" />
+                                    Open POS
+                                </a>
+                                <a
+                                    href="/products"
+                                    className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+                                >
+                                    <Package className="mr-2 h-4 w-4" />
+                                    Products
+                                </a>
+                                <a
+                                    href="/stock-movements"
+                                    className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+                                >
+                                    Stock Movements
+                                </a>
+                                <a
+                                    href="/transactions"
+                                    className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+                                >
+                                    <Wallet className="mr-2 h-4 w-4" />
+                                    Transactions
+                                </a>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
         </>

@@ -5,6 +5,7 @@ import {
     FolderGit2,
     LayoutGrid,
     Package,
+    RefreshCw,
     ShoppingCart,
     Tags,
     Wallet,
@@ -40,6 +41,11 @@ const mainNavItems: NavItem[] = [
         title: 'Transactions',
         href: '/transactions',
         icon: Wallet,
+    },
+    {
+        title: 'Stock Movements',
+        href: '/stock-movements',
+        icon: RefreshCw,
     },
     {
         title: 'Products',

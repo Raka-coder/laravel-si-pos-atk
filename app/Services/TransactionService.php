@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Product;
+use App\Models\StockMovement;
 use App\Models\Transaction;
 use App\Models\TransactionItem;
 use Illuminate\Support\Facades\DB;
@@ -33,6 +34,8 @@ class TransactionService
     public function createTransaction(array $data): Transaction
     {
         return DB::transaction(function () use ($data) {
+            $userId = auth()->id();
+
             $transaction = Transaction::create([
                 'receipt_number' => $this->generateReceiptNumber(),
                 'subtotal' => $data['subtotal'],
@@ -45,11 +48,12 @@ class TransactionService
                 'change_amount' => $data['change_amount'],
                 'note' => $data['note'] ?? null,
                 'transaction_date' => now(),
-                'user_id' => auth()->id(),
+                'user_id' => $userId,
             ]);
 
             foreach ($data['items'] as $item) {
                 $product = Product::find($item['product_id']);
+                $stockBefore = $product->stock;
 
                 TransactionItem::create([
                     'transaction_id' => $transaction->id,
@@ -63,9 +67,51 @@ class TransactionService
                 ]);
 
                 $product->decrement('stock', $item['quantity']);
+                $product->refresh();
+
+                StockMovement::create([
+                    'movement_type' => 'sale',
+                    'qty' => $item['quantity'],
+                    'stock_before' => $stockBefore,
+                    'stock_after' => $product->stock,
+                    'reason' => 'Penjualan - '.$transaction->receipt_number,
+                    'product_id' => $item['product_id'],
+                    'user_id' => $userId,
+                    'reference_id' => $transaction->id,
+                ]);
             }
 
             return $transaction;
         });
+    }
+
+    public function createStockMovement(
+        Product $product,
+        string $type,
+        int $qty,
+        string $reason,
+        ?int $referenceId = null
+    ): StockMovement {
+        $stockBefore = $product->stock;
+
+        match ($type) {
+            'in' => $product->increment('stock', $qty),
+            'out' => $product->decrement('stock', $qty),
+            'adjustment' => $product->update(['stock' => $qty]),
+            default => null,
+        };
+
+        $product->refresh();
+
+        return StockMovement::create([
+            'movement_type' => $type,
+            'qty' => $type === 'adjustment' ? $product->stock - $stockBefore : $qty,
+            'stock_before' => $stockBefore,
+            'stock_after' => $product->stock,
+            'reason' => $reason,
+            'product_id' => $product->id,
+            'user_id' => auth()->id(),
+            'reference_id' => $referenceId,
+        ]);
     }
 }

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Category\CategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Product\ProductController;
+use App\Http\Controllers\StockMovement\StockMovementController;
 use App\Http\Controllers\Transaction\TransactionController;
 use App\Http\Controllers\Unit\UnitController;
 use Illuminate\Support\Facades\Route;
@@ -19,6 +20,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::resource('transactions', TransactionController::class)->only(['index', 'store', 'show']);
     Route::get('transactions/receipt/{transaction}', [TransactionController::class, 'receipt'])->name('transactions.receipt');
+
+    Route::resource('stock-movements', StockMovementController::class)->only(['index', 'store']);
 
     Route::resource('categories', CategoryController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('units', UnitController::class)->only(['index', 'store', 'update', 'destroy']);

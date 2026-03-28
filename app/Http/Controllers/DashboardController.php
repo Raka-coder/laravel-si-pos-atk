@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Expense;
 use App\Models\Product;
 use App\Models\Transaction;
 use App\Models\Unit;
@@ -17,6 +18,11 @@ class DashboardController extends Controller
             ->where('payment_status', 'paid')
             ->get();
 
+        $todayExpenses = Expense::whereDate('date', today())->get();
+        $monthExpenses = Expense::whereMonth('date', now()->month)
+            ->whereYear('date', now()->year)
+            ->get();
+
         $stats = [
             'total_products' => Product::count(),
             'total_categories' => Category::count(),
@@ -25,6 +31,8 @@ class DashboardController extends Controller
             'active_products' => Product::where('is_active', true)->count(),
             'today_sales' => $todayTransactions->count(),
             'today_revenue' => $todayTransactions->sum('total_price'),
+            'today_expenses' => $todayExpenses->sum('amount'),
+            'month_expenses' => $monthExpenses->sum('amount'),
         ];
 
         $lowStockProducts = Product::with(['category', 'unit'])

@@ -37,6 +37,7 @@ interface Product {
 }
 
 interface Props {
+    [key: string]: unknown;
     products: Product[];
     taxRate: number;
 }
@@ -429,5 +430,5 @@ POSIndex.layout = {
             title: 'POS',
             href: '/pos',
         },
-    ],
-} satisfies BreadcrumbItem[];
+    ] as BreadcrumbItem[],
+};

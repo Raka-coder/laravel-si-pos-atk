@@ -54,6 +54,7 @@ interface Product {
 }
 
 interface Props {
+    [key: string]: unknown;
     products: Product[];
     categories: Category[];
     units: Unit[];
@@ -723,5 +724,5 @@ ProductIndex.layout = {
             title: 'Products',
             href: '/products',
         },
-    ],
-} satisfies BreadcrumbItem[];
+    ] as BreadcrumbItem[],
+};

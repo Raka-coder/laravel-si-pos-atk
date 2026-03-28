@@ -17,7 +17,7 @@ import { Label } from '@/components/ui/label';
 import InputError from '@/components/input-error';
 import type { BreadcrumbItem } from '@/types';
 
-interface Category {
+interface ExpenseCategory {
     id: number;
     name: string;
     created_at: string;
@@ -26,15 +26,18 @@ interface Category {
 
 interface Props {
     [key: string]: unknown;
-    categories: Category[];
+    categories: ExpenseCategory[];
 }
 
-export default function CategoryIndex() {
+export default function ExpenseCategoryIndex() {
     const { categories } = usePage<Props>().props;
 
     const [isOpen, setIsOpen] = useState(false);
-    const [editCategory, setEditCategory] = useState<Category | null>(null);
-    const [deleteCategory, setDeleteCategory] = useState<Category | null>(null);
+    const [editCategory, setEditCategory] = useState<ExpenseCategory | null>(
+        null,
+    );
+    const [deleteCategory, setDeleteCategory] =
+        useState<ExpenseCategory | null>(null);
 
     const createForm = useForm({
         name: '',
@@ -47,7 +50,7 @@ export default function CategoryIndex() {
     const deleteForm = useForm({});
 
     const handleCreate = () => {
-        createForm.post('/categories', {
+        createForm.post('/expense-categories', {
             onSuccess: () => {
                 createForm.reset();
                 setIsOpen(false);
@@ -55,14 +58,14 @@ export default function CategoryIndex() {
         });
     };
 
-    const handleEdit = (category: Category) => {
+    const handleEdit = (category: ExpenseCategory) => {
         setEditCategory(category);
         editForm.setData('name', category.name);
     };
 
     const handleUpdate = () => {
         if (!editCategory) return;
-        editForm.patch(`/categories/${editCategory.id}`, {
+        editForm.patch(`/expense-categories/${editCategory.id}`, {
             onSuccess: () => {
                 editForm.reset();
                 setEditCategory(null);
@@ -72,7 +75,7 @@ export default function CategoryIndex() {
 
     const handleDelete = () => {
         if (!deleteCategory) return;
-        deleteForm.delete(`/categories/${deleteCategory.id}`, {
+        deleteForm.delete(`/expense-categories/${deleteCategory.id}`, {
             onSuccess: () => {
                 setDeleteCategory(null);
             },
@@ -81,11 +84,11 @@ export default function CategoryIndex() {
 
     return (
         <>
-            <Head title="Categories" />
+            <Head title="Expense Categories" />
 
             <div className="flex flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold">Categories</h1>
+                    <h1 className="text-2xl font-bold">Expense Categories</h1>
                     <Dialog open={isOpen} onOpenChange={setIsOpen}>
                         <DialogTrigger asChild>
                             <Button>
@@ -95,9 +98,9 @@ export default function CategoryIndex() {
                         </DialogTrigger>
                         <DialogContent>
                             <DialogHeader>
-                                <DialogTitle>Add New Category</DialogTitle>
+                                <DialogTitle>Add Expense Category</DialogTitle>
                                 <DialogDescription>
-                                    Create a new product category.
+                                    Create a new expense category.
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="grid gap-4 py-4">
@@ -217,7 +220,7 @@ export default function CategoryIndex() {
                     <DialogHeader>
                         <DialogTitle>Edit Category</DialogTitle>
                         <DialogDescription>
-                            Update the category information.
+                            Update the expense category.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
@@ -280,11 +283,11 @@ export default function CategoryIndex() {
     );
 }
 
-CategoryIndex.layout = {
+ExpenseCategoryIndex.layout = {
     breadcrumbs: [
         {
-            title: 'Categories',
-            href: '/categories',
+            title: 'Expense Categories',
+            href: '/expense-categories',
         },
     ] as BreadcrumbItem[],
 };

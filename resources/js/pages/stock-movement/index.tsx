@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Head, useForm, usePage } from '@inertiajs/react';
-import { Plus, Search } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -54,6 +54,7 @@ interface StockMovement {
 }
 
 interface Props {
+    [key: string]: unknown;
     movements: {
         data: StockMovement[];
         current_page: number;
@@ -385,5 +386,5 @@ StockMovementIndex.layout = {
             title: 'Stock Movements',
             href: '/stock-movements',
         },
-    ],
-} satisfies BreadcrumbItem[];
+    ] as BreadcrumbItem[]
+};

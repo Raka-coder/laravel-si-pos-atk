@@ -116,7 +116,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
     },
 
     incrementQuantity: (productId: number) => {
-        const { items, calculateTotals, taxRate } = get();
+        const { items } = get();
         const item = items.find((i) => i.product.id === productId);
 
         if (item && item.quantity < item.product.stock) {

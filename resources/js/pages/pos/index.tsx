@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Head, useForm, usePage, router } from '@inertiajs/react';
+import { Head, usePage, router } from '@inertiajs/react';
 import {
     Minus,
     Plus,
-    Printer,
     Search,
     ShoppingCart,
     Trash2,

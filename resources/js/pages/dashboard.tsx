@@ -1,10 +1,8 @@
 import { Head, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
-    Box,
     CreditCard,
     Package,
-    Tags,
     TrendingUp,
     Wallet,
 } from 'lucide-react';

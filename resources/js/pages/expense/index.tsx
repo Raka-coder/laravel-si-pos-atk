@@ -81,7 +81,7 @@ const formatDate = (date: string) => {
 };
 
 export default function ExpenseIndex() {
-    const { expenses, categories, filters } = usePage<Props>().props;
+    const { expenses, categories } = usePage<Props>().props;
 
     const [isOpen, setIsOpen] = useState(false);
     const [editExpense, setEditExpense] = useState<Expense | null>(null);

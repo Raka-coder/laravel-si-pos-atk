@@ -115,7 +115,7 @@ const getTypeLabel = (type: string) => {
 };
 
 export default function StockMovementIndex() {
-    const { movements, products, filters } = usePage<Props>().props;
+    const { movements, products } = usePage<Props>().props;
 
     const [isOpen, setIsOpen] = useState(false);
 

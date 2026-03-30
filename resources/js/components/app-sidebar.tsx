@@ -1,8 +1,6 @@
 import { Link } from '@inertiajs/react';
 import {
-    BookOpen,
     Box,
-    FolderGit2,
     LayoutGrid,
     Package,
     RefreshCw,

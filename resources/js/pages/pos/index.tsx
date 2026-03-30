@@ -67,7 +67,6 @@ export default function POSIndex() {
         total,
         addItem,
         removeItem,
-        updateQuantity,
         incrementQuantity,
         decrementQuantity,
         clearCart,

@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Expense\ExpenseController;
 use App\Http\Controllers\ExpenseCategory\ExpenseCategoryController;
 use App\Http\Controllers\Product\ProductController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\StockMovement\StockMovementController;
 use App\Http\Controllers\Transaction\TransactionController;
 use App\Http\Controllers\Unit\UnitController;
@@ -32,6 +33,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('units', UnitController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('products', ProductController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::get('products/barcode/{barcode}', [ProductController::class, 'byBarcode']);
+
+    Route::get('reports/sales', [ReportController::class, 'sales'])->name('reports.sales');
+    Route::get('reports/expenses', [ReportController::class, 'expenses'])->name('reports.expenses');
+    Route::get('reports/profit-loss', [ReportController::class, 'profitLoss'])->name('reports.profit-loss');
 });
 
 require __DIR__.'/settings.php';

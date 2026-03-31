@@ -110,7 +110,7 @@
         </tbody>
     </table>
 
-    <div class="totals">
+    <div class="totals text-right">
         <div class="row">
             <span>Subtotal:</span>
             <span>Rp {{ number_format($transaction->subtotal, 0, ',', '.') }}</span>
@@ -131,7 +131,7 @@
         </div>
     </div>
 
-    <div class="totals">
+    <div class="totals text-right">
         <div class="row">
             <span>Bayar:</span>
             <span>Rp {{ number_format($transaction->amount_paid, 0, ',', '.') }}</span>

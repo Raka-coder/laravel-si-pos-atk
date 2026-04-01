@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\ExpensesReportExport;
+use App\Exports\SalesReportExport;
 use App\Models\Expense;
 use App\Models\Transaction;
 use App\Models\TransactionItem;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
 {
@@ -115,5 +118,25 @@ class ReportController extends Controller
                 'end_date' => $endDate,
             ],
         ]);
+    }
+
+    public function exportSales(Request $request)
+    {
+        $startDate = $request->input('start_date', now()->startOfMonth()->toDateString());
+        $endDate = $request->input('end_date', now()->endOfMonth()->toDateString());
+
+        $filename = 'sales_report_'.$startDate.'_to_'.$endDate.'.xlsx';
+
+        return Excel::download(new SalesReportExport($startDate, $endDate), $filename);
+    }
+
+    public function exportExpenses(Request $request)
+    {
+        $startDate = $request->input('start_date', now()->startOfMonth()->toDateString());
+        $endDate = $request->input('end_date', now()->endOfMonth()->toDateString());
+
+        $filename = 'expenses_report_'.$startDate.'_to_'.$endDate.'.xlsx';
+
+        return Excel::download(new ExpensesReportExport($startDate, $endDate), $filename);
     }
 }

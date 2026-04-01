@@ -35,7 +35,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('products/barcode/{barcode}', [ProductController::class, 'byBarcode']);
 
     Route::get('reports/sales', [ReportController::class, 'sales'])->name('reports.sales');
+    Route::get('reports/sales/export', [ReportController::class, 'exportSales'])->name('reports.sales.export');
     Route::get('reports/expenses', [ReportController::class, 'expenses'])->name('reports.expenses');
+    Route::get('reports/expenses/export', [ReportController::class, 'exportExpenses'])->name('reports.expenses.export');
     Route::get('reports/profit-loss', [ReportController::class, 'profitLoss'])->name('reports.profit-loss');
 });
 

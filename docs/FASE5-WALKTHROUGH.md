@@ -7,6 +7,8 @@ FASE 5 focuses on business reporting and analytics:
 - ✅ Sales Report with date range filter
 - ✅ Expenses Report with date range filter
 - ✅ Profit & Loss Report (Gross Profit, Expenses, Net Profit)
+- ✅ **Excel Export for Sales Report**
+- ✅ **Excel Export for Expenses Report**
 - ✅ Navigation menu for Reports
 
 ---
@@ -16,9 +18,12 @@ FASE 5 focuses on business reporting and analytics:
 ```
 example-app/
 ├── app/
-│   └── Http/
-│       └── Controllers/
-│           └── ReportController.php
+│   ├── Http/
+│   │   └── Controllers/
+│   │       └── ReportController.php
+│   └── Exports/
+│       ├── SalesReportExport.php
+│       └── ExpensesReportExport.php
 ├── routes/
 │   └── web.php
 └── resources/
@@ -58,6 +63,7 @@ Open `http://localhost:8000/dashboard` and click "Reports" in the sidebar.
 - Summary cards: Total Revenue, Total Transactions, Gross Profit
 - Transaction list with receipt number, cashier, payment method, total
 - Pagination
+- **Export Excel** - Download current filtered data as `.xlsx`
 
 **Database Query:**
 
@@ -74,6 +80,7 @@ Open `http://localhost:8000/dashboard` and click "Reports" in the sidebar.
 - Summary card: Total Expenses
 - Expense list with date, name, category, note, amount
 - Pagination
+- **Export Excel** - Download current filtered data as `.xlsx`
 
 ### 3. Profit & Loss Report
 
@@ -104,17 +111,19 @@ Added "Reports" menu in sidebar that links to `/reports/sales`.
 
 ## Routes
 
-| Method | URI                    | Description          |
-| ------ | ---------------------- | -------------------- |
-| GET    | `/reports/sales`       | Sales report         |
-| GET    | `/reports/expenses`    | Expenses report      |
-| GET    | `/reports/profit-loss` | Profit & Loss report |
+| Method | URI                        | Description              |
+| ------ | -------------------------- | ------------------------ |
+| GET    | `/reports/sales`           | Sales report             |
+| GET    | `/reports/sales/export`    | Export Sales to Excel    |
+| GET    | `/reports/expenses`        | Expenses report          |
+| GET    | `/reports/expenses/export` | Export Expenses to Excel |
+| GET    | `/reports/profit-loss`     | Profit & Loss report     |
 
 ---
 
 ## Dependencies
 
-- **maatwebsite/excel** - For Excel export (installed but export not yet implemented)
+- **maatwebsite/excel** (v3.1.68) - For Excel export functionality
 
 ---
 
@@ -125,6 +134,17 @@ Added "Reports" menu in sidebar that links to `/reports/sales`.
 - [ ] View profit & loss report
 - [ ] Navigate between different report pages
 - [ ] Verify calculations are correct
+- [ ] **Export Sales Report to Excel** - Click "Export Excel" button
+- [ ] **Export Expenses Report to Excel** - Click "Export Excel" button
+
+---
+
+## Excel Export Usage
+
+1. **Sales Report**: Go to `/reports/sales`, select date range, click "Export Excel"
+2. **Expenses Report**: Go to `/reports/expenses`, select date range, click "Export Excel"
+
+File naming convention: `sales_report_YYYY-MM-DD_to_YYYY-MM-DD.xlsx`
 
 ---
 
@@ -132,14 +152,12 @@ Added "Reports" menu in sidebar that links to `/reports/sales`.
 
 FASE 5 complete. Available next phases:
 
-- **FASE 6**: Settings & Profile (Shop settings, User profile)
+- **FASE 6**: Settings & Profile (Shop settings, User profile) - has access issue
 - **FASE 7**: RBAC (User management, Roles, Permissions)
 - **FASE 8**: Payment Gateway (Midtrans/QRIS integration)
 
 ---
 
-## Notes
+## Known Issues
 
-- TypeScript errors in IDE don't affect functionality
-- Date filters use query parameters (?start_date=2025-01-01&end_date=2025-01-31)
-- Excel export not yet implemented (can be added later)
+- FASE 6 Shop Settings page has "Page not found" error - needs investigation

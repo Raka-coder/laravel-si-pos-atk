@@ -1,7 +1,6 @@
 import { usePage } from '@inertiajs/react';
 import { Head } from '@inertiajs/react';
 import { Download } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import type { BreadcrumbItem } from '@/types';
 
 interface TransactionItem {

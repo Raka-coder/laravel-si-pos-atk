@@ -76,7 +76,7 @@ export default function POSIndex() {
 
     useEffect(() => {
         calculateTotals(initialTaxRate);
-    }, [items, initialTaxRate]);
+    }, [items, initialTaxRate, calculateTotals]);
 
     const filteredProducts = products.filter((product) => {
         const matchesSearch =

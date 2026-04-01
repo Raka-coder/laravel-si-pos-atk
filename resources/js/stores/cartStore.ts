@@ -64,8 +64,9 @@ export const useCartStore = create<CartStore>((set, get) => ({
                     ? {
                           ...item,
                           quantity: item.quantity + 1,
-                          subtotal:
+                          subtotal: Math.round(
                               (item.quantity + 1) * item.product.sell_price,
+                          ),
                       }
                     : item,
             );
@@ -75,7 +76,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
                 id: product.id,
                 product,
                 quantity: 1,
-                subtotal: product.sell_price,
+                subtotal: Math.round(product.sell_price),
             };
             set({ items: [...items, newItem] });
         }
@@ -105,9 +106,10 @@ export const useCartStore = create<CartStore>((set, get) => ({
                 ? {
                       ...item,
                       quantity: Math.min(quantity, item.product.stock),
-                      subtotal:
+                      subtotal: Math.round(
                           Math.min(quantity, item.product.stock) *
-                          item.product.sell_price,
+                              item.product.sell_price,
+                      ),
                   }
                 : item,
         );
@@ -149,7 +151,9 @@ export const useCartStore = create<CartStore>((set, get) => ({
     calculateTotals: (taxRate: number) => {
         const { items } = get();
 
-        const subtotal = items.reduce((sum, item) => sum + item.subtotal, 0);
+        const subtotal = Math.round(
+            items.reduce((sum, item) => sum + item.subtotal, 0),
+        );
         const taxAmount = Math.round(subtotal * (taxRate / 100));
         const total = subtotal + taxAmount;
 

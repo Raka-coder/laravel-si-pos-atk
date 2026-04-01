@@ -3,24 +3,20 @@
 namespace App\Http\Controllers\Transaction;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Transaction\StoreTransactionRequest;
 use App\Models\Product;
+use App\Models\ShopSetting;
 use App\Models\Transaction;
 use App\Services\TransactionService;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class TransactionController extends Controller
 {
-    public function __construct(
-        protected TransactionService $transactionService
-    ) {}
-
-    public function index(): Response
+    public function index()
     {
-        $transactions = Transaction::with(['user', 'items'])
+        $transactions = Transaction::with('user')
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
@@ -29,30 +25,26 @@ class TransactionController extends Controller
         ]);
     }
 
-    public function store(StoreTransactionRequest $request): RedirectResponse
+    public function store(Request $request)
     {
         $data = [
             'items' => $request->input('items', []),
-            'subtotal' => $request->input('subtotal'),
+            'subtotal' => $request->input('subtotal', 0),
             'discount_amount' => $request->input('discount_amount', 0),
-            'tax_amount' => $request->input('tax_amount'),
-            'total_price' => $request->input('total_price'),
+            'tax_amount' => $request->input('tax_amount', 0),
+            'total_price' => $request->input('total_price', 0),
             'payment_method' => $request->input('payment_method'),
-            'amount_paid' => $request->input('amount_paid'),
-            'change_amount' => $request->input('change_amount'),
+            'amount_paid' => $request->input('amount_paid', 0),
+            'change_amount' => $request->input('change_amount', 0),
             'note' => $request->input('note'),
         ];
 
-        if (empty($data['items'])) {
-            return back()->with('error', 'No items in cart');
-        }
+        $transaction = app(TransactionService::class)->createTransaction($data);
 
-        $transaction = $this->transactionService->createTransaction($data);
-
-        return to_route('transactions.show', $transaction->id);
+        return redirect()->route('transactions.show', $transaction->id);
     }
 
-    public function show(Transaction $transaction): Response
+    public function show(Transaction $transaction)
     {
         $transaction->load(['user', 'items.product']);
 
@@ -65,8 +57,11 @@ class TransactionController extends Controller
     {
         $transaction->load(['user', 'items.product']);
 
+        $shop = ShopSetting::getShop();
+
         $pdf = Pdf::loadView('receipts.transaction', [
             'transaction' => $transaction,
+            'shop' => $shop,
         ]);
 
         return $pdf->download('receipt-'.$transaction->receipt_number.'.pdf');
@@ -80,9 +75,12 @@ class TransactionController extends Controller
             ->orderBy('name')
             ->get();
 
+        $shop = ShopSetting::getShop();
+
         return Inertia::render('pos/index', [
             'products' => $products,
-            'taxRate' => TransactionService::TAX_RATE * 100,
+            'taxRate' => $shop->tax_rate,
+            'paperSize' => $shop->paper_size,
         ]);
     }
 }

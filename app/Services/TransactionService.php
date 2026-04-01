@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Product;
+use App\Models\ShopSetting;
 use App\Models\StockMovement;
 use App\Models\Transaction;
 use App\Models\TransactionItem;
@@ -10,8 +11,6 @@ use Illuminate\Support\Facades\DB;
 
 class TransactionService
 {
-    public const TAX_RATE = 0.11;
-
     public function generateReceiptNumber(): string
     {
         $date = now()->format('Ymd');
@@ -26,9 +25,16 @@ class TransactionService
         return 'TRX-'.$date.'-'.str_pad($sequence, 4, '0', STR_PAD_LEFT);
     }
 
+    public function getTaxRate(): float
+    {
+        $shop = ShopSetting::getShop();
+
+        return $shop->tax_rate / 100;
+    }
+
     public function calculateTax(float $subtotal): float
     {
-        return round($subtotal * self::TAX_RATE);
+        return round($subtotal * $this->getTaxRate());
     }
 
     public function createTransaction(array $data): Transaction

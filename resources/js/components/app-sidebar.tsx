@@ -10,6 +10,7 @@ import {
     Receipt,
     CreditCard,
     FileText,
+    Settings,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
@@ -77,6 +78,11 @@ const mainNavItems: NavItem[] = [
         title: 'Reports',
         href: '/reports/sales',
         icon: FileText,
+    },
+    {
+        title: 'Shop Settings',
+        href: '/shop-settings',
+        icon: Settings,
     },
 ];
 

@@ -6,6 +6,7 @@ use App\Http\Controllers\Expense\ExpenseController;
 use App\Http\Controllers\ExpenseCategory\ExpenseCategoryController;
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\Settings\ShopSettingController;
 use App\Http\Controllers\StockMovement\StockMovementController;
 use App\Http\Controllers\Transaction\TransactionController;
 use App\Http\Controllers\Unit\UnitController;
@@ -39,6 +40,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('reports/expenses', [ReportController::class, 'expenses'])->name('reports.expenses');
     Route::get('reports/expenses/export', [ReportController::class, 'exportExpenses'])->name('reports.expenses.export');
     Route::get('reports/profit-loss', [ReportController::class, 'profitLoss'])->name('reports.profit-loss');
+
+    Route::get('shop-settings', [ShopSettingController::class, 'index'])->name('shop-settings');
+    Route::put('shop-settings', [ShopSettingController::class, 'update'])->name('shop-settings.update');
 });
 
 require __DIR__.'/settings.php';

@@ -13,7 +13,7 @@
             font-family: 'Courier New', Courier, monospace;
             font-size: 12px;
             line-height: 1.4;
-            width: 80mm;
+            width: {{ ($paperSize ?? 'mm_80') === 'mm_58' ? '58mm' : '80mm' }};
             margin: 0 auto;
             padding: 10px;
         }
@@ -22,6 +22,11 @@
             margin-bottom: 15px;
             border-bottom: 1px dashed #000;
             padding-bottom: 10px;
+        }
+        .header .logo {
+            max-width: 60px;
+            max-height: 40px;
+            margin-bottom: 5px;
         }
         .header h1 {
             font-size: 16px;
@@ -73,14 +78,22 @@
             margin-top: 20px;
             padding-top: 10px;
             border-top: 1px dashed #000;
+            white-space: pre-line;
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>TOKO ATK</h1>
-        <p>Jl. Contoh No. 123</p>
-        <p>Jakarta Pusat</p>
+        @if($shop->logo_path)
+        <img src="{{ public_path('storage/' . $shop->logo_path) }}" alt="Logo" class="logo" />
+        @endif
+        <h1>{{ $shop->shop_name ?? 'TOKO ATK' }}</h1>
+        @if($shop->address)
+        <p>{{ $shop->address }}</p>
+        @endif
+        @if($shop->phone)
+        <p>{{ $shop->phone }}</p>
+        @endif
     </div>
 
     <div class="info">
@@ -122,7 +135,7 @@
         </div>
         @endif
         <div class="row">
-            <span>PPN ({{ $transaction->tax_amount > 0 ? 11 : 0 }}%):</span>
+            <span>PPN ({{ $shop->tax_rate ?? 11 }}%):</span>
             <span>Rp {{ number_format($transaction->tax_amount, 0, ',', '.') }}</span>
         </div>
         <div class="row total">
@@ -143,8 +156,7 @@
     </div>
 
     <div class="footer">
-        <p>Terima kasih atas</p>
-        <p>kunjungan Anda!</p>
+        {!! $shop->receipt_footer ? e($shop->receipt_footer) : 'Terima kasih atas<br>kunjungan Anda!' !!}
     </div>
 </body>
 </html>

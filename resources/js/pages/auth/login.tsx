@@ -7,6 +7,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { register } from '@/routes';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
@@ -35,6 +42,24 @@ export default function Login({
                     <>
                         <div className="grid gap-6">
                             <div className="grid gap-2">
+                                <Label htmlFor="role">Role</Label>
+                                <Select name="role" required>
+                                    <SelectTrigger id="role" tabIndex={1}>
+                                        <SelectValue placeholder="Pilih role" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="owner">
+                                            Owner
+                                        </SelectItem>
+                                        <SelectItem value="cashier">
+                                            Cashier
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <InputError message={errors.role} />
+                            </div>
+
+                            <div className="grid gap-2">
                                 <Label htmlFor="email">Email address</Label>
                                 <Input
                                     id="email"
@@ -42,7 +67,7 @@ export default function Login({
                                     name="email"
                                     required
                                     autoFocus
-                                    tabIndex={1}
+                                    tabIndex={2}
                                     autoComplete="email"
                                     placeholder="email@example.com"
                                 />
@@ -56,7 +81,7 @@ export default function Login({
                                         <TextLink
                                             href={request()}
                                             className="ml-auto text-sm"
-                                            tabIndex={5}
+                                            tabIndex={6}
                                         >
                                             Forgot password?
                                         </TextLink>
@@ -66,7 +91,7 @@ export default function Login({
                                     id="password"
                                     name="password"
                                     required
-                                    tabIndex={2}
+                                    tabIndex={3}
                                     autoComplete="current-password"
                                     placeholder="Password"
                                 />
@@ -77,7 +102,7 @@ export default function Login({
                                 <Checkbox
                                     id="remember"
                                     name="remember"
-                                    tabIndex={3}
+                                    tabIndex={4}
                                 />
                                 <Label htmlFor="remember">Remember me</Label>
                             </div>
@@ -85,7 +110,7 @@ export default function Login({
                             <Button
                                 type="submit"
                                 className="mt-4 w-full"
-                                tabIndex={4}
+                                tabIndex={5}
                                 disabled={processing}
                                 data-test="login-button"
                             >
@@ -97,7 +122,7 @@ export default function Login({
                         {canRegister && (
                             <div className="text-center text-sm text-muted-foreground">
                                 Don't have an account?{' '}
-                                <TextLink href={register()} tabIndex={5}>
+                                <TextLink href={register()} tabIndex={6}>
                                     Sign up
                                 </TextLink>
                             </div>

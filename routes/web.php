@@ -10,6 +10,7 @@ use App\Http\Controllers\Settings\ShopSettingController;
 use App\Http\Controllers\StockMovement\StockMovementController;
 use App\Http\Controllers\Transaction\TransactionController;
 use App\Http\Controllers\Unit\UnitController;
+use App\Http\Controllers\User\UserController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 
@@ -17,32 +18,38 @@ Route::inertia('/', 'welcome', [
     'canRegister' => Features::enabled(Features::registration()),
 ])->name('home');
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', DashboardController::class)->name('dashboard');
-
-    Route::get('pos', [TransactionController::class, 'pos'])->name('pos');
-
-    Route::resource('transactions', TransactionController::class)->only(['index', 'store', 'show']);
-    Route::get('transactions/receipt/{transaction}', [TransactionController::class, 'receipt'])->name('transactions.receipt');
-
-    Route::resource('stock-movements', StockMovementController::class)->only(['index', 'store']);
-
-    Route::resource('expense-categories', ExpenseCategoryController::class)->only(['index', 'store', 'update', 'destroy']);
-    Route::resource('expenses', ExpenseController::class)->only(['index', 'store', 'update', 'destroy']);
+Route::middleware(['auth', 'verified', 'role:owner'])->group(function () {
+    Route::resource('users', UserController::class)->except(['create', 'edit']);
+    Route::patch('users/{user}/toggle-active', [UserController::class, 'toggleActive'])->name('users.toggle-active');
+    Route::patch('users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
 
     Route::resource('categories', CategoryController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('units', UnitController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('products', ProductController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::get('products/barcode/{barcode}', [ProductController::class, 'byBarcode']);
 
+    Route::resource('expense-categories', ExpenseCategoryController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('expenses', ExpenseController::class)->only(['index', 'store', 'update', 'destroy']);
+
+    Route::resource('stock-movements', StockMovementController::class)->only(['index', 'store']);
+
+    Route::get('shop-settings', [ShopSettingController::class, 'index'])->name('shop-settings');
+    Route::put('shop-settings', [ShopSettingController::class, 'update'])->name('shop-settings.update');
+});
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('dashboard', DashboardController::class)->name('dashboard');
+
+    Route::get('pos', [TransactionController::class, 'pos'])->name('pos');
+
+    Route::resource('transactions', TransactionController::class)->only(['index', 'store', 'show', 'update']);
+    Route::get('transactions/receipt/{transaction}', [TransactionController::class, 'receipt'])->name('transactions.receipt');
+
     Route::get('reports/sales', [ReportController::class, 'sales'])->name('reports.sales');
     Route::get('reports/sales/export', [ReportController::class, 'exportSales'])->name('reports.sales.export');
     Route::get('reports/expenses', [ReportController::class, 'expenses'])->name('reports.expenses');
     Route::get('reports/expenses/export', [ReportController::class, 'exportExpenses'])->name('reports.expenses.export');
     Route::get('reports/profit-loss', [ReportController::class, 'profitLoss'])->name('reports.profit-loss');
-
-    Route::get('shop-settings', [ShopSettingController::class, 'index'])->name('shop-settings');
-    Route::put('shop-settings', [ShopSettingController::class, 'update'])->name('shop-settings.update');
 });
 
 require __DIR__.'/settings.php';

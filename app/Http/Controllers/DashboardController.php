@@ -14,36 +14,50 @@ class DashboardController extends Controller
 {
     public function __invoke(): Response
     {
+        $user = auth()->user();
+        $isOwner = $user && $user->hasRole('owner');
+
         $todayTransactions = Transaction::whereDate('created_at', today())
             ->where('payment_status', 'paid')
             ->get();
 
-        $todayExpenses = Expense::whereDate('date', today())->get();
-        $monthExpenses = Expense::whereMonth('date', now()->month)
-            ->whereYear('date', now()->year)
-            ->get();
-
         $stats = [
-            'total_products' => Product::count(),
-            'total_categories' => Category::count(),
-            'total_units' => Unit::count(),
-            'low_stock_products' => Product::whereColumn('stock', '<', 'min_stock')->count(),
-            'active_products' => Product::where('is_active', true)->count(),
             'today_sales' => $todayTransactions->count(),
             'today_revenue' => $todayTransactions->sum('total_price'),
-            'today_expenses' => $todayExpenses->sum('amount'),
-            'month_expenses' => $monthExpenses->sum('amount'),
         ];
 
-        $lowStockProducts = Product::with(['category', 'unit'])
-            ->whereColumn('stock', '<', 'min_stock')
-            ->orderBy('stock', 'asc')
-            ->limit(10)
-            ->get();
+        if ($isOwner) {
+            $todayExpenses = Expense::whereDate('date', today())->get();
+            $monthExpenses = Expense::whereMonth('date', now()->month)
+                ->whereYear('date', now()->year)
+                ->get();
+
+            $stats = array_merge($stats, [
+                'total_products' => Product::count(),
+                'total_categories' => Category::count(),
+                'total_units' => Unit::count(),
+                'low_stock_products' => Product::whereColumn('stock', '<', 'min_stock')->count(),
+                'active_products' => Product::where('is_active', true)->count(),
+                'today_expenses' => $todayExpenses->sum('amount'),
+                'month_expenses' => $monthExpenses->sum('amount'),
+            ]);
+
+            $lowStockProducts = Product::with(['category', 'unit'])
+                ->whereColumn('stock', '<', 'min_stock')
+                ->orderBy('stock', 'asc')
+                ->limit(10)
+                ->get();
+
+            return Inertia::render('dashboard', [
+                'stats' => $stats,
+                'lowStockProducts' => $lowStockProducts,
+                'isCashier' => false,
+            ]);
+        }
 
         return Inertia::render('dashboard', [
             'stats' => $stats,
-            'lowStockProducts' => $lowStockProducts,
+            'isCashier' => true,
         ]);
     }
 }

@@ -1,5 +1,5 @@
-import { Link, router } from '@inertiajs/react';
-import { LogOut, Settings } from 'lucide-react';
+import { Link, router, usePage } from '@inertiajs/react';
+import { LogOut, Palette, Settings } from 'lucide-react';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
@@ -9,7 +9,8 @@ import {
 import { UserInfo } from '@/components/user-info';
 import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
 import { logout } from '@/routes';
-import { edit } from '@/routes/profile';
+import { edit as profileEdit } from '@/routes/profile';
+import { edit as appearanceEdit } from '@/routes/appearance';
 import type { User } from '@/types';
 
 type Props = {
@@ -18,6 +19,8 @@ type Props = {
 
 export function UserMenuContent({ user }: Props) {
     const cleanup = useMobileNavigation();
+    const { auth } = usePage().props;
+    const isOwner = auth?.isOwner === true;
 
     const handleLogout = () => {
         cleanup();
@@ -36,7 +39,7 @@ export function UserMenuContent({ user }: Props) {
                 <DropdownMenuItem asChild>
                     <Link
                         className="block w-full cursor-pointer"
-                        href={edit()}
+                        href={isOwner ? profileEdit() : appearanceEdit()}
                         prefetch
                         onClick={cleanup}
                     >

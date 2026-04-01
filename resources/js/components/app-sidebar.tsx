@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import {
     Box,
     LayoutGrid,
@@ -11,6 +11,7 @@ import {
     CreditCard,
     FileText,
     Settings,
+    Users,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
@@ -28,7 +29,7 @@ import {
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 
-const mainNavItems: NavItem[] = [
+const allNavItems: NavItem[] = [
     {
         title: 'Dashboard',
         href: dashboard(),
@@ -80,26 +81,30 @@ const mainNavItems: NavItem[] = [
         icon: FileText,
     },
     {
+        title: 'Manage User',
+        href: '/users',
+        icon: Users,
+    },
+    {
         title: 'Shop Settings',
         href: '/shop-settings',
         icon: Settings,
     },
 ];
 
-const footerNavItems: NavItem[] = [
-    // {
-    //     title: 'Repository',
-    //     href: 'https://github.com/laravel/react-starter-kit',
-    //     icon: FolderGit2,
-    // },
-    // {
-    //     title: 'Documentation',
-    //     href: 'https://laravel.com/docs/starter-kits#react',
-    //     icon: BookOpen,
-    // },
-];
+const ownerNavItems: NavItem[] = allNavItems;
+
+const cashierNavItems: NavItem[] = allNavItems.filter((item) =>
+    ['Dashboard', 'POS', 'Transactions', 'Reports'].includes(item.title),
+);
+
+const footerNavItems: NavItem[] = [];
 
 export function AppSidebar() {
+    const { auth } = usePage().props;
+    const isOwner = auth?.isOwner === true;
+    const mainNavItems = isOwner ? ownerNavItems : cashierNavItems;
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>

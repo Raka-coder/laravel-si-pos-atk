@@ -50,6 +50,9 @@ example-app/
 # Terminal 1
 php artisan serve
 
+# Running for preview images
+php artisan storage:link
+
 # Terminal 2
 npm run dev
 ```

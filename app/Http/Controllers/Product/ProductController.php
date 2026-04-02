@@ -8,8 +8,10 @@ use App\Http\Requests\Product\UpdateProductRequest;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Unit;
+use App\Services\ImageOptimizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -36,7 +38,19 @@ class ProductController extends Controller
         $validated = $request->validated();
 
         if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('products', 'public');
+            $imagePath = $request->file('image')->store('products', 'public');
+            $fullPath = storage_path('app/public/' . $imagePath);
+
+            // Optimize image
+            $optimizer = new ImageOptimizer();
+            $optimizedPath = $optimizer->optimize($fullPath, 800, 800, 80);
+
+            // Generate thumbnail
+            $optimizer->generateThumbnail($optimizedPath, 200);
+
+            // Update image path to webp (relative to storage/app/public)
+            $relativePath = str_replace('\\', '/', str_replace(storage_path('app/public/'), '', $optimizedPath));
+            $validated['image'] = $relativePath;
         }
 
         Product::create($validated);
@@ -49,10 +63,31 @@ class ProductController extends Controller
         $validated = $request->validated();
 
         if ($request->hasFile('image')) {
+            // Delete old image and thumbnail
             if ($product->image) {
-                \Storage::disk('public')->delete($product->image);
+                $oldPath = storage_path('app/public/' . $product->image);
+                $thumbPath = str_replace('.webp', '_thumb.webp', $oldPath);
+
+                if (file_exists($oldPath)) {
+                    unlink($oldPath);
+                }
+                if (file_exists($thumbPath)) {
+                    unlink($thumbPath);
+                }
+
+                Storage::disk('public')->delete($product->image);
             }
-            $validated['image'] = $request->file('image')->store('products', 'public');
+
+            // Upload and optimize new image
+            $imagePath = $request->file('image')->store('products', 'public');
+            $fullPath = storage_path('app/public/' . $imagePath);
+
+            $optimizer = new ImageOptimizer();
+            $optimizedPath = $optimizer->optimize($fullPath, 800, 800, 80);
+            $optimizer->generateThumbnail($optimizedPath, 200);
+
+            $relativePath = str_replace('\\', '/', str_replace(storage_path('app/public/'), '', $optimizedPath));
+            $validated['image'] = $relativePath;
         }
 
         $product->update($validated);
@@ -63,7 +98,17 @@ class ProductController extends Controller
     public function destroy(Product $product): RedirectResponse
     {
         if ($product->image) {
-            \Storage::disk('public')->delete($product->image);
+            $oldPath = storage_path('app/public/' . $product->image);
+            $thumbPath = str_replace('.webp', '_thumb.webp', $oldPath);
+
+            if (file_exists($oldPath)) {
+                unlink($oldPath);
+            }
+            if (file_exists($thumbPath)) {
+                unlink($thumbPath);
+            }
+
+            Storage::disk('public')->delete($product->image);
         }
 
         $product->delete();

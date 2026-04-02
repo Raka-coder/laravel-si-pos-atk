@@ -1,13 +1,6 @@
-import { useState, useEffect } from 'react';
 import { Head, usePage, router } from '@inertiajs/react';
-import {
-    Minus,
-    Plus,
-    Search,
-    ShoppingCart,
-    Trash2,
-    X,
-} from 'lucide-react';
+import { Minus, Plus, Search, ShoppingCart, Trash2, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -30,6 +23,7 @@ interface Product {
     sell_price: number;
     stock: number;
     min_stock: number;
+    image: string | null;
     is_active: boolean;
     category: { id: number; name: string } | null;
     unit: { id: number; name: string; short_name: string } | null;
@@ -85,6 +79,7 @@ export default function POSIndex() {
         const matchesCategory =
             selectedCategory === null ||
             product.category?.id === selectedCategory;
+
         return matchesSearch && matchesCategory && product.stock > 0;
     });
 
@@ -97,7 +92,10 @@ export default function POSIndex() {
     };
 
     const handleCheckout = () => {
-        if (total <= 0) return;
+        if (total <= 0) {
+            return;
+        }
+
         setIsPaymentOpen(true);
         setAmountPaid(String(Math.ceil(total / 1000) * 1000));
     };
@@ -107,6 +105,7 @@ export default function POSIndex() {
 
         if (paid < total) {
             alert('Jumlah pembayaran kurang!');
+
             return;
         }
 
@@ -198,6 +197,21 @@ export default function POSIndex() {
                                     disabled={product.stock <= 0}
                                     className="flex flex-col items-center justify-center rounded-lg border border-sidebar-border/70 bg-background p-3 transition-colors hover:bg-accent disabled:opacity-50"
                                 >
+                                    <div className="mb-2 flex h-20 w-20 items-center justify-center overflow-hidden rounded-lg bg-muted">
+                                        {product.image ? (
+                                            <img
+                                                src={`/storage/${product.image}`}
+                                                alt={product.name}
+                                                className="h-full w-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted-foreground/10">
+                                                <span className="text-xs text-muted-foreground">
+                                                    No Img
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
                                     <div className="w-full text-center">
                                         <div className="truncate font-medium">
                                             {product.name}

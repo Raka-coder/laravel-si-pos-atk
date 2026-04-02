@@ -121,7 +121,7 @@ Buka browser: `http://localhost:8000`
 
 Halaman utama kasir dengan:
 
-- **Product Grid** - Tampilan produk sebagai tombol yang bisa diklik
+- **Product Grid** - Tampilan produk dengan gambar thumbnail (200x200px)
 - **Search** - Pencarian produk berdasarkan nama atau barcode
 - **Category Filter** - Filter produk berdasarkan kategori
 - **Cart Sidebar** - Keranjang belanja di sisi kanan
@@ -129,7 +129,7 @@ Halaman utama kasir dengan:
 
 **Components:**
 
-- Product grid dengan stock indicator
+- Product grid dengan gambar produk (fallback "No Img" jika tidak ada gambar)
 - Cart items dengan quantity adjustment (+/-)
 - Payment modal dengan perhitungan kembalian
 - Real-time totals (subtotal, tax, total)
@@ -365,6 +365,11 @@ FASE 2 selesai. Lanjut ke **FASE 3: Inventory**:
 ## Catatan
 
 - TypeScript errors di IDE tidak 影响 fungsi - hanya type constraint warning
+- **Product images ditampilkan di POS** dengan thumbnail 200x200px
 - QRIS/Midtrans payment belum diimplementasi (bisa di Fase 8)
 - Diskon belum ada (sesuai request)
 - Stock otomatis berkurang saat transaksi PAID
+- **Setup storage link untuk melihat gambar:**
+    ```bash
+    php artisan storage:link
+    ```

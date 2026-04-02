@@ -42,6 +42,8 @@ example-app/
 │   │       ├── Category/
 │   │       ├── Product/
 │   │       └── Unit/
+│   ├── Services/
+│   │   └── ImageOptimizer.php
 │   └── Models/
 │       ├── Category.php
 │       ├── Product.php
@@ -193,7 +195,7 @@ Buka browser: `http://localhost:8000`
 | sell_price | decimal(12,2) | Selling price |
 | stock | int | Current stock quantity |
 | min_stock | int | Minimum stock threshold |
-| image | varchar(255) | Product image path |
+| image | varchar(255) | Product image path (optimized WebP) |
 | is_active | boolean | Active status |
 | category_id | bigint | Foreign key to categories |
 | unit_id | bigint | Foreign key to units |
@@ -207,6 +209,15 @@ Buka browser: `http://localhost:8000`
 - `is_active`
 - `name`
 
+**Image Upload Features:**
+
+- **Max file size:** 2MB
+- **Supported formats:** JPG, JPEG, PNG, GIF, WEBP
+- **Max dimensions:** 1920x1920px
+- **Auto-optimization:** Resize to 800x800px, compress to WebP (80% quality)
+- **Thumbnail generation:** 200x200px for grid view
+- **Preview:** Client-side preview before upload
+
 **Routes:**
 | Method | URI | Action |
 |--------|-----|--------|
@@ -215,6 +226,15 @@ Buka browser: `http://localhost:8000`
 | GET | /products/barcode/{barcode} | products.byBarcode |
 | PUT/PATCH | /products/{product} | products.update |
 | DELETE | /products/{product} | products.destroy |
+
+**Features:**
+
+- List all products with image thumbnails
+- Add new product with image upload (modal)
+- Edit product with image replacement (modal)
+- Delete product (removes image files)
+- Image preview in form
+- Optimized image storage (WebP format)
 
 ### 5. Dashboard
 
@@ -336,7 +356,19 @@ FASE 1 selesai. Lanjut ke **FASE 2: Core Transaction**:
 ## Catatan
 
 - TypeScript errors di IDE tidak 影响 fungsi - hanya type constraint warning
-- Image upload sudah di-setup tapi belum diimplementasi di UI
+- **Image upload sudah diimplementasi** dengan fitur:
+    - Preview client-side
+    - Validasi size (max 2MB) dan format
+    - Auto-optimasi ke WebP (800x800px, 80% quality)
+    - Generate thumbnail 200x200px
+- **Setup storage link:**
+    ```bash
+    php artisan storage:link
+    ```
+- **Intervention Image required:**
+    ```bash
+    composer require intervention/image
+    ```
 - Untuk testing, bisa gunakan seeding:
     ```bash
     php artisan db:seed

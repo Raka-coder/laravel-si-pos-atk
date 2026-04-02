@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, useForm, usePage, router } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -21,7 +22,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import InputError from '@/components/input-error';
 import type { BreadcrumbItem } from '@/types';
 
 interface Category {
@@ -66,6 +66,10 @@ export default function ProductIndex() {
     const [isOpen, setIsOpen] = useState(false);
     const [editProduct, setEditProduct] = useState<Product | null>(null);
     const [deleteProduct, setDeleteProduct] = useState<Product | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [editImagePreview, setEditImagePreview] = useState<string | null>(
+        null,
+    );
 
     const createForm = useForm({
         barcode: '',
@@ -77,6 +81,7 @@ export default function ProductIndex() {
         category_id: '',
         unit_id: '',
         is_active: true,
+        image: null as File | null,
     });
 
     const editForm = useForm({
@@ -89,14 +94,32 @@ export default function ProductIndex() {
         category_id: '',
         unit_id: '',
         is_active: true,
+        image: null as File | null,
     });
 
     const deleteForm = useForm({});
 
     const handleCreate = () => {
+        const formData = new FormData();
+        formData.append('barcode', createForm.data.barcode);
+        formData.append('name', createForm.data.name);
+        formData.append('buy_price', createForm.data.buy_price);
+        formData.append('sell_price', createForm.data.sell_price);
+        formData.append('stock', createForm.data.stock);
+        formData.append('min_stock', createForm.data.min_stock);
+        formData.append('category_id', createForm.data.category_id);
+        formData.append('unit_id', createForm.data.unit_id);
+        formData.append('is_active', createForm.data.is_active ? '1' : '0');
+
+        if (createForm.data.image) {
+            formData.append('image', createForm.data.image);
+        }
+
         createForm.post('/products', {
+            forceFormData: true,
             onSuccess: () => {
                 createForm.reset();
+                setImagePreview(null);
                 setIsOpen(false);
             },
         });
@@ -114,21 +137,50 @@ export default function ProductIndex() {
             category_id: product.category_id ? String(product.category_id) : '',
             unit_id: product.unit_id ? String(product.unit_id) : '',
             is_active: product.is_active,
+            image: null,
         });
+        setEditImagePreview(product.image ? `/storage/${product.image}` : null);
     };
 
     const handleUpdate = () => {
-        if (!editProduct) return;
-        editForm.patch(`/products/${editProduct.id}`, {
+        if (!editProduct) {
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('barcode', editForm.data.barcode);
+        formData.append('name', editForm.data.name);
+        formData.append('buy_price', editForm.data.buy_price);
+        formData.append('sell_price', editForm.data.sell_price);
+        formData.append('stock', String(editForm.data.stock));
+        formData.append('min_stock', String(editForm.data.min_stock));
+        formData.append('category_id', editForm.data.category_id);
+        formData.append('unit_id', editForm.data.unit_id);
+        formData.append('is_active', editForm.data.is_active ? '1' : '0');
+
+        if (editForm.data.image) {
+            formData.append('image', editForm.data.image);
+        }
+
+        // Add _method for PUT request (Laravel method spoofing)
+        formData.append('_method', 'PUT');
+
+        // Use router directly for PUT request with FormData
+        router.post(`/products/${editProduct.id}`, formData, {
+            preserveScroll: true,
             onSuccess: () => {
                 editForm.reset();
+                setEditImagePreview(null);
                 setEditProduct(null);
             },
         });
     };
 
     const handleDelete = () => {
-        if (!deleteProduct) return;
+        if (!deleteProduct) {
+            return;
+        }
+
         deleteForm.delete(`/products/${deleteProduct.id}`, {
             onSuccess: () => {
                 setDeleteProduct(null);
@@ -360,6 +412,65 @@ export default function ProductIndex() {
                                         />
                                     </div>
                                 </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="image">Product Image</Label>
+                                    <Input
+                                        id="image"
+                                        name="image"
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+
+                                            if (file) {
+                                                // Validate file size (max 2MB)
+                                                if (
+                                                    file.size >
+                                                    2 * 1024 * 1024
+                                                ) {
+                                                    alert(
+                                                        'Ukuran gambar tidak boleh lebih dari 2MB',
+                                                    );
+
+                                                    e.target.value = '';
+
+                                                    return;
+                                                }
+
+                                                createForm.setData(
+                                                    'image',
+                                                    file,
+                                                );
+
+                                                const reader = new FileReader();
+                                                reader.onload = (event) => {
+                                                    setImagePreview(
+                                                        event.target
+                                                            ?.result as string,
+                                                    );
+                                                };
+                                                reader.readAsDataURL(file);
+                                            }
+                                        }}
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        Max size: 2MB. Format: JPG, PNG, GIF,
+                                        WEBP. Image akan di-optimasi otomatis.
+                                    </p>
+                                    {imagePreview && (
+                                        <div className="mt-2">
+                                            <img
+                                                src={imagePreview}
+                                                alt="Preview"
+                                                className="h-32 w-32 rounded-lg object-cover"
+                                            />
+                                        </div>
+                                    )}
+
+                                    <InputError
+                                        message={createForm.errors.image}
+                                    />
+                                </div>
                             </div>
                             <DialogFooter>
                                 <DialogClose asChild>
@@ -383,6 +494,9 @@ export default function ProductIndex() {
                         <table className="w-full">
                             <thead className="border-b bg-muted/50">
                                 <tr>
+                                    <th className="px-4 py-3 text-left text-sm font-medium">
+                                        Image
+                                    </th>
                                     <th className="px-4 py-3 text-left text-sm font-medium">
                                         Barcode
                                     </th>
@@ -418,6 +532,21 @@ export default function ProductIndex() {
                                         key={product.id}
                                         className="hover:bg-muted/50"
                                     >
+                                        <td className="px-4 py-3">
+                                            {product.image ? (
+                                                <img
+                                                    src={`/storage/${product.image}`}
+                                                    alt={product.name}
+                                                    className="h-12 w-12 rounded-lg object-cover"
+                                                />
+                                            ) : (
+                                                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted">
+                                                    <span className="text-xs text-muted-foreground">
+                                                        No Image
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </td>
                                         <td className="px-4 py-3 font-mono text-sm">
                                             {product.barcode}
                                         </td>
@@ -490,7 +619,7 @@ export default function ProductIndex() {
                                 {products.length === 0 && (
                                     <tr>
                                         <td
-                                            colSpan={9}
+                                            colSpan={10}
                                             className="px-4 py-8 text-center text-sm text-muted-foreground"
                                         >
                                             No products found. Create one to get
@@ -670,6 +799,56 @@ export default function ProductIndex() {
                                     </SelectContent>
                                 </Select>
                             </div>
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="edit-image">Product Image</Label>
+                            {editImagePreview && (
+                                <div className="mb-2">
+                                    <img
+                                        src={editImagePreview}
+                                        alt="Current image"
+                                        className="h-32 w-32 rounded-lg object-cover"
+                                    />
+                                </div>
+                            )}
+                            <Input
+                                id="edit-image"
+                                name="image"
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0];
+
+                                    if (file) {
+                                        // Validate file size (max 2MB)
+                                        if (file.size > 2 * 1024 * 1024) {
+                                            alert(
+                                                'Ukuran gambar tidak boleh lebih dari 2MB',
+                                            );
+
+                                            e.target.value = '';
+
+                                            return;
+                                        }
+
+                                        editForm.setData('image', file);
+
+                                        const reader = new FileReader();
+                                        reader.onload = (event) => {
+                                            setEditImagePreview(
+                                                event.target?.result as string,
+                                            );
+                                        };
+                                        reader.readAsDataURL(file);
+                                    }
+                                }}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                Max size: 2MB. Format: JPG, PNG, GIF, WEBP.
+                                Image akan di-optimasi otomatis.
+                            </p>
+
+                            <InputError message={editForm.errors.image} />
                         </div>
                     </div>
                     <DialogFooter>

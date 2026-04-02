@@ -7,16 +7,17 @@ use App\Http\Requests\User\StoreUserRequest;
 use App\Http\Requests\User\UpdateUserRequest;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
     public function index(): Response
     {
         $users = User::with('roles')
-            ->whereHas('roles', fn ($q) => $q->where('name', 'cashier'))
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -26,29 +27,38 @@ class UserController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'is_active' => $user->is_active,
+                'role' => $user->roles->first()?->name ?? 'cashier',
                 'created_at' => $user->created_at->toISOString(),
             ]),
+            'roles' => Role::all()->pluck('name'),
         ]);
     }
 
     public function store(StoreUserRequest $request): RedirectResponse
     {
+        $role = $request->input('role', 'cashier');
+
+        if (! in_array($role, ['owner', 'cashier'])) {
+            $role = 'cashier';
+        }
+
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => $request->password,
-            'is_active' => true,
+            'is_active' => $request->boolean('is_active', true),
         ]);
 
-        $user->assignRole('cashier');
+        $user->assignRole($role);
 
-        Log::info('Kasir created', [
+        Log::info('User created', [
             'user_id' => auth()->id(),
-            'kasir_id' => $user->id,
-            'kasir_name' => $user->name,
+            'new_user_id' => $user->id,
+            'new_user_name' => $user->name,
+            'role' => $role,
         ]);
 
-        return redirect()->route('users.index')->with('success', 'Kasir berhasil ditambahkan.');
+        return redirect()->route('users.index')->with('success', 'User berhasil ditambahkan.');
     }
 
     public function update(UpdateUserRequest $request, User $user): RedirectResponse
@@ -58,49 +68,64 @@ class UserController extends Controller
         $user->update([
             'name' => $request->name,
             'email' => $request->email,
-            'is_active' => $request->is_active,
+            'is_active' => $request->boolean('is_active'),
         ]);
 
         if ($request->password) {
             $user->update(['password' => $request->password]);
         }
 
-        Log::info('Kasir updated', [
+        if ($request->has('role')) {
+            $role = $request->role;
+            if (in_array($role, ['owner', 'cashier'])) {
+                $user->syncRoles($role);
+            }
+        }
+
+        Log::info('User updated', [
             'user_id' => auth()->id(),
-            'kasir_id' => $user->id,
+            'updated_user_id' => $user->id,
             'old_data' => $oldData,
             'new_data' => $user->only(['name', 'email', 'is_active']),
         ]);
 
-        return redirect()->route('users.index')->with('success', 'Kasir berhasil diperbarui.');
+        return redirect()->route('users.index')->with('success', 'User berhasil diperbarui.');
     }
 
     public function destroy(User $user): RedirectResponse
     {
+        if ($user->id === auth()->id()) {
+            return redirect()->route('users.index')->with('error', 'Tidak dapat menghapus akun sendiri.');
+        }
+
         $userName = $user->name;
         $user->delete();
 
-        Log::info('Kasir deleted', [
+        Log::info('User deleted', [
             'user_id' => auth()->id(),
-            'kasir_name' => $userName,
+            'deleted_user_name' => $userName,
         ]);
 
-        return redirect()->route('users.index')->with('success', 'Kasir berhasil dihapus.');
+        return redirect()->route('users.index')->with('success', 'User berhasil dihapus.');
     }
 
     public function toggleActive(User $user): RedirectResponse
     {
-        $user->update(['is_active' => ! $user->is_active]);
+        if ($user->id === auth()->id()) {
+            return redirect()->route('users.index')->with('error', 'Tidak dapat menonaktifkan akun sendiri.');
+        }
 
-        Log::info('Kasir status toggled', [
+        $user->update(['is_active' => (bool) ! $user->is_active]);
+
+        Log::info('User status toggled', [
             'user_id' => auth()->id(),
-            'kasir_id' => $user->id,
+            'target_user_id' => $user->id,
             'new_status' => $user->is_active,
         ]);
 
         $status = $user->is_active ? 'diaktifkan' : 'dinonaktifkan';
 
-        return redirect()->route('users.index')->with('success', "Kasir berhasil {$status}.");
+        return redirect()->route('users.index')->with('success', "User berhasil {$status}.");
     }
 
     public function resetPassword(Request $request, User $user): RedirectResponse
@@ -111,11 +136,11 @@ class UserController extends Controller
 
         $user->update(['password' => $request->password]);
 
-        Log::info('Kasir password reset', [
+        Log::info('User password reset', [
             'user_id' => auth()->id(),
-            'kasir_id' => $user->id,
+            'target_user_id' => $user->id,
         ]);
 
-        return redirect()->route('users.index')->with('success', 'Password kasir berhasil direset.');
+        return redirect()->route('users.index')->with('success', 'Password user berhasil direset.');
     }
 }

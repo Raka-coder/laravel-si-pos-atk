@@ -14,30 +14,41 @@ FASE 7 implements Role-Based Access Control (RBAC) with User Management using Sp
 
 ### 2. User Management (Owner Only)
 
-- **CRUD Kasir**: Create, read, update, delete cashier accounts
-- **Fields**: name, email, password, is_active
+- **CRUD User**: Create, read, update, delete user accounts (owner & cashier)
+- **Fields**: name, email, password, is_active, role
 - **Features**:
-    - Reset password kasir
-    - Activate/deactivate kasir
+    - Reset password user
+    - Activate/deactivate user via toggle
+    - Select role (owner/cashier) saat create
     - Activity logging
+    - Toggle status langsung berfungsi (fixed: sebelumnya ada bug pada mass-assignment)
 
-### 3. Login with Role Selection
+### 3. User Status & Login Flow
+
+- **is_active** field di tabel users mengontrol akses login
+- User dengan `is_active = false` tidak bisa login
+- Toggle status di table langsung mempengaruhi kemampuan login
+- Checkbox di form create/edit menentukan status aktif/non-aktif
+- Bug fix: `is_active` ditambahkan ke `$fillable` di User model agar bisa di-mass-assign
+
+### 4. Login with Role Selection
 
 - Dropdown untuk pilih role (Owner / Cashier)
 - Validasi user memiliki role yang dipilih
 - Akun non-aktif tidak bisa login
+- Cek is_active sebelum authentication
 
-### 4. Dashboard per Role
+### 5. Dashboard per Role
 
 - **Owner**: Full dashboard (sales, revenue, expenses, low stock, products)
 - **Cashier**: Simplified dashboard (sales & revenue only)
 
-### 5. Sidebar Navigation per Role
+### 6. Sidebar Navigation per Role
 
 - **Owner**: All menu items (Dashboard, POS, Transactions, Stock Movements, Products, Categories, Units, Expenses, Expense Categories, Reports, Manage User, Shop Settings)
 - **Cashier**: Limited menu (Dashboard, POS, Transactions, Reports)
 
-### 6. Edit Transaction (Cashier & Owner)
+### 7. Edit Transaction (Cashier & Owner)
 
 - Fitur edit transaksi untuk memperbaiki kesalahan input
 - **Yang bisa diedit**:
@@ -50,7 +61,7 @@ FASE 7 implements Role-Based Access Control (RBAC) with User Management using Sp
 - **Stock adjustment**: otomatis kembalikan stok lama + kurangi stok baru
 - **Log stock movements**: mencatat setiap perubahan stok saat edit
 
-### 7. Settings Access per Role
+### 8. Settings Access per Role
 
 - **Owner**: Full access (Profile, Security, Appearance)
 - **Cashier**: Appearance only
@@ -60,46 +71,35 @@ FASE 7 implements Role-Based Access Control (RBAC) with User Management using Sp
 
 ### Backend
 
-#### New Files
-
-- `app/Actions/Fortify/AttemptAuthentication.php` - Custom login authentication with role validation
-- `app/Http/Controllers/User/UserController.php` - CRUD operations for kasir
-- `app/Http/Requests/User/StoreUserRequest.php` - Validation for creating kasir
-- `app/Http/Requests/User/UpdateUserRequest.php` - Validation for updating kasir
-
 #### Modified Files
 
-- `app/Models/User.php` - Added `HasRoles` trait
-- `app/Providers/FortifyServiceProvider.php` - Added custom authentication
-- `app/Http/Middleware/HandleInertiaRequests.php` - Added `isOwner` to shared data
-- `bootstrap/app.php` - Registered Spatie middleware aliases (RoleMiddleware, PermissionMiddleware)
-- `app/Http/Controllers/Transaction/TransactionController.php` - Added `update()` method for edit transaction
-- `routes/settings.php` - Added `role:owner` middleware for profile & security routes
+- `app/Http/Controllers/User/UserController.php` - Full CRUD untuk semua user (owner & cashier)
+    - Menampilkan semua user (tidak filter hanya cashier)
+    - Role selector saat create/update
+    - is_active dari request
+    - Pencegahan hapus/nonaktifkan diri sendiri
+
+- `app/Actions/Fortify/AttemptAuthentication.php` - Cek is_active sebelum login
+    - Validasi is_active = true sebelum authentication
+
+- `app/Models/User.php` - Added `is_active` ke fillable array
+    - Memungkinkan mass-assignment untuk is_active field
+    - Perbaikan bug: toggle status tidak berfungsi sebelumnya
 
 #### Database
 
-- `2026_04_01_072303_create_permission_tables.php` - Spatie tables
-- `2026_04_01_072326_add_is_active_to_users_table.php` - is_active column
-- `2026_04_01_080614_create_shop_settings_table.php` - Shop settings table (FASE 6 fix)
-
-#### Seeders
-
-- `database/seeders/RolesAndPermissionsSeeder.php` - Creates roles, permissions, default users
+- `users` table: is_active column (sudah ada)
 
 ### Frontend
 
-#### New Files
-
-- `resources/js/pages/users/index.tsx` - Kasir management page
-
 #### Modified Files
 
-- `resources/js/pages/auth/login.tsx` - Added role selection dropdown
-- `resources/js/pages/dashboard.tsx` - Role-based dashboard rendering
-- `resources/js/components/app-sidebar.tsx` - Role-based navigation
-- `resources/js/types/auth.ts` - Added isOwner type
-- `resources/js/pages/transaction/show.tsx` - Added edit transaction modal
-- `resources/js/components/user-menu-content.tsx` - Settings link based on role
+- `resources/js/pages/users/index.tsx` - User management dengan:
+    - Role column di table
+    - Status indicator (Active/Non-active)
+    - Toggle button menggunakan ToggleRight/ToggleLeft icons
+    - Checkbox is_active di form create & edit
+    - Role selector di form
 
 ### Routes
 
@@ -108,10 +108,10 @@ FASE 7 implements Role-Based Access Control (RBAC) with User Management using Sp
 
 ## Default Users (After Seeding)
 
-| Email                | Password | Role    |
-| -------------------- | -------- | ------- |
-| owner@atk-sync.com   | password | Owner   |
-| cashier@atk-sync.com | password | Cashier |
+| Email                | Password | Role    | is_active  |
+| -------------------- | -------- | ------- | ---------- |
+| owner@atk-sync.com   | password | Owner   | 1 (Active) |
+| cashier@atk-sync.com | password | Cashier | 1 (Active) |
 
 ## Test Credentials
 
@@ -125,16 +125,45 @@ FASE 7 implements Role-Based Access Control (RBAC) with User Management using Sp
     - Password: `password`
     - Role: Cashier
 
+## User Management Flow
+
+### Create User
+
+1. Klik "Add User"
+2. Isi: Name, Email, Password, Confirm Password
+3. Pilih Role: Owner / Cashier
+4. Centang/uncheck Active (default: checked/active)
+5. Klik Create
+
+### Edit User
+
+1. Klik icon pencil pada row user
+2. Ubah data yang diperlukan
+3. Ubah role jika diperlukan
+4. Centang/uncheck Active untuk mengubah status
+5. Klik Save Changes
+
+### Toggle Status
+
+1. Klik toggle button (ToggleRight/ToggleLeft) pada row user
+2. User langsung diaktifkan/nonaktifkan
+3. User tidak bisa login jika non-aktif
+
+### Delete User
+
+1. Klik icon trash pada row user
+2. Konfirmasi delete
+3. Catatan: Tidak bisa menghapus diri sendiri
+
 ## Activity Log
 
 Semua aksi user management di-log ke Laravel log:
 
-- Create kasir
-- Update kasir
-- Delete kasir
-- Reset password kasir
+- Create user (dengan role)
+- Update user (data & role)
+- Delete user
+- Reset password user
 - Toggle active status
-- Edit transaction (stock movements)
 
 ## Permissions Detail
 
@@ -159,6 +188,13 @@ Semua aksi user management di-log ke Laravel log:
 - appearance (theme)
 
 ## Feature Details
+
+### User Status Logic
+
+1. Saat login, sistem cek `is_active` pada user
+2. Jika `is_active = false`, tampilkan error "Akun tidak aktif"
+3. Toggle di management page langsung update status
+4. Perubahan status langsung berlaku (user tidak bisa login jika non-aktif)
 
 ### Edit Transaction Flow
 
@@ -193,19 +229,23 @@ User tidak memiliki role yang dipilih. Pastikan email memiliki role yang sesuai.
 
 ### Login Error: "Akun Anda tidak aktif"
 
-User aktif tapi field `is_active` = false. Hubungi administrator.
+User aktif tapi field `is_active` = false. Hubungi administrator untuk mengaktifkan.
 
 ### Route Access Denied
 
 Cashier tidak bisa akses route owner-only (products, categories, dll). Gunakan role yang sesuai.
 
-### Error: "Class DB not found"
+### Error: "Tidak dapat menonaktifkan akun sendiri"
 
-Perlu import `use Illuminate\Support\Facades\DB;` di controller.
+Sistem mencegah owner untuk menonaktifkan dirinya sendiri dari menu management.
 
-### Error: Table 'shop_settings' not found
+### Toggle Button Tidak Merespons
 
-Jalankan migration: `php artisan migrate`
+Pastikan `is_active` ada di fillable array di `app/Models/User.php`. Jika toggle tidak update status:
+
+1. Cek apakah user tersebut diri sendiri (tidak bisa toggle diri sendiri)
+2. Cek log untuk error message
+3. Refresh halaman setelah toggle
 
 ## Next Steps
 

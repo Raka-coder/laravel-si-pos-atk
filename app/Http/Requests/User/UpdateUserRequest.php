@@ -19,7 +19,8 @@ class UpdateUserRequest extends FormRequest
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,'.$userId,
             'password' => 'nullable|string|min:6|confirmed',
-            'is_active' => 'required|boolean',
+            'is_active' => 'nullable|boolean',
+            'role' => 'nullable|string|in:owner,cashier',
         ];
     }
 }

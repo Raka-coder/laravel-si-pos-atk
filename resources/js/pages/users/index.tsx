@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import {
     Pencil,
@@ -8,6 +7,9 @@ import {
     ToggleLeft,
     ToggleRight,
 } from 'lucide-react';
+import { useState } from 'react';
+
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -21,7 +23,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import InputError from '@/components/input-error';
 import type { BreadcrumbItem } from '@/types';
 
 interface User {
@@ -29,12 +30,14 @@ interface User {
     name: string;
     email: string;
     is_active: boolean;
+    role: string;
     created_at: string;
 }
 
 interface Props {
     [key: string]: unknown;
     users: User[];
+    roles: string[];
 }
 
 export default function UserIndex() {
@@ -52,6 +55,8 @@ export default function UserIndex() {
         email: '',
         password: '',
         password_confirmation: '',
+        is_active: true,
+        role: 'cashier',
     });
 
     const editForm = useForm({
@@ -60,6 +65,7 @@ export default function UserIndex() {
         password: '',
         password_confirmation: '',
         is_active: true,
+        role: 'cashier',
     });
 
     const deleteForm = useForm({});
@@ -88,11 +94,15 @@ export default function UserIndex() {
             password: '',
             password_confirmation: '',
             is_active: user.is_active,
+            role: user.role || 'cashier',
         });
     };
 
     const handleUpdate = () => {
-        if (!editUser) return;
+        if (!editUser) {
+            return;
+        }
+
         editForm.patch(`/users/${editUser.id}`, {
             onSuccess: () => {
                 editForm.reset('password', 'password_confirmation');
@@ -102,7 +112,10 @@ export default function UserIndex() {
     };
 
     const handleDelete = () => {
-        if (!deleteUser) return;
+        if (!deleteUser) {
+            return;
+        }
+
         deleteForm.delete(`/users/${deleteUser.id}`, {
             onSuccess: () => {
                 setDeleteUser(null);
@@ -113,13 +126,16 @@ export default function UserIndex() {
     const handleToggleActive = (user: User) => {
         toggleActiveForm.patch(`/users/${user.id}/toggle-active`, {
             onSuccess: () => {
-                window.location.reload();
+                toggleActiveForm.reset();
             },
         });
     };
 
     const handleResetPassword = () => {
-        if (!resetPasswordUser) return;
+        if (!resetPasswordUser) {
+            return;
+        }
+
         resetPasswordForm.patch(
             `/users/${resetPasswordUser.id}/reset-password`,
             {
@@ -147,9 +163,9 @@ export default function UserIndex() {
                         </DialogTrigger>
                         <DialogContent>
                             <DialogHeader>
-                                <DialogTitle>Add New Kasir</DialogTitle>
+                                <DialogTitle>Add New User</DialogTitle>
                                 <DialogDescription>
-                                    Create a new cashier account.
+                                    Create a new user account.
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="grid gap-4 py-4">
@@ -236,6 +252,40 @@ export default function UserIndex() {
                                         }
                                     />
                                 </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="role">Role</Label>
+                                    <select
+                                        id="role"
+                                        className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                        value={createForm.data.role}
+                                        onChange={(e) =>
+                                            createForm.setData(
+                                                'role',
+                                                e.target.value,
+                                            )
+                                        }
+                                    >
+                                        <option value="cashier">Cashier</option>
+                                        <option value="owner">Owner</option>
+                                    </select>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        id="create-is_active"
+                                        type="checkbox"
+                                        checked={createForm.data.is_active}
+                                        onChange={(e) =>
+                                            createForm.setData(
+                                                'is_active',
+                                                e.target.checked,
+                                            )
+                                        }
+                                        className="h-4 w-4"
+                                    />
+                                    <Label htmlFor="create-is_active">
+                                        Active
+                                    </Label>
+                                </div>
                             </div>
                             <DialogFooter>
                                 <DialogClose asChild>
@@ -269,6 +319,9 @@ export default function UserIndex() {
                                         Email
                                     </th>
                                     <th className="px-4 py-3 text-left text-sm font-medium">
+                                        Role
+                                    </th>
+                                    <th className="px-4 py-3 text-left text-sm font-medium">
                                         Status
                                     </th>
                                     <th className="px-4 py-3 text-right text-sm font-medium">
@@ -293,15 +346,22 @@ export default function UserIndex() {
                                         </td>
                                         <td className="px-4 py-3 text-sm">
                                             <span
-                                                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none ${
+                                                className={`capitalize ${user.role === 'owner' ? 'font-semibold text-blue-600' : ''}`}
+                                            >
+                                                {user.role}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3 text-sm">
+                                            <span
+                                                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                                                     user.is_active
-                                                        ? 'bg-green-100 text-green-800'
-                                                        : 'bg-red-100 text-red-800'
+                                                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                                        : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
                                                 }`}
                                             >
                                                 {user.is_active
                                                     ? 'Active'
-                                                    : 'Inactive'}
+                                                    : 'Non-active'}
                                             </span>
                                         </td>
                                         <td className="px-4 py-3 text-right">
@@ -343,7 +403,7 @@ export default function UserIndex() {
                                                     {user.is_active ? (
                                                         <ToggleRight className="h-4 w-4 text-green-500" />
                                                     ) : (
-                                                        <ToggleLeft className="h-4 w-4 text-red-500" />
+                                                        <ToggleLeft className="h-4 w-4 text-gray-400" />
                                                     )}
                                                 </Button>
                                                 <Button
@@ -363,10 +423,10 @@ export default function UserIndex() {
                                 {users.length === 0 && (
                                     <tr>
                                         <td
-                                            colSpan={5}
+                                            colSpan={6}
                                             className="px-4 py-8 text-center text-sm text-muted-foreground"
                                         >
-                                            No kasir found. Create one to get
+                                            No user found. Create one to get
                                             started.
                                         </td>
                                     </tr>
@@ -449,6 +509,20 @@ export default function UserIndex() {
                             <InputError
                                 message={editForm.errors.password_confirmation}
                             />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="edit-role">Role</Label>
+                            <select
+                                id="edit-role"
+                                className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                value={editForm.data.role}
+                                onChange={(e) =>
+                                    editForm.setData('role', e.target.value)
+                                }
+                            >
+                                <option value="cashier">Cashier</option>
+                                <option value="owner">Owner</option>
+                            </select>
                         </div>
                         <div className="flex items-center gap-2">
                             <input
@@ -586,9 +660,6 @@ export default function UserIndex() {
 
 UserIndex.layout = {
     breadcrumbs: [
-        {
-            title: 'Kasir Management',
-            href: '/users',
-        },
+        { title: 'User Management', href: '/users' },
     ] as BreadcrumbItem[],
 };

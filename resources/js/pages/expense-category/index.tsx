@@ -15,6 +15,14 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import type { BreadcrumbItem } from '@/types';
 
 interface ExpenseCategory {
@@ -65,8 +73,8 @@ export default function ExpenseCategoryIndex() {
 
     const handleUpdate = () => {
         if (!editCategory) {
-return;
-}
+            return;
+        }
 
         editForm.patch(`/expense-categories/${editCategory.id}`, {
             onSuccess: () => {
@@ -78,8 +86,8 @@ return;
 
     const handleDelete = () => {
         if (!deleteCategory) {
-return;
-}
+            return;
+        }
 
         deleteForm.delete(`/expense-categories/${deleteCategory.id}`, {
             onSuccess: () => {
@@ -97,8 +105,7 @@ return;
                     <h1 className="text-2xl font-bold">Expense Categories</h1>
                     <Dialog open={isOpen} onOpenChange={setIsOpen}>
                         <DialogTrigger asChild>
-                            <Button
-                                size={"lg"}>
+                            <Button size={'lg'}>
                                 <Plus className="mr-2 h-4 w-4" />
                                 Add Category
                             </Button>
@@ -132,10 +139,12 @@ return;
                             </div>
                             <DialogFooter>
                                 <DialogClose asChild>
-                                    <Button variant="outline" size={"lg"}>Cancel</Button>
+                                    <Button variant="outline" size={'lg'}>
+                                        Cancel
+                                    </Button>
                                 </DialogClose>
                                 <Button
-                                    size={"lg"}
+                                    size={'lg'}
                                     onClick={handleCreate}
                                     disabled={createForm.processing}
                                 >
@@ -150,37 +159,26 @@ return;
 
                 <div className="rounded-xl border border-sidebar-border/70 p-6">
                     <div className="rounded-md border">
-                        <table className="w-full">
-                            <thead className="border-b bg-muted/50">
-                                <tr>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
-                                        ID
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
-                                        Name
-                                    </th>
-                                    <th className="px-4 py-3 text-right text-sm font-medium">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>ID</TableHead>
+                                    <TableHead>Name</TableHead>
+                                    <TableHead className="text-right">
                                         Actions
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y">
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
                                 {categories.map((category) => (
-                                    <tr
-                                        key={category.id}
-                                        className="hover:bg-muted/50"
-                                    >
-                                        <td className="px-4 py-3 text-sm">
-                                            {category.id}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm">
-                                            {category.name}
-                                        </td>
-                                        <td className="px-4 py-3 text-right">
+                                    <TableRow key={category.id}>
+                                        <TableCell>{category.id}</TableCell>
+                                        <TableCell>{category.name}</TableCell>
+                                        <TableCell className="text-right">
                                             <div className="flex items-center justify-end gap-2">
                                                 <Button
                                                     variant="ghost"
-                                                    size="icon"
+                                                    size="lg"
                                                     onClick={() =>
                                                         handleEdit(category)
                                                     }
@@ -189,7 +187,7 @@ return;
                                                 </Button>
                                                 <Button
                                                     variant="ghost"
-                                                    size="icon"
+                                                    size="lg"
                                                     onClick={() =>
                                                         setDeleteCategory(
                                                             category,
@@ -199,22 +197,22 @@ return;
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
                                             </div>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 ))}
                                 {categories.length === 0 && (
-                                    <tr>
-                                        <td
+                                    <TableRow>
+                                        <TableCell
                                             colSpan={3}
-                                            className="px-4 py-8 text-center text-sm text-muted-foreground"
+                                            className="h-24 text-center text-muted-foreground"
                                         >
                                             No categories found. Create one to
                                             get started.
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 )}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
                     </div>
                 </div>
             </div>
@@ -247,10 +245,12 @@ return;
                     </div>
                     <DialogFooter>
                         <DialogClose asChild>
-                            <Button variant="outline" size={"lg"}>Cancel</Button>
+                            <Button variant="outline" size={'lg'}>
+                                Cancel
+                            </Button>
                         </DialogClose>
                         <Button
-                            size={"lg"}
+                            size={'lg'}
                             onClick={handleUpdate}
                             disabled={editForm.processing}
                         >
@@ -276,11 +276,13 @@ return;
                     </DialogHeader>
                     <DialogFooter>
                         <DialogClose asChild>
-                            <Button variant="outline" size={"lg"}>Cancel</Button>
+                            <Button variant="outline" size={'lg'}>
+                                Cancel
+                            </Button>
                         </DialogClose>
                         <Button
                             variant="destructive"
-                            size={"lg"}
+                            size={'lg'}
                             onClick={handleDelete}
                             disabled={deleteForm.processing}
                         >

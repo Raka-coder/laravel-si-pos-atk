@@ -1,5 +1,15 @@
-import { usePage } from '@inertiajs/react';
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
+import { format } from 'date-fns';
+import { CalendarIcon } from 'lucide-react';
+import * as React from 'react';
+
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import type { BreadcrumbItem } from '@/types';
 
 interface Props {
@@ -28,6 +38,29 @@ const formatCurrency = (value: number) => {
 export default function ProfitLossReport() {
     const { summary, sales_by_day, expenses_by_day, filters } =
         usePage<Props>().props;
+
+    const [startDate, setStartDate] = React.useState<Date | undefined>(
+        filters.start_date ? new Date(filters.start_date) : undefined,
+    );
+    const [endDate, setEndDate] = React.useState<Date | undefined>(
+        filters.end_date ? new Date(filters.end_date) : undefined,
+    );
+    const [startOpen, setStartOpen] = React.useState(false);
+    const [endOpen, setEndOpen] = React.useState(false);
+
+    const applyDateFilter = (start?: Date, end?: Date) => {
+        const url = new URL(window.location.href);
+
+        if (start) {
+            url.searchParams.set('start_date', format(start, 'yyyy-MM-dd'));
+        }
+
+        if (end) {
+            url.searchParams.set('end_date', format(end, 'yyyy-MM-dd'));
+        }
+
+        window.location.href = url.toString();
+    };
 
     return (
         <>
@@ -80,35 +113,78 @@ export default function ProfitLossReport() {
                 <div className="flex items-center gap-4 rounded-xl border bg-card p-4">
                     <div className="flex items-center gap-2">
                         <label className="text-sm">From:</label>
-                        <input
-                            type="date"
-                            className="rounded-md border px-3 py-2 text-sm"
-                            defaultValue={filters.start_date}
-                            onChange={(e) => {
-                                const url = new URL(window.location.href);
-                                url.searchParams.set(
-                                    'start_date',
-                                    e.target.value,
-                                );
-                                window.location.href = url.toString();
-                            }}
-                        />
+                        <DropdownMenu
+                            open={startOpen}
+                            onOpenChange={setStartOpen}
+                        >
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    className="w-45 justify-start text-left font-normal"
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {startDate ? (
+                                        format(startDate, 'PPP')
+                                    ) : (
+                                        <span>Pick a date</span>
+                                    )}
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                                className="w-auto p-0"
+                                align="start"
+                            >
+                                <Calendar
+                                    mode="single"
+                                    selected={startDate}
+                                    onSelect={(date) => {
+                                        setStartDate(date);
+                                        setStartOpen(false);
+
+                                        if (date) {
+applyDateFilter(date, endDate);
+}
+                                    }}
+                                    initialFocus
+                                />
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                     <div className="flex items-center gap-2">
                         <label className="text-sm">To:</label>
-                        <input
-                            type="date"
-                            className="rounded-md border px-3 py-2 text-sm"
-                            defaultValue={filters.end_date}
-                            onChange={(e) => {
-                                const url = new URL(window.location.href);
-                                url.searchParams.set(
-                                    'end_date',
-                                    e.target.value,
-                                );
-                                window.location.href = url.toString();
-                            }}
-                        />
+                        <DropdownMenu open={endOpen} onOpenChange={setEndOpen}>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    className="w-45 justify-start text-left font-normal"
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {endDate ? (
+                                        format(endDate, 'PPP')
+                                    ) : (
+                                        <span>Pick a date</span>
+                                    )}
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                                className="w-auto p-0"
+                                align="start"
+                            >
+                                <Calendar
+                                    mode="single"
+                                    selected={endDate}
+                                    onSelect={(date) => {
+                                        setEndDate(date);
+                                        setEndOpen(false);
+
+                                        if (date) {
+                                            applyDateFilter(startDate, date);
+                                        }
+                                    }}
+                                    initialFocus
+                                />
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                 </div>
 

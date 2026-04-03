@@ -22,6 +22,14 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import type { BreadcrumbItem } from '@/types';
 
 interface Product {
@@ -278,105 +286,88 @@ export default function StockMovementIndex() {
                 </div>
 
                 <div className="rounded-xl border border-sidebar-border/70 p-6">
-                    <div className="rounded-md border">
-                        <table className="w-full">
-                            <thead className="border-b bg-muted/50">
-                                <tr>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
-                                        Date
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
-                                        Product
-                                    </th>
-                                    <th className="px-4 py-3 text-center text-sm font-medium">
-                                        Type
-                                    </th>
-                                    <th className="px-4 py-3 text-right text-sm font-medium">
-                                        Qty
-                                    </th>
-                                    <th className="px-4 py-3 text-right text-sm font-medium">
-                                        Before
-                                    </th>
-                                    <th className="px-4 py-3 text-right text-sm font-medium">
-                                        After
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
-                                        Reason
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
-                                        User
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y">
-                                {movements.data.map((movement) => (
-                                    <tr
-                                        key={movement.id}
-                                        className="hover:bg-muted/50"
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Date</TableHead>
+                                <TableHead>Product</TableHead>
+                                <TableHead className="text-center">
+                                    Type
+                                </TableHead>
+                                <TableHead className="text-right">
+                                    Qty
+                                </TableHead>
+                                <TableHead className="text-right">
+                                    Before
+                                </TableHead>
+                                <TableHead className="text-right">
+                                    After
+                                </TableHead>
+                                <TableHead>Reason</TableHead>
+                                <TableHead>User</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {movements.data.map((movement) => (
+                                <TableRow key={movement.id}>
+                                    <TableCell className="whitespace-nowrap">
+                                        {formatDate(movement.created_at)}
+                                    </TableCell>
+                                    <TableCell>
+                                        {movement.product.name}
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                        <span
+                                            className={`inline-flex rounded-full px-2 text-xs leading-5 font-medium ${getTypeColor(movement.movement_type)}`}
+                                        >
+                                            {getTypeLabel(
+                                                movement.movement_type,
+                                            )}
+                                        </span>
+                                    </TableCell>
+                                    <TableCell
+                                        className={`text-right font-medium ${
+                                            movement.movement_type === 'in' ||
+                                            movement.movement_type === 'return'
+                                                ? 'text-green-600'
+                                                : movement.movement_type ===
+                                                        'out' ||
+                                                    movement.movement_type ===
+                                                        'sale'
+                                                  ? 'text-red-600'
+                                                  : ''
+                                        }`}
                                     >
-                                        <td className="px-4 py-3 text-sm whitespace-nowrap">
-                                            {formatDate(movement.created_at)}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm">
-                                            {movement.product.name}
-                                        </td>
-                                        <td className="px-4 py-3 text-center">
-                                            <span
-                                                className={`inline-flex rounded-full px-2 text-xs leading-5 font-medium ${getTypeColor(movement.movement_type)}`}
-                                            >
-                                                {getTypeLabel(
-                                                    movement.movement_type,
-                                                )}
-                                            </span>
-                                        </td>
-                                        <td
-                                            className={`px-4 py-3 text-right font-medium ${
-                                                movement.movement_type ===
-                                                    'in' ||
-                                                movement.movement_type ===
-                                                    'return'
-                                                    ? 'text-green-600'
-                                                    : movement.movement_type ===
-                                                            'out' ||
-                                                        movement.movement_type ===
-                                                            'sale'
-                                                      ? 'text-red-600'
-                                                      : ''
-                                            }`}
-                                        >
-                                            {movement.movement_type === 'out' ||
-                                            movement.movement_type === 'sale'
-                                                ? '-'
-                                                : '+'}
-                                            {movement.qty}
-                                        </td>
-                                        <td className="px-4 py-3 text-right text-sm">
-                                            {movement.stock_before}
-                                        </td>
-                                        <td className="px-4 py-3 text-right text-sm font-medium">
-                                            {movement.stock_after}
-                                        </td>
-                                        <td className="max-w-xs truncate px-4 py-3 text-sm">
-                                            {movement.reason}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm">
-                                            {movement.user.name}
-                                        </td>
-                                    </tr>
-                                ))}
-                                {movements.data.length === 0 && (
-                                    <tr>
-                                        <td
-                                            colSpan={8}
-                                            className="px-4 py-8 text-center text-sm text-muted-foreground"
-                                        >
-                                            No stock movements found
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                                        {movement.movement_type === 'out' ||
+                                        movement.movement_type === 'sale'
+                                            ? '-'
+                                            : '+'}
+                                        {movement.qty}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        {movement.stock_before}
+                                    </TableCell>
+                                    <TableCell className="text-right font-medium">
+                                        {movement.stock_after}
+                                    </TableCell>
+                                    <TableCell className="max-w-xs truncate">
+                                        {movement.reason}
+                                    </TableCell>
+                                    <TableCell>{movement.user.name}</TableCell>
+                                </TableRow>
+                            ))}
+                            {movements.data.length === 0 && (
+                                <TableRow>
+                                    <TableCell
+                                        colSpan={8}
+                                        className="h-24 text-center text-muted-foreground"
+                                    >
+                                        No stock movements found
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
                 </div>
             </div>
         </>

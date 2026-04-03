@@ -1,8 +1,10 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { format } from 'date-fns';
+import { CalendarIcon, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import {
     Dialog,
     DialogClose,
@@ -13,6 +15,11 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -22,6 +29,14 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import type { BreadcrumbItem } from '@/types';
 
 interface ExpenseCategory {
@@ -86,6 +101,8 @@ export default function ExpenseIndex() {
     const [isOpen, setIsOpen] = useState(false);
     const [editExpense, setEditExpense] = useState<Expense | null>(null);
     const [deleteExpense, setDeleteExpense] = useState<Expense | null>(null);
+    const [createDateOpen, setCreateDateOpen] = useState(false);
+    const [editDateOpen, setEditDateOpen] = useState(false);
 
     const createForm = useForm({
         name: '',
@@ -129,8 +146,8 @@ export default function ExpenseIndex() {
 
     const handleUpdate = () => {
         if (!editExpense) {
-return;
-}
+            return;
+        }
 
         editForm.patch(`/expenses/${editExpense.id}`, {
             onSuccess: () => {
@@ -142,8 +159,8 @@ return;
 
     const handleDelete = () => {
         if (!deleteExpense) {
-return;
-}
+            return;
+        }
 
         deleteForm.delete(`/expenses/${deleteExpense.id}`, {
             onSuccess: () => {
@@ -161,7 +178,7 @@ return;
                     <h1 className="text-2xl font-bold">Expenses</h1>
                     <Dialog open={isOpen} onOpenChange={setIsOpen}>
                         <DialogTrigger asChild>
-                            <Button size={"lg"}>
+                            <Button size={'lg'}>
                                 <Plus className="mr-2 h-4 w-4" />
                                 Add Expense
                             </Button>
@@ -213,18 +230,59 @@ return;
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="date">Date</Label>
-                                    <Input
-                                        id="date"
-                                        name="date"
-                                        type="date"
-                                        value={createForm.data.date}
-                                        onChange={(e) =>
-                                            createForm.setData(
-                                                'date',
-                                                e.target.value,
-                                            )
-                                        }
-                                    />
+                                    <DropdownMenu
+                                        open={createDateOpen}
+                                        onOpenChange={setCreateDateOpen}
+                                    >
+                                        <DropdownMenuTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                className="w-full justify-start text-left font-normal"
+                                            >
+                                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                                {createForm.data.date ? (
+                                                    format(
+                                                        new Date(
+                                                            createForm.data
+                                                                .date,
+                                                        ),
+                                                        'PPP',
+                                                    )
+                                                ) : (
+                                                    <span>Pick a date</span>
+                                                )}
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent
+                                            className="w-auto p-0"
+                                            align="start"
+                                        >
+                                            <Calendar
+                                                mode="single"
+                                                selected={
+                                                    createForm.data.date
+                                                        ? new Date(
+                                                              createForm.data
+                                                                  .date,
+                                                          )
+                                                        : undefined
+                                                }
+                                                onSelect={(date) => {
+                                                    createForm.setData(
+                                                        'date',
+                                                        date
+                                                            ? format(
+                                                                  date,
+                                                                  'yyyy-MM-dd',
+                                                              )
+                                                            : '',
+                                                    );
+                                                    setCreateDateOpen(false);
+                                                }}
+                                                initialFocus
+                                            />
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
                                     <InputError
                                         message={createForm.errors.date}
                                     />
@@ -277,10 +335,12 @@ return;
                             </div>
                             <DialogFooter>
                                 <DialogClose asChild>
-                                    <Button variant="outline" size={"lg"}>Cancel</Button>
+                                    <Button variant="outline" size={'lg'}>
+                                        Cancel
+                                    </Button>
                                 </DialogClose>
                                 <Button
-                                    size={"lg"}
+                                    size={'lg'}
                                     onClick={handleCreate}
                                     disabled={createForm.processing}
                                 >
@@ -294,90 +354,73 @@ return;
                 </div>
 
                 <div className="rounded-xl border border-sidebar-border/70 p-6">
-                    <div className="rounded-md border">
-                        <table className="w-full">
-                            <thead className="border-b bg-muted/50">
-                                <tr>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
-                                        Date
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
-                                        Name
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
-                                        Category
-                                    </th>
-                                    <th className="px-4 py-3 text-right text-sm font-medium">
-                                        Amount
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
-                                        Note
-                                    </th>
-                                    <th className="px-4 py-3 text-right text-sm font-medium">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y">
-                                {expenses.data.map((expense) => (
-                                    <tr
-                                        key={expense.id}
-                                        className="hover:bg-muted/50"
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Date</TableHead>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Category</TableHead>
+                                <TableHead className="text-right">
+                                    Amount
+                                </TableHead>
+                                <TableHead>Note</TableHead>
+                                <TableHead className="text-right">
+                                    Actions
+                                </TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {expenses.data.map((expense) => (
+                                <TableRow key={expense.id}>
+                                    <TableCell className="whitespace-nowrap">
+                                        {formatDate(expense.date)}
+                                    </TableCell>
+                                    <TableCell>{expense.name}</TableCell>
+                                    <TableCell>
+                                        {expense.category?.name || '-'}
+                                    </TableCell>
+                                    <TableCell className="text-right font-medium">
+                                        {formatCurrency(expense.amount)}
+                                    </TableCell>
+                                    <TableCell className="max-w-xs truncate">
+                                        {expense.note || '-'}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <div className="flex items-center justify-end gap-2">
+                                            <Button
+                                                variant="ghost"
+                                                size="lg"
+                                                onClick={() =>
+                                                    handleEdit(expense)
+                                                }
+                                            >
+                                                <Pencil className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="lg"
+                                                onClick={() =>
+                                                    setDeleteExpense(expense)
+                                                }
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                            {expenses.data.length === 0 && (
+                                <TableRow>
+                                    <TableCell
+                                        colSpan={6}
+                                        className="h-24 text-center text-muted-foreground"
                                     >
-                                        <td className="px-4 py-3 text-sm whitespace-nowrap">
-                                            {formatDate(expense.date)}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm">
-                                            {expense.name}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm">
-                                            {expense.category?.name || '-'}
-                                        </td>
-                                        <td className="px-4 py-3 text-right text-sm font-medium">
-                                            {formatCurrency(expense.amount)}
-                                        </td>
-                                        <td className="max-w-xs truncate px-4 py-3 text-sm">
-                                            {expense.note || '-'}
-                                        </td>
-                                        <td className="px-4 py-3 text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() =>
-                                                        handleEdit(expense)
-                                                    }
-                                                >
-                                                    <Pencil className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() =>
-                                                        setDeleteExpense(
-                                                            expense,
-                                                        )
-                                                    }
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {expenses.data.length === 0 && (
-                                    <tr>
-                                        <td
-                                            colSpan={6}
-                                            className="px-4 py-8 text-center text-sm text-muted-foreground"
-                                        >
-                                            No expenses found.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                                        No expenses found.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
                 </div>
             </div>
 
@@ -421,15 +464,50 @@ return;
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="edit-date">Date</Label>
-                            <Input
-                                id="edit-date"
-                                name="date"
-                                type="date"
-                                value={editForm.data.date}
-                                onChange={(e) =>
-                                    editForm.setData('date', e.target.value)
-                                }
-                            />
+                            <DropdownMenu
+                                open={editDateOpen}
+                                onOpenChange={setEditDateOpen}
+                            >
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        className="w-full justify-start text-left font-normal"
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {editForm.data.date ? (
+                                            format(
+                                                new Date(editForm.data.date),
+                                                'PPP',
+                                            )
+                                        ) : (
+                                            <span>Pick a date</span>
+                                        )}
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    className="w-auto p-0"
+                                    align="start"
+                                >
+                                    <Calendar
+                                        mode="single"
+                                        selected={
+                                            editForm.data.date
+                                                ? new Date(editForm.data.date)
+                                                : undefined
+                                        }
+                                        onSelect={(date) => {
+                                            editForm.setData(
+                                                'date',
+                                                date
+                                                    ? format(date, 'yyyy-MM-dd')
+                                                    : '',
+                                            );
+                                            setEditDateOpen(false);
+                                        }}
+                                        initialFocus
+                                    />
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="edit-category">Category</Label>
@@ -471,10 +549,12 @@ return;
                     </div>
                     <DialogFooter>
                         <DialogClose asChild>
-                            <Button variant="outline" size={"lg"}>Cancel</Button>
+                            <Button variant="outline" size={'lg'}>
+                                Cancel
+                            </Button>
                         </DialogClose>
                         <Button
-                            size={"lg"}
+                            size={'lg'}
                             onClick={handleUpdate}
                             disabled={editForm.processing}
                         >

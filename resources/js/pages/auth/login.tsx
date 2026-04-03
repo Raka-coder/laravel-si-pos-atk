@@ -122,7 +122,6 @@ export default function Login({
 
                             <Button
                                 type="submit"
-                                className="mt-4 w-full"
                                 tabIndex={5}
                                 disabled={processing}
                                 data-test="login-button"

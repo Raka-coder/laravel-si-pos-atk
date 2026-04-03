@@ -193,11 +193,12 @@ export default function POSIndex() {
                     <div className="flex-1 overflow-y-auto">
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                             {filteredProducts.map((product) => (
-                                <button
+                                <Button
                                     key={product.id}
                                     onClick={() => handleAddToCart(product)}
                                     disabled={product.stock <= 0}
-                                    className="flex flex-col items-center justify-center rounded-lg border border-sidebar-border/70 bg-background p-3 transition-colors hover:bg-accent disabled:opacity-50"
+                                    variant="outline"
+                                    className="flex h-auto flex-col items-center justify-center rounded-lg border border-sidebar-border/70 bg-background p-3 transition-colors hover:bg-accent disabled:opacity-50"
                                 >
                                     <div className="mb-2 flex h-20 w-20 items-center justify-center overflow-hidden rounded-lg bg-muted">
                                         {product.image ? (
@@ -222,7 +223,7 @@ export default function POSIndex() {
                                             {product.category?.name ||
                                                 'No Category'}
                                         </div>
-                                        <div className="mt-1 text-lg font-bold text-primary">
+                                        <div className="mt-1 font-bold text-primary">
                                             {formatCurrency(product.sell_price)}
                                         </div>
                                         <div
@@ -232,7 +233,7 @@ export default function POSIndex() {
                                             {product.unit?.short_name}
                                         </div>
                                     </div>
-                                </button>
+                                </Button>
                             ))}
                         </div>
 

@@ -1,7 +1,23 @@
-import { usePage } from '@inertiajs/react';
-import { Head } from '@inertiajs/react';
-import { Download } from 'lucide-react';
+import { Head, usePage } from '@inertiajs/react';
+import { format } from 'date-fns';
+import { CalendarIcon, Download } from 'lucide-react';
+import * as React from 'react';
+
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import type { BreadcrumbItem } from '@/types';
 
 interface TransactionItem {
@@ -71,6 +87,29 @@ const formatDate = (date: string) => {
 export default function SalesReport() {
     const { transactions, summary, filters } = usePage<Props>().props;
 
+    const [startDate, setStartDate] = React.useState<Date | undefined>(
+        filters.start_date ? new Date(filters.start_date) : undefined,
+    );
+    const [endDate, setEndDate] = React.useState<Date | undefined>(
+        filters.end_date ? new Date(filters.end_date) : undefined,
+    );
+    const [startOpen, setStartOpen] = React.useState(false);
+    const [endOpen, setEndOpen] = React.useState(false);
+
+    const applyDateFilter = (start?: Date, end?: Date) => {
+        const url = new URL(window.location.href);
+
+        if (start) {
+            url.searchParams.set('start_date', format(start, 'yyyy-MM-dd'));
+        }
+
+        if (end) {
+            url.searchParams.set('end_date', format(end, 'yyyy-MM-dd'));
+        }
+
+        window.location.href = url.toString();
+    };
+
     return (
         <>
             <Head title="Sales Report" />
@@ -78,7 +117,7 @@ export default function SalesReport() {
             <div className="flex flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold">Sales Report</h1>
-                    <Button asChild size="lg">
+                    <Button asChild size="lg" variant={'default'}>
                         <a
                             href={`/reports/sales/export?start_date=${filters.start_date}&end_date=${filters.end_date}`}
                             target="_blank"
@@ -119,106 +158,136 @@ export default function SalesReport() {
                 <div className="flex items-center gap-4 rounded-xl border bg-card p-4">
                     <div className="flex items-center gap-2">
                         <label className="text-sm">From:</label>
-                        <input
-                            type="date"
-                            className="rounded-md border px-3 py-2 text-sm"
-                            defaultValue={filters.start_date}
-                            onChange={(e) => {
-                                const url = new URL(window.location.href);
-                                url.searchParams.set(
-                                    'start_date',
-                                    e.target.value,
-                                );
-                                window.location.href = url.toString();
-                            }}
-                        />
+                        <DropdownMenu
+                            open={startOpen}
+                            onOpenChange={setStartOpen}
+                        >
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    className="w-45 justify-start text-left font-normal"
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {startDate ? (
+                                        format(startDate, 'PPP')
+                                    ) : (
+                                        <span>Pick a date</span>
+                                    )}
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                                className="w-auto p-0"
+                                align="start"
+                            >
+                                <Calendar
+                                    mode="single"
+                                    selected={startDate}
+                                    onSelect={(date) => {
+                                        setStartDate(date);
+                                        setStartOpen(false);
+
+                                        if (date) {
+applyDateFilter(date, endDate);
+}
+                                    }}
+                                    initialFocus
+                                />
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                     <div className="flex items-center gap-2">
                         <label className="text-sm">To:</label>
-                        <input
-                            type="date"
-                            className="rounded-md border px-3 py-2 text-sm"
-                            defaultValue={filters.end_date}
-                            onChange={(e) => {
-                                const url = new URL(window.location.href);
-                                url.searchParams.set(
-                                    'end_date',
-                                    e.target.value,
-                                );
-                                window.location.href = url.toString();
-                            }}
-                        />
+                        <DropdownMenu open={endOpen} onOpenChange={setEndOpen}>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    className="w-45 justify-start text-left font-normal"
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {endDate ? (
+                                        format(endDate, 'PPP')
+                                    ) : (
+                                        <span>Pick a date</span>
+                                    )}
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                                className="w-auto p-0"
+                                align="start"
+                            >
+                                <Calendar
+                                    mode="single"
+                                    selected={endDate}
+                                    onSelect={(date) => {
+                                        setEndDate(date);
+                                        setEndOpen(false);
+
+                                        if (date) {
+                                            applyDateFilter(startDate, date);
+                                        }
+                                    }}
+                                    initialFocus
+                                />
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                 </div>
 
                 <div className="rounded-xl border border-sidebar-border/70 p-6">
-                    <div className="rounded-md border">
-                        <table className="w-full">
-                            <thead className="border-b bg-muted/50">
-                                <tr>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
-                                        Date
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
-                                        Receipt
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
-                                        Cashier
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
-                                        Payment
-                                    </th>
-                                    <th className="px-4 py-3 text-right text-sm font-medium">
-                                        Total
-                                    </th>
-                                    <th className="px-4 py-3 text-center text-sm font-medium">
-                                        Items
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y">
-                                {transactions.data.map((transaction) => (
-                                    <tr
-                                        key={transaction.id}
-                                        className="hover:bg-muted/50"
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Date</TableHead>
+                                <TableHead>Receipt</TableHead>
+                                <TableHead>Cashier</TableHead>
+                                <TableHead>Payment</TableHead>
+                                <TableHead className="text-right">
+                                    Total
+                                </TableHead>
+                                <TableHead className="text-center">
+                                    Items
+                                </TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {transactions.data.map((transaction) => (
+                                <TableRow key={transaction.id}>
+                                    <TableCell className="whitespace-nowrap">
+                                        {formatDate(transaction.created_at)}
+                                    </TableCell>
+                                    <TableCell className="font-mono">
+                                        {transaction.receipt_number}
+                                    </TableCell>
+                                    <TableCell>
+                                        {transaction.user.name}
+                                    </TableCell>
+                                    <TableCell>
+                                        <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none">
+                                            {transaction.payment_method}
+                                        </span>
+                                    </TableCell>
+                                    <TableCell className="text-right font-medium">
+                                        {formatCurrency(
+                                            transaction.total_price,
+                                        )}
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                        {transaction.items.length}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                            {transactions.data.length === 0 && (
+                                <TableRow>
+                                    <TableCell
+                                        colSpan={6}
+                                        className="h-24 text-center text-muted-foreground"
                                     >
-                                        <td className="px-4 py-3 text-sm whitespace-nowrap">
-                                            {formatDate(transaction.created_at)}
-                                        </td>
-                                        <td className="px-4 py-3 font-mono text-sm">
-                                            {transaction.receipt_number}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm">
-                                            {transaction.user.name}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm">
-                                            <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none">
-                                                {transaction.payment_method}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-3 text-right text-sm font-medium">
-                                            {formatCurrency(
-                                                transaction.total_price,
-                                            )}
-                                        </td>
-                                        <td className="px-4 py-3 text-center text-sm">
-                                            {transaction.items.length}
-                                        </td>
-                                    </tr>
-                                ))}
-                                {transactions.data.length === 0 && (
-                                    <tr>
-                                        <td
-                                            colSpan={6}
-                                            className="px-4 py-8 text-center text-sm text-muted-foreground"
-                                        >
-                                            No transactions found.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                                        No transactions found.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
                 </div>
 
                 {transactions.last_page > 1 && (

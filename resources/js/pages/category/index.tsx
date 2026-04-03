@@ -15,6 +15,14 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import type { BreadcrumbItem } from '@/types';
 
 interface Category {
@@ -148,33 +156,29 @@ export default function CategoryIndex() {
 
                 <div className="rounded-xl border border-sidebar-border/70 p-6">
                     <div className="rounded-md border">
-                        <table className="w-full">
-                            <thead className="border-b bg-muted/50">
-                                <tr>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
-                                        ID
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
-                                        Name
-                                    </th>
-                                    <th className="px-4 py-3 text-right text-sm font-medium">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>ID</TableHead>
+                                    <TableHead>Name</TableHead>
+                                    <TableHead className="text-right">
                                         Actions
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y">
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
                                 {categories.map((category) => (
-                                    <tr
+                                    <TableRow
                                         key={category.id}
                                         className="hover:bg-muted/50"
                                     >
-                                        <td className="px-4 py-3 text-sm">
+                                        <TableCell className="text-sm">
                                             {category.id}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm">
+                                        </TableCell>
+                                        <TableCell className="text-sm">
                                             {category.name}
-                                        </td>
-                                        <td className="px-4 py-3 text-right">
+                                        </TableCell>
+                                        <TableCell className="text-right">
                                             <div className="flex items-center justify-end gap-2">
                                                 <Button
                                                     variant="ghost"
@@ -197,22 +201,22 @@ export default function CategoryIndex() {
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
                                             </div>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 ))}
                                 {categories.length === 0 && (
-                                    <tr>
-                                        <td
+                                    <TableRow>
+                                        <TableCell
                                             colSpan={3}
-                                            className="px-4 py-8 text-center text-sm text-muted-foreground"
+                                            className="h-24 text-center text-muted-foreground"
                                         >
                                             No categories found. Create one to
                                             get started.
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 )}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
                     </div>
                 </div>
             </div>

@@ -15,6 +15,14 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import type { BreadcrumbItem } from '@/types';
 
 interface Unit {
@@ -172,39 +180,36 @@ export default function UnitIndex() {
 
                 <div className="rounded-xl border border-sidebar-border/70 p-6">
                     <div className="rounded-md border">
-                        <table className="w-full">
-                            <thead className="border-b bg-muted/50">
-                                <tr>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="text-left">
                                         ID
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
+                                    </TableHead>
+                                    <TableHead className="text-left">
                                         Name
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
+                                    </TableHead>
+                                    <TableHead className="text-left">
                                         Short Name
-                                    </th>
-                                    <th className="px-4 py-3 text-right text-sm font-medium">
+                                    </TableHead>
+                                    <TableHead className="text-right">
                                         Actions
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y">
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
                                 {units.map((unit) => (
-                                    <tr
-                                        key={unit.id}
-                                        className="hover:bg-muted/50"
-                                    >
-                                        <td className="px-4 py-3 text-sm">
+                                    <TableRow key={unit.id}>
+                                        <TableCell className="text-sm">
                                             {unit.id}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm">
+                                        </TableCell>
+                                        <TableCell className="text-sm">
                                             {unit.name}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm">
+                                        </TableCell>
+                                        <TableCell className="text-sm">
                                             {unit.short_name}
-                                        </td>
-                                        <td className="px-4 py-3 text-right">
+                                        </TableCell>
+                                        <TableCell className="text-right">
                                             <div className="flex items-center justify-end gap-2">
                                                 <Button
                                                     variant="ghost"
@@ -225,22 +230,22 @@ export default function UnitIndex() {
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
                                             </div>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 ))}
                                 {units.length === 0 && (
-                                    <tr>
-                                        <td
+                                    <TableRow>
+                                        <TableCell
                                             colSpan={4}
-                                            className="px-4 py-8 text-center text-sm text-muted-foreground"
+                                            className="h-24 text-center text-muted-foreground"
                                         >
                                             No units found. Create one to get
                                             started.
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 )}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
                     </div>
                 </div>
             </div>
@@ -343,5 +348,5 @@ UnitIndex.layout = {
             title: 'Units',
             href: '/units',
         },
-    ] as BreadcrumbItem[]
+    ] as BreadcrumbItem[],
 };

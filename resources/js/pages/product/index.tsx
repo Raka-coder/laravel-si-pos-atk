@@ -22,6 +22,14 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import type { BreadcrumbItem } from '@/types';
 
 interface Category {
@@ -493,146 +501,129 @@ export default function ProductIndex() {
                 </div>
 
                 <div className="rounded-xl border border-sidebar-border/70 p-6">
-                    <div className="rounded-md border">
-                        <table className="w-full">
-                            <thead className="border-b bg-muted/50">
-                                <tr>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
-                                        Image
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
-                                        Barcode
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
-                                        Name
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
-                                        Category
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
-                                        Unit
-                                    </th>
-                                    <th className="px-4 py-3 text-right text-sm font-medium">
-                                        Buy
-                                    </th>
-                                    <th className="px-4 py-3 text-right text-sm font-medium">
-                                        Sell
-                                    </th>
-                                    <th className="px-4 py-3 text-right text-sm font-medium">
-                                        Stock
-                                    </th>
-                                    <th className="px-4 py-3 text-center text-sm font-medium">
-                                        Status
-                                    </th>
-                                    <th className="px-4 py-3 text-right text-sm font-medium">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y">
-                                {products.map((product) => (
-                                    <tr
-                                        key={product.id}
-                                        className="hover:bg-muted/50"
-                                    >
-                                        <td className="px-4 py-3">
-                                            {product.image ? (
-                                                <img
-                                                    src={`/storage/${product.image}`}
-                                                    alt={product.name}
-                                                    className="h-12 w-12 rounded-lg object-cover"
-                                                />
-                                            ) : (
-                                                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted">
-                                                    <span className="text-xs text-muted-foreground">
-                                                        No Image
-                                                    </span>
-                                                </div>
-                                            )}
-                                        </td>
-                                        <td className="px-4 py-3 font-mono text-sm">
-                                            {product.barcode}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm">
-                                            {product.name}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm">
-                                            {product.category?.name || '-'}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm">
-                                            {product.unit?.short_name || '-'}
-                                        </td>
-                                        <td className="px-4 py-3 text-right text-sm">
-                                            {formatCurrency(product.buy_price)}
-                                        </td>
-                                        <td className="px-4 py-3 text-right text-sm">
-                                            {formatCurrency(product.sell_price)}
-                                        </td>
-                                        <td className="px-4 py-3 text-right text-sm">
-                                            <span
-                                                className={
-                                                    product.stock <
-                                                    product.min_stock
-                                                        ? 'font-medium text-red-500'
-                                                        : ''
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Image</TableHead>
+                                <TableHead>Barcode</TableHead>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Category</TableHead>
+                                <TableHead>Unit</TableHead>
+                                <TableHead className="text-right">
+                                    Buy
+                                </TableHead>
+                                <TableHead className="text-right">
+                                    Sell
+                                </TableHead>
+                                <TableHead className="text-right">
+                                    Stock
+                                </TableHead>
+                                <TableHead className="text-center">
+                                    Status
+                                </TableHead>
+                                <TableHead className="text-right">
+                                    Actions
+                                </TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {products.map((product) => (
+                                <TableRow key={product.id}>
+                                    <TableCell>
+                                        {product.image ? (
+                                            <img
+                                                src={`/storage/${product.image}`}
+                                                alt={product.name}
+                                                className="h-12 w-12 rounded-lg object-cover"
+                                            />
+                                        ) : (
+                                            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted">
+                                                <span className="text-xs text-muted-foreground">
+                                                    No Image
+                                                </span>
+                                            </div>
+                                        )}
+                                    </TableCell>
+                                    <TableCell className="font-mono text-sm">
+                                        {product.barcode}
+                                    </TableCell>
+                                    <TableCell className="text-sm">
+                                        {product.name}
+                                    </TableCell>
+                                    <TableCell className="text-sm">
+                                        {product.category?.name || '-'}
+                                    </TableCell>
+                                    <TableCell className="text-sm">
+                                        {product.unit?.short_name || '-'}
+                                    </TableCell>
+                                    <TableCell className="text-right text-sm">
+                                        {formatCurrency(product.buy_price)}
+                                    </TableCell>
+                                    <TableCell className="text-right text-sm">
+                                        {formatCurrency(product.sell_price)}
+                                    </TableCell>
+                                    <TableCell className="text-right text-sm">
+                                        <span
+                                            className={
+                                                product.stock <
+                                                product.min_stock
+                                                    ? 'font-medium text-red-500'
+                                                    : ''
+                                            }
+                                        >
+                                            {product.stock}
+                                        </span>
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                        <span
+                                            className={`inline-flex rounded-full px-2 text-xs leading-5 font-medium ${
+                                                product.is_active
+                                                    ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                                                    : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                                            }`}
+                                        >
+                                            {product.is_active
+                                                ? 'Active'
+                                                : 'Inactive'}
+                                        </span>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <div className="flex items-center justify-end gap-2">
+                                            <Button
+                                                variant="ghost"
+                                                size="lg"
+                                                onClick={() =>
+                                                    handleEdit(product)
                                                 }
                                             >
-                                                {product.stock}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-3 text-center">
-                                            <span
-                                                className={`inline-flex rounded-full px-2 text-xs leading-5 font-medium ${
-                                                    product.is_active
-                                                        ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
-                                                        : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
-                                                }`}
+                                                <Pencil className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="lg"
+                                                onClick={() =>
+                                                    setDeleteProduct(product)
+                                                }
                                             >
-                                                {product.is_active
-                                                    ? 'Active'
-                                                    : 'Inactive'}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-3 text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="lg"
-                                                    onClick={() =>
-                                                        handleEdit(product)
-                                                    }
-                                                >
-                                                    <Pencil className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="lg"
-                                                    onClick={() =>
-                                                        setDeleteProduct(
-                                                            product,
-                                                        )
-                                                    }
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {products.length === 0 && (
-                                    <tr>
-                                        <td
-                                            colSpan={10}
-                                            className="px-4 py-8 text-center text-sm text-muted-foreground"
-                                        >
-                                            No products found. Create one to get
-                                            started.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                            {products.length === 0 && (
+                                <TableRow>
+                                    <TableCell
+                                        colSpan={10}
+                                        className="h-24 text-center text-muted-foreground"
+                                    >
+                                        No products found. Create one to get
+                                        started.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
                 </div>
             </div>
 

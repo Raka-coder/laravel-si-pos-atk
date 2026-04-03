@@ -2,6 +2,14 @@ import { Head, usePage } from '@inertiajs/react';
 import { FileText, Printer, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import type { BreadcrumbItem } from '@/types';
 
 interface Transaction {
@@ -24,6 +32,7 @@ interface Transaction {
 }
 
 interface Props {
+    [key: string]: unknown;
     transactions: {
         data: Transaction[];
         current_page: number;
@@ -75,60 +84,55 @@ export default function TransactionIndex() {
                     </div>
 
                     <div className="rounded-md border">
-                        <table className="w-full">
-                            <thead className="border-b bg-muted/50">
-                                <tr>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="text-left">
                                         Receipt No
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
+                                    </TableHead>
+                                    <TableHead className="text-left">
                                         Date
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
+                                    </TableHead>
+                                    <TableHead className="text-left">
                                         Kasir
-                                    </th>
-                                    <th className="px-4 py-3 text-right text-sm font-medium">
+                                    </TableHead>
+                                    <TableHead className="text-right">
                                         Total
-                                    </th>
-                                    <th className="px-4 py-3 text-center text-sm font-medium">
+                                    </TableHead>
+                                    <TableHead className="text-center">
                                         Payment
-                                    </th>
-                                    <th className="px-4 py-3 text-center text-sm font-medium">
+                                    </TableHead>
+                                    <TableHead className="text-center">
                                         Status
-                                    </th>
-                                    <th className="px-4 py-3 text-right text-sm font-medium">
+                                    </TableHead>
+                                    <TableHead className="text-right">
                                         Actions
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y">
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
                                 {transactions.data.map((transaction) => (
-                                    <tr
-                                        key={transaction.id}
-                                        className="hover:bg-muted/50"
-                                    >
-                                        <td className="px-4 py-3 font-mono text-sm">
+                                    <TableRow key={transaction.id}>
+                                        <TableCell className="font-mono">
                                             {transaction.receipt_number}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm">
+                                        </TableCell>
+                                        <TableCell>
                                             {formatDate(
                                                 transaction.transaction_date,
                                             )}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm">
+                                        </TableCell>
+                                        <TableCell>
                                             {transaction.user.name}
-                                        </td>
-                                        <td className="px-4 py-3 text-right text-sm font-medium">
+                                        </TableCell>
+                                        <TableCell className="text-right font-medium">
                                             {formatCurrency(
                                                 transaction.total_price,
                                             )}
-                                        </td>
-                                        <td className="px-4 py-3 text-center text-sm">
-                                            <span className="capitalize">
-                                                {transaction.payment_method}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-3 text-center">
+                                        </TableCell>
+                                        <TableCell className="text-center capitalize">
+                                            {transaction.payment_method}
+                                        </TableCell>
+                                        <TableCell className="text-center">
                                             <span
                                                 className={`inline-flex rounded-full px-2 text-xs leading-5 font-medium ${
                                                     transaction.payment_status ===
@@ -142,12 +146,12 @@ export default function TransactionIndex() {
                                             >
                                                 {transaction.payment_status}
                                             </span>
-                                        </td>
-                                        <td className="px-4 py-3 text-right">
+                                        </TableCell>
+                                        <TableCell className="text-right">
                                             <div className="flex items-center justify-end gap-2">
                                                 <Button
                                                     variant="ghost"
-                                                    size="icon"
+                                                    size="lg"
                                                     asChild
                                                 >
                                                     <a
@@ -158,7 +162,7 @@ export default function TransactionIndex() {
                                                 </Button>
                                                 <Button
                                                     variant="ghost"
-                                                    size="icon"
+                                                    size="lg"
                                                     asChild
                                                 >
                                                     <a
@@ -169,21 +173,21 @@ export default function TransactionIndex() {
                                                     </a>
                                                 </Button>
                                             </div>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 ))}
                                 {transactions.data.length === 0 && (
-                                    <tr>
-                                        <td
+                                    <TableRow>
+                                        <TableCell
                                             colSpan={7}
-                                            className="px-4 py-8 text-center text-sm text-muted-foreground"
+                                            className="h-24 text-center text-muted-foreground"
                                         >
                                             Tidak ada transaksi ditemukan
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 )}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
                     </div>
 
                     {/* Pagination */}
@@ -200,7 +204,7 @@ export default function TransactionIndex() {
                                             ? 'default'
                                             : 'outline'
                                     }
-                                    size="sm"
+                                    size="lg"
                                 >
                                     {page}
                                 </Button>
@@ -219,5 +223,5 @@ TransactionIndex.layout = {
             title: 'Transactions',
             href: '/transactions',
         },
-    ],
-} satisfies BreadcrumbItem[];
+    ] as BreadcrumbItem[]
+};

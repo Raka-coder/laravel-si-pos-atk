@@ -23,6 +23,14 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import type { BreadcrumbItem } from '@/types';
 
 interface User {
@@ -156,8 +164,7 @@ export default function UserIndex() {
                     <h1 className="text-2xl font-bold">User Management</h1>
                     <Dialog open={isOpen} onOpenChange={setIsOpen}>
                         <DialogTrigger asChild>
-                            <Button
-                             size={"lg"}>
+                            <Button size={'lg'}>
                                 <Plus className="mr-2 h-4 w-4" />
                                 Add User
                             </Button>
@@ -290,10 +297,12 @@ export default function UserIndex() {
                             </div>
                             <DialogFooter>
                                 <DialogClose asChild>
-                                    <Button variant="outline" size={"lg"}>Cancel</Button>
+                                    <Button variant="outline" size={'lg'}>
+                                        Cancel
+                                    </Button>
                                 </DialogClose>
                                 <Button
-                                    size={"lg"}
+                                    size={'lg'}
                                     onClick={handleCreate}
                                     disabled={createForm.processing}
                                 >
@@ -308,52 +317,43 @@ export default function UserIndex() {
 
                 <div className="rounded-xl border border-sidebar-border/70 p-6">
                     <div className="rounded-md border">
-                        <table className="w-full">
-                            <thead className="border-b bg-muted/50">
-                                <tr>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="text-left">
                                         ID
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
+                                    </TableHead>
+                                    <TableHead className="text-left">
                                         Name
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
+                                    </TableHead>
+                                    <TableHead className="text-left">
                                         Email
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
+                                    </TableHead>
+                                    <TableHead className="text-left">
                                         Role
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
+                                    </TableHead>
+                                    <TableHead className="text-left">
                                         Status
-                                    </th>
-                                    <th className="px-4 py-3 text-right text-sm font-medium">
+                                    </TableHead>
+                                    <TableHead className="text-right">
                                         Actions
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y">
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
                                 {users.map((user) => (
-                                    <tr
-                                        key={user.id}
-                                        className="hover:bg-muted/50"
-                                    >
-                                        <td className="px-4 py-3 text-sm">
-                                            {user.id}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm">
-                                            {user.name}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm">
-                                            {user.email}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm">
+                                    <TableRow key={user.id}>
+                                        <TableCell>{user.id}</TableCell>
+                                        <TableCell>{user.name}</TableCell>
+                                        <TableCell>{user.email}</TableCell>
+                                        <TableCell>
                                             <span
                                                 className={`capitalize ${user.role === 'owner' ? 'font-semibold text-blue-600' : ''}`}
                                             >
                                                 {user.role}
                                             </span>
-                                        </td>
-                                        <td className="px-4 py-3 text-sm">
+                                        </TableCell>
+                                        <TableCell>
                                             <span
                                                 className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                                                     user.is_active
@@ -365,12 +365,12 @@ export default function UserIndex() {
                                                     ? 'Active'
                                                     : 'Non-active'}
                                             </span>
-                                        </td>
-                                        <td className="px-4 py-3 text-right">
+                                        </TableCell>
+                                        <TableCell className="text-right">
                                             <div className="flex items-center justify-end gap-2">
                                                 <Button
                                                     variant="ghost"
-                                                    size="icon"
+                                                    size="lg"
                                                     onClick={() =>
                                                         handleEdit(user)
                                                     }
@@ -380,7 +380,7 @@ export default function UserIndex() {
                                                 </Button>
                                                 <Button
                                                     variant="ghost"
-                                                    size="icon"
+                                                    size="lg"
                                                     onClick={() =>
                                                         setResetPasswordUser(
                                                             user,
@@ -392,7 +392,7 @@ export default function UserIndex() {
                                                 </Button>
                                                 <Button
                                                     variant="ghost"
-                                                    size="icon"
+                                                    size="lg"
                                                     onClick={() =>
                                                         handleToggleActive(user)
                                                     }
@@ -410,7 +410,7 @@ export default function UserIndex() {
                                                 </Button>
                                                 <Button
                                                     variant="ghost"
-                                                    size="icon"
+                                                    size="lg"
                                                     onClick={() =>
                                                         setDeleteUser(user)
                                                     }
@@ -419,22 +419,22 @@ export default function UserIndex() {
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
                                             </div>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 ))}
                                 {users.length === 0 && (
-                                    <tr>
-                                        <td
+                                    <TableRow>
+                                        <TableCell
                                             colSpan={6}
-                                            className="px-4 py-8 text-center text-sm text-muted-foreground"
+                                            className="h-24 text-center text-muted-foreground"
                                         >
                                             No user found. Create one to get
                                             started.
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 )}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
                     </div>
                 </div>
             </div>

@@ -139,6 +139,8 @@ export default function Security({
 
                             <div className="flex items-center gap-4">
                                 <Button
+                                    size={"lg"}
+                                    variant={"default"}
                                     disabled={processing}
                                     data-test="update-password-button"
                                 >

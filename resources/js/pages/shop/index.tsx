@@ -1,4 +1,3 @@
-import { Textarea } from '@headlessui/react';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { Trash2, Upload } from 'lucide-react';
 import { useState } from 'react';
@@ -13,6 +12,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Textarea as TextareaComponent } from '@/components/ui/textarea';
 import type { BreadcrumbItem } from '@/types';
 
 interface ShopSettings {
@@ -104,7 +104,11 @@ export default function ShopSettingsPage() {
             <div className="flex flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-4">
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold">Shop Settings</h1>
-                    <Button onClick={handleSubmit} disabled={form.processing}>
+                    <Button
+                        onClick={handleSubmit}
+                        disabled={form.processing}
+                        size={'lg'}
+                    >
                         {form.processing ? 'Saving...' : 'Save Changes'}
                     </Button>
                 </div>
@@ -132,14 +136,14 @@ export default function ShopSettingsPage() {
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="address">Address</Label>
-                                <textarea
+                                <TextareaComponent
                                     id="address"
-                                    className="min-h-20 rounded-md border px-3 py-2 text-sm"
                                     value={form.data.address}
                                     onChange={(e) =>
                                         form.setData('address', e.target.value)
                                     }
                                     placeholder="Jl. example No. 123"
+                                    className="min-h-20"
                                 />
                             </div>
                             <div className="grid gap-2">
@@ -181,8 +185,10 @@ export default function ShopSettingsPage() {
                                                 alt="Logo preview"
                                                 className="h-16 w-16 rounded-lg border object-cover"
                                             />
-                                            <button
+                                            <Button
                                                 type="button"
+                                                variant="destructive"
+                                                size="icon-xs"
                                                 onClick={() => {
                                                     form.setData(
                                                         'remove_logo',
@@ -190,18 +196,29 @@ export default function ShopSettingsPage() {
                                                     );
                                                     setLogoPreview(null);
                                                 }}
-                                                className="absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
+                                                className="absolute -top-2 -right-2 rounded-full"
                                             >
                                                 <Trash2 className="h-3 w-3" />
-                                            </button>
+                                            </Button>
                                         </div>
                                     )}
                                     <label
                                         htmlFor="logo-upload"
-                                        className="flex cursor-pointer items-center gap-2 rounded-md border px-4 py-2 text-sm hover:bg-muted"
+                                        className="flex cursor-pointer items-center gap-2"
                                     >
-                                        <Upload className="h-4 w-4" />
-                                        {logoPreview ? 'Change' : 'Upload'}
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="lg"
+                                            asChild
+                                        >
+                                            <span>
+                                                <Upload className="h-4 w-4" />
+                                                {logoPreview
+                                                    ? 'Change'
+                                                    : 'Upload'}
+                                            </span>
+                                        </Button>
                                     </label>
                                     <Input
                                         id="logo-upload"
@@ -226,8 +243,10 @@ export default function ShopSettingsPage() {
                                                 alt="QRIS preview"
                                                 className="h-16 w-16 rounded-lg border object-cover"
                                             />
-                                            <button
+                                            <Button
                                                 type="button"
+                                                variant="destructive"
+                                                size="icon-xs"
                                                 onClick={() => {
                                                     form.setData(
                                                         'remove_qris',
@@ -235,18 +254,29 @@ export default function ShopSettingsPage() {
                                                     );
                                                     setQrisPreview(null);
                                                 }}
-                                                className="absolute -top-2 -right-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600"
+                                                className="absolute -top-2 -right-2 rounded-full"
                                             >
                                                 <Trash2 className="h-3 w-3" />
-                                            </button>
+                                            </Button>
                                         </div>
                                     )}
                                     <label
                                         htmlFor="qris-upload"
-                                        className="flex cursor-pointer items-center gap-2 rounded-md border px-4 py-2 text-sm hover:bg-muted"
+                                        className="flex cursor-pointer items-center gap-2"
                                     >
-                                        <Upload className="h-4 w-4" />
-                                        {qrisPreview ? 'Change' : 'Upload'}
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="lg"
+                                            asChild
+                                        >
+                                            <span>
+                                                <Upload className="h-4 w-4" />
+                                                {qrisPreview
+                                                    ? 'Change'
+                                                    : 'Upload'}
+                                            </span>
+                                        </Button>
                                     </label>
                                     <Input
                                         id="qris-upload"
@@ -337,9 +367,9 @@ export default function ShopSettingsPage() {
                                 <Label htmlFor="receipt_footer">
                                     Receipt Footer Text
                                 </Label>
-                                <Textarea
+                                <TextareaComponent
                                     id="receipt_footer"
-                                    className="min-h-20 rounded-md border px-3 py-2 text-sm"
+                                    className="min-h-20"
                                     value={form.data.receipt_footer}
                                     onChange={(e) =>
                                         form.setData(

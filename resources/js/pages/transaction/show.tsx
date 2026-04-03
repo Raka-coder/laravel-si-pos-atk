@@ -1,7 +1,6 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { Pencil, Printer } from 'lucide-react';
 import { useState } from 'react';
-import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {

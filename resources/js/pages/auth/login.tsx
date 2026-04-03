@@ -126,6 +126,7 @@ export default function Login({
                                 tabIndex={5}
                                 disabled={processing}
                                 data-test="login-button"
+                                size={"lg"}
                             >
                                 {processing && <Spinner />}
                                 Log in

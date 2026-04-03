@@ -204,7 +204,7 @@ export default function ProductIndex() {
                     <h1 className="text-2xl font-bold">Products</h1>
                     <Dialog open={isOpen} onOpenChange={setIsOpen}>
                         <DialogTrigger asChild>
-                            <Button>
+                            <Button size="lg">
                                 <Plus className="mr-2 h-4 w-4" />
                                 Add Product
                             </Button>
@@ -474,9 +474,12 @@ export default function ProductIndex() {
                             </div>
                             <DialogFooter>
                                 <DialogClose asChild>
-                                    <Button variant="outline">Cancel</Button>
+                                    <Button variant="outline" size="lg">
+                                        Cancel
+                                    </Button>
                                 </DialogClose>
                                 <Button
+                                    size="lg"
                                     onClick={handleCreate}
                                     disabled={createForm.processing}
                                 >
@@ -594,7 +597,7 @@ export default function ProductIndex() {
                                             <div className="flex items-center justify-end gap-2">
                                                 <Button
                                                     variant="ghost"
-                                                    size="icon"
+                                                    size="lg"
                                                     onClick={() =>
                                                         handleEdit(product)
                                                     }
@@ -603,7 +606,7 @@ export default function ProductIndex() {
                                                 </Button>
                                                 <Button
                                                     variant="ghost"
-                                                    size="icon"
+                                                    size="lg"
                                                     onClick={() =>
                                                         setDeleteProduct(
                                                             product,
@@ -853,9 +856,12 @@ export default function ProductIndex() {
                     </div>
                     <DialogFooter>
                         <DialogClose asChild>
-                            <Button variant="outline">Cancel</Button>
+                            <Button variant="outline" size="lg">
+                                Cancel
+                            </Button>
                         </DialogClose>
                         <Button
+                            size="lg"
                             onClick={handleUpdate}
                             disabled={editForm.processing}
                         >
@@ -881,10 +887,13 @@ export default function ProductIndex() {
                     </DialogHeader>
                     <DialogFooter>
                         <DialogClose asChild>
-                            <Button variant="outline">Cancel</Button>
+                            <Button variant="outline" size="lg">
+                                Cancel
+                            </Button>
                         </DialogClose>
                         <Button
                             variant="destructive"
+                            size="lg"
                             onClick={handleDelete}
                             disabled={deleteForm.processing}
                         >

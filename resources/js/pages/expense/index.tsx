@@ -161,7 +161,7 @@ return;
                     <h1 className="text-2xl font-bold">Expenses</h1>
                     <Dialog open={isOpen} onOpenChange={setIsOpen}>
                         <DialogTrigger asChild>
-                            <Button>
+                            <Button size={"lg"}>
                                 <Plus className="mr-2 h-4 w-4" />
                                 Add Expense
                             </Button>
@@ -277,9 +277,10 @@ return;
                             </div>
                             <DialogFooter>
                                 <DialogClose asChild>
-                                    <Button variant="outline">Cancel</Button>
+                                    <Button variant="outline" size={"lg"}>Cancel</Button>
                                 </DialogClose>
                                 <Button
+                                    size={"lg"}
                                     onClick={handleCreate}
                                     disabled={createForm.processing}
                                 >
@@ -470,9 +471,10 @@ return;
                     </div>
                     <DialogFooter>
                         <DialogClose asChild>
-                            <Button variant="outline">Cancel</Button>
+                            <Button variant="outline" size={"lg"}>Cancel</Button>
                         </DialogClose>
                         <Button
+                            size={"lg"}
                             onClick={handleUpdate}
                             disabled={editForm.processing}
                         >

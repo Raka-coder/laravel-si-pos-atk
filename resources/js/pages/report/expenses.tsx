@@ -1,6 +1,7 @@
 import { usePage } from '@inertiajs/react';
 import { Head } from '@inertiajs/react';
 import { Download } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import type { BreadcrumbItem } from '@/types';
 
 interface ExpenseCategory {
@@ -71,14 +72,15 @@ export default function ExpensesReport() {
             <div className="flex flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold">Expenses Report</h1>
-                    <a
-                        href={`/reports/expenses/export?start_date=${filters.start_date}&end_date=${filters.end_date}`}
-                        target="_blank"
-                        className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-                    >
-                        <Download className="h-4 w-4" />
-                        Export Excel
-                    </a>
+                    <Button asChild size="lg">
+                        <a
+                            href={`/reports/expenses/export?start_date=${filters.start_date}&end_date=${filters.end_date}`}
+                            target="_blank"
+                        >
+                            <Download className="h-4 w-4" />
+                            Export Excel
+                        </a>
+                    </Button>
                 </div>
 
                 <div className="rounded-xl border bg-card p-6">

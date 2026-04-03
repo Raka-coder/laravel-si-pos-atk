@@ -166,6 +166,7 @@ export default function POSIndex() {
                                     ? 'default'
                                     : 'outline'
                             }
+                            size="lg"
                             onClick={() => setSelectedCategory(null)}
                         >
                             All
@@ -178,6 +179,7 @@ export default function POSIndex() {
                                         ? 'default'
                                         : 'outline'
                                 }
+                                size="lg"
                                 onClick={() =>
                                     setSelectedCategory(category?.id)
                                 }
@@ -281,7 +283,7 @@ export default function POSIndex() {
                                             </div>
                                             <Button
                                                 variant="ghost"
-                                                size="icon"
+                                                size="lg"
                                                 className="h-6 w-6"
                                                 onClick={() =>
                                                     removeItem(item.product.id)
@@ -294,7 +296,7 @@ export default function POSIndex() {
                                             <div className="flex items-center gap-1">
                                                 <Button
                                                     variant="outline"
-                                                    size="icon"
+                                                    size="lg"
                                                     className="h-7 w-7"
                                                     onClick={() =>
                                                         decrementQuantity(
@@ -309,7 +311,7 @@ export default function POSIndex() {
                                                 </span>
                                                 <Button
                                                     variant="outline"
-                                                    size="icon"
+                                                    size="lg"
                                                     className="h-7 w-7"
                                                     onClick={() =>
                                                         incrementQuantity(
@@ -350,6 +352,7 @@ export default function POSIndex() {
                         <div className="mt-4 flex gap-2">
                             <Button
                                 variant="outline"
+                                size="lg"
                                 className="flex-1"
                                 onClick={handleClearCart}
                                 disabled={items.length === 0}
@@ -358,6 +361,7 @@ export default function POSIndex() {
                                 Clear
                             </Button>
                             <Button
+                                size="lg"
                                 className="flex-1"
                                 onClick={handleCheckout}
                                 disabled={items.length === 0}
@@ -415,11 +419,13 @@ export default function POSIndex() {
                     <DialogFooter>
                         <Button
                             variant="outline"
+                            size="lg"
                             onClick={() => setIsPaymentOpen(false)}
                         >
                             Batal
                         </Button>
                         <Button
+                            size="lg"
                             onClick={handleProcessPayment}
                             disabled={
                                 isProcessing || parseFloat(amountPaid) < total

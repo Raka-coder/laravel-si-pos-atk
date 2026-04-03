@@ -62,8 +62,8 @@ export default function CategoryIndex() {
 
     const handleUpdate = () => {
         if (!editCategory) {
-return;
-}
+            return;
+        }
 
         editForm.patch(`/categories/${editCategory.id}`, {
             onSuccess: () => {
@@ -75,8 +75,8 @@ return;
 
     const handleDelete = () => {
         if (!deleteCategory) {
-return;
-}
+            return;
+        }
 
         deleteForm.delete(`/categories/${deleteCategory.id}`, {
             onSuccess: () => {
@@ -94,7 +94,7 @@ return;
                     <h1 className="text-2xl font-bold">Categories</h1>
                     <Dialog open={isOpen} onOpenChange={setIsOpen}>
                         <DialogTrigger asChild>
-                            <Button>
+                            <Button size="lg">
                                 <Plus className="mr-2 h-4 w-4" />
                                 Add Category
                             </Button>
@@ -128,9 +128,12 @@ return;
                             </div>
                             <DialogFooter>
                                 <DialogClose asChild>
-                                    <Button variant="outline">Cancel</Button>
+                                    <Button variant="outline" size="lg">
+                                        Cancel
+                                    </Button>
                                 </DialogClose>
                                 <Button
+                                    size="lg"
                                     onClick={handleCreate}
                                     disabled={createForm.processing}
                                 >
@@ -175,7 +178,7 @@ return;
                                             <div className="flex items-center justify-end gap-2">
                                                 <Button
                                                     variant="ghost"
-                                                    size="icon"
+                                                    size="lg"
                                                     onClick={() =>
                                                         handleEdit(category)
                                                     }
@@ -184,7 +187,7 @@ return;
                                                 </Button>
                                                 <Button
                                                     variant="ghost"
-                                                    size="icon"
+                                                    size="lg"
                                                     onClick={() =>
                                                         setDeleteCategory(
                                                             category,
@@ -242,9 +245,12 @@ return;
                     </div>
                     <DialogFooter>
                         <DialogClose asChild>
-                            <Button variant="outline">Cancel</Button>
+                            <Button variant="outline" size="lg">
+                                Cancel
+                            </Button>
                         </DialogClose>
                         <Button
+                            size="lg"
                             onClick={handleUpdate}
                             disabled={editForm.processing}
                         >
@@ -270,10 +276,13 @@ return;
                     </DialogHeader>
                     <DialogFooter>
                         <DialogClose asChild>
-                            <Button variant="outline">Cancel</Button>
+                            <Button variant="outline" size="lg">
+                                Cancel
+                            </Button>
                         </DialogClose>
                         <Button
                             variant="destructive"
+                            size="lg"
                             onClick={handleDelete}
                             disabled={deleteForm.processing}
                         >

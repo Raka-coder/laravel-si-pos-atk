@@ -6,6 +6,7 @@ import {
     TrendingUp,
     Wallet,
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { dashboard } from '@/routes';
 import type { BreadcrumbItem } from '@/types';
@@ -103,26 +104,21 @@ export default function Dashboard() {
                             </CardHeader>
                             <CardContent>
                                 <div className="flex flex-wrap gap-2">
-                                    <a
-                                        href="/pos"
-                                        className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-                                    >
-                                        <TrendingUp className="mr-2 h-4 w-4" />
-                                        Open POS
-                                    </a>
-                                    <a
-                                        href="/transactions"
-                                        className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
-                                    >
-                                        <Wallet className="mr-2 h-4 w-4" />
-                                        Transactions
-                                    </a>
-                                    <a
-                                        href="/reports/sales"
-                                        className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
-                                    >
-                                        Reports
-                                    </a>
+                                    <Button asChild size="lg">
+                                        <a href="/pos">
+                                            <TrendingUp className="mr-2 h-4 w-4" />
+                                            Open POS
+                                        </a>
+                                    </Button>
+                                    <Button asChild variant="outline" size="lg">
+                                        <a href="/transactions">
+                                            <Wallet className="mr-2 h-4 w-4" />
+                                            Transactions
+                                        </a>
+                                    </Button>
+                                    <Button asChild variant="outline" size="lg">
+                                        <a href="/reports/sales">Reports</a>
+                                    </Button>
                                 </div>
                             </CardContent>
                         </Card>
@@ -290,33 +286,41 @@ export default function Dashboard() {
                                 </CardHeader>
                                 <CardContent>
                                     <div className="flex flex-wrap gap-2">
-                                        <a
-                                            href="/pos"
-                                            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                                        <Button asChild size="lg">
+                                            <a href="/pos">
+                                                <TrendingUp className="mr-2 h-4 w-4" />
+                                                Open POS
+                                            </a>
+                                        </Button>
+                                        <Button
+                                            asChild
+                                            variant="outline"
+                                            size="lg"
                                         >
-                                            <TrendingUp className="mr-2 h-4 w-4" />
-                                            Open POS
-                                        </a>
-                                        <a
-                                            href="/products"
-                                            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+                                            <a href="/products">
+                                                <Package className="mr-2 h-4 w-4" />
+                                                Products
+                                            </a>
+                                        </Button>
+                                        <Button
+                                            asChild
+                                            variant="outline"
+                                            size="lg"
                                         >
-                                            <Package className="mr-2 h-4 w-4" />
-                                            Products
-                                        </a>
-                                        <a
-                                            href="/stock-movements"
-                                            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+                                            <a href="/stock-movements">
+                                                Stock Movements
+                                            </a>
+                                        </Button>
+                                        <Button
+                                            asChild
+                                            variant="outline"
+                                            size="lg"
                                         >
-                                            Stock Movements
-                                        </a>
-                                        <a
-                                            href="/transactions"
-                                            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
-                                        >
-                                            <Wallet className="mr-2 h-4 w-4" />
-                                            Transactions
-                                        </a>
+                                            <a href="/transactions">
+                                                <Wallet className="mr-2 h-4 w-4" />
+                                                Transactions
+                                            </a>
+                                        </Button>
                                     </div>
                                 </CardContent>
                             </Card>

@@ -144,7 +144,7 @@ export default function StockMovementIndex() {
                     <h1 className="text-2xl font-bold">Stock Movements</h1>
                     <Dialog open={isOpen} onOpenChange={setIsOpen}>
                         <DialogTrigger asChild>
-                            <Button>
+                            <Button size="lg">
                                 <Plus className="mr-2 h-4 w-4" />
                                 Add Movement
                             </Button>
@@ -259,9 +259,12 @@ export default function StockMovementIndex() {
                             </div>
                             <DialogFooter>
                                 <DialogClose asChild>
-                                    <Button variant="outline">Cancel</Button>
+                                    <Button variant="outline" size="lg">
+                                        Cancel
+                                    </Button>
                                 </DialogClose>
                                 <Button
+                                    size="lg"
                                     onClick={handleCreate}
                                     disabled={createForm.processing}
                                 >
@@ -386,5 +389,5 @@ StockMovementIndex.layout = {
             title: 'Stock Movements',
             href: '/stock-movements',
         },
-    ] as BreadcrumbItem[]
+    ] as BreadcrumbItem[],
 };

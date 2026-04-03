@@ -10,6 +10,12 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 import type { BreadcrumbItem } from '@/types';
 
 interface Transaction {
@@ -149,29 +155,49 @@ export default function TransactionIndex() {
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex items-center justify-end gap-2">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="lg"
-                                                    asChild
-                                                >
-                                                    <a
-                                                        href={`/transactions/${transaction.id}`}
-                                                    >
-                                                        <FileText className="h-4 w-4" />
-                                                    </a>
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="lg"
-                                                    asChild
-                                                >
-                                                    <a
-                                                        href={`/transactions/receipt/${transaction.id}`}
-                                                        target="_blank"
-                                                    >
-                                                        <Printer className="h-4 w-4" />
-                                                    </a>
-                                                </Button>
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="lg"
+                                                                asChild
+                                                            >
+                                                                <a
+                                                                    href={`/transactions/${transaction.id}`}
+                                                                >
+                                                                    <FileText className="h-4 w-4" />
+                                                                </a>
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>
+                                                                Detail Transaksi
+                                                            </p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="lg"
+                                                                asChild
+                                                            >
+                                                                <a
+                                                                    href={`/transactions/receipt/${transaction.id}`}
+                                                                    target="_blank"
+                                                                >
+                                                                    <Printer className="h-4 w-4" />
+                                                                </a>
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>Cetak Struk</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
                                             </div>
                                         </TableCell>
                                     </TableRow>
@@ -223,5 +249,5 @@ TransactionIndex.layout = {
             title: 'Transactions',
             href: '/transactions',
         },
-    ] as BreadcrumbItem[]
+    ] as BreadcrumbItem[],
 };

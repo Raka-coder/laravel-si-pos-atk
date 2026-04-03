@@ -14,6 +14,13 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import type { BreadcrumbItem } from '@/types';
 
 interface Product {
@@ -198,8 +205,8 @@ export default function TransactionShow() {
 
     const handleRemoveItem = (index: number) => {
         if (editForm.data.items.length <= 1) {
-return;
-}
+            return;
+        }
 
         const newItems = editForm.data.items.filter((_, i) => i !== index);
         const totals = calculateTotals(newItems);
@@ -243,12 +250,12 @@ return;
                                 onOpenChange={setIsEditOpen}
                             >
                                 <DialogTrigger asChild>
-                                    <Button>
+                                    <Button variant={'default'} size={'lg'}>
                                         <Pencil className="mr-2 h-4 w-4" />
                                         Edit
                                     </Button>
                                 </DialogTrigger>
-                                <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+                                <DialogContent className="max-h-[90vh] max-w-6xl overflow-y-auto sm:max-w-6xl">
                                     <DialogHeader>
                                         <DialogTitle>
                                             Edit Transaction
@@ -259,79 +266,81 @@ return;
                                         </DialogDescription>
                                     </DialogHeader>
 
-                                    <div className="space-y-4 py-4">
-                                        <div className="rounded-md border">
-                                            <table className="w-full">
+                                    <div className="space-y-6 py-4">
+                                        <div className="overflow-x-auto rounded-md border">
+                                            <table className="w-full min-w-150">
                                                 <thead className="border-b bg-muted/50">
                                                     <tr>
-                                                        <th className="px-2 py-2 text-left text-xs font-medium">
+                                                        <th className="px-4 py-3 text-left text-sm font-medium">
                                                             Product
                                                         </th>
-                                                        <th className="px-2 py-2 text-right text-xs font-medium">
+                                                        <th className="px-4 py-3 text-right text-sm font-medium">
                                                             Price
                                                         </th>
-                                                        <th className="px-2 py-2 text-center text-xs font-medium">
+                                                        <th className="px-4 py-3 text-center text-sm font-medium">
                                                             Qty
                                                         </th>
-                                                        <th className="px-2 py-2 text-right text-xs font-medium">
+                                                        <th className="px-4 py-3 text-right text-sm font-medium">
                                                             Discount
                                                         </th>
-                                                        <th className="px-2 py-2 text-right text-xs font-medium">
+                                                        <th className="px-4 py-3 text-right text-sm font-medium">
                                                             Subtotal
                                                         </th>
-                                                        <th className="w-10 px-2 py-2"></th>
+                                                        <th className="w-12 px-4 py-3"></th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y">
                                                     {editForm.data.items.map(
                                                         (item, index) => (
                                                             <tr key={index}>
-                                                                <td className="px-2 py-2">
-                                                                    <select
-                                                                        className="w-full rounded border px-2 py-1 text-sm"
+                                                                <td className="px-4 py-3">
+                                                                    <Select
                                                                         value={
-                                                                            item.product_id ||
-                                                                            ''
+                                                                            item.product_id
+                                                                                ? String(
+                                                                                      item.product_id,
+                                                                                  )
+                                                                                : ''
                                                                         }
-                                                                        onChange={(
-                                                                            e,
+                                                                        onValueChange={(
+                                                                            value,
                                                                         ) =>
                                                                             handleItemChange(
                                                                                 index,
                                                                                 'product_id',
-                                                                                e
-                                                                                    .target
-                                                                                    .value,
+                                                                                value,
                                                                             )
                                                                         }
                                                                     >
-                                                                        <option value="">
-                                                                            Select...
-                                                                        </option>
-                                                                        {products.map(
-                                                                            (
-                                                                                p,
-                                                                            ) => (
-                                                                                <option
-                                                                                    key={
-                                                                                        p.id
-                                                                                    }
-                                                                                    value={
-                                                                                        p.id
-                                                                                    }
-                                                                                >
-                                                                                    {
-                                                                                        p.name
-                                                                                    }
-                                                                                </option>
-                                                                            ),
-                                                                        )}
-                                                                    </select>
+                                                                        <SelectTrigger>
+                                                                            <SelectValue placeholder="Select product..." />
+                                                                        </SelectTrigger>
+                                                                        <SelectContent>
+                                                                            {products.map(
+                                                                                (
+                                                                                    p,
+                                                                                ) => (
+                                                                                    <SelectItem
+                                                                                        key={
+                                                                                            p.id
+                                                                                        }
+                                                                                        value={String(
+                                                                                            p.id,
+                                                                                        )}
+                                                                                    >
+                                                                                        {
+                                                                                            p.name
+                                                                                        }
+                                                                                    </SelectItem>
+                                                                                ),
+                                                                            )}
+                                                                        </SelectContent>
+                                                                    </Select>
                                                                 </td>
-                                                                <td className="px-2 py-2">
+                                                                <td className="px-4 py-3">
                                                                     <Input
                                                                         type="number"
-                                                                        className="w-20 text-right text-sm"
+                                                                        className="w-24 text-right"
                                                                         value={
                                                                             item.price_sell
                                                                         }
@@ -348,10 +357,10 @@ return;
                                                                         }
                                                                     />
                                                                 </td>
-                                                                <td className="px-2 py-2">
+                                                                <td className="px-4 py-3">
                                                                     <Input
                                                                         type="number"
-                                                                        className="w-16 text-center text-sm"
+                                                                        className="w-20 text-center"
                                                                         min="1"
                                                                         value={
                                                                             item.quantity
@@ -369,10 +378,10 @@ return;
                                                                         }
                                                                     />
                                                                 </td>
-                                                                <td className="px-2 py-2">
+                                                                <td className="px-4 py-3">
                                                                     <Input
                                                                         type="number"
-                                                                        className="w-20 text-right text-sm"
+                                                                        className="w-24 text-right"
                                                                         value={
                                                                             item.discount_amount
                                                                         }
@@ -389,16 +398,16 @@ return;
                                                                         }
                                                                     />
                                                                 </td>
-                                                                <td className="px-2 py-2 text-right text-sm font-medium">
+                                                                <td className="px-4 py-3 text-right font-medium">
                                                                     {formatCurrency(
                                                                         item.subtotal,
                                                                     )}
                                                                 </td>
-                                                                <td className="px-2 py-2">
+                                                                <td className="px-4 py-3">
                                                                     <Button
                                                                         variant="ghost"
                                                                         size="icon"
-                                                                        className="h-6 w-6 text-red-500"
+                                                                        className="h-8 w-8 text-red-500"
                                                                         onClick={() =>
                                                                             handleRemoveItem(
                                                                                 index,
@@ -417,13 +426,13 @@ return;
 
                                         <Button
                                             variant="outline"
-                                            size="sm"
+                                            size="lg"
                                             onClick={handleAddItem}
                                         >
                                             + Add Item
                                         </Button>
 
-                                        <div className="grid gap-4 md:grid-cols-2">
+                                        <div className="grid gap-6 lg:grid-cols-2">
                                             <div className="space-y-2">
                                                 <Label htmlFor="note">
                                                     Catatan
@@ -511,7 +520,7 @@ return;
                                 </DialogContent>
                             </Dialog>
                         )}
-                        <Button variant="outline" asChild>
+                        <Button variant="outline" size={'lg'} asChild>
                             <a
                                 href={`/transactions/receipt/${transaction.id}`}
                                 target="_blank"
@@ -520,7 +529,7 @@ return;
                                 Print Receipt
                             </a>
                         </Button>
-                        <Button variant="outline" asChild>
+                        <Button variant="outline" size={'lg'} asChild>
                             <a href="/transactions">Back to List</a>
                         </Button>
                     </div>

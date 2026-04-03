@@ -31,6 +31,12 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 import type { BreadcrumbItem } from '@/types';
 
 interface User {
@@ -368,56 +374,96 @@ export default function UserIndex() {
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex items-center justify-end gap-2">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="lg"
-                                                    onClick={() =>
-                                                        handleEdit(user)
-                                                    }
-                                                    title="Edit"
-                                                >
-                                                    <Pencil className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="lg"
-                                                    onClick={() =>
-                                                        setResetPasswordUser(
-                                                            user,
-                                                        )
-                                                    }
-                                                    title="Reset Password"
-                                                >
-                                                    <Key className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="lg"
-                                                    onClick={() =>
-                                                        handleToggleActive(user)
-                                                    }
-                                                    title={
-                                                        user.is_active
-                                                            ? 'Deactivate'
-                                                            : 'Activate'
-                                                    }
-                                                >
-                                                    {user.is_active ? (
-                                                        <ToggleRight className="h-4 w-4 text-green-500" />
-                                                    ) : (
-                                                        <ToggleLeft className="h-4 w-4 text-gray-400" />
-                                                    )}
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="lg"
-                                                    onClick={() =>
-                                                        setDeleteUser(user)
-                                                    }
-                                                    title="Delete"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="lg"
+                                                                onClick={() =>
+                                                                    handleEdit(
+                                                                        user,
+                                                                    )
+                                                                }
+                                                            >
+                                                                <Pencil className="h-4 w-4" />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>Edit User</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="lg"
+                                                                onClick={() =>
+                                                                    setResetPasswordUser(
+                                                                        user,
+                                                                    )
+                                                                }
+                                                            >
+                                                                <Key className="h-4 w-4" />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>
+                                                                Reset Password
+                                                            </p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="lg"
+                                                                onClick={() =>
+                                                                    handleToggleActive(
+                                                                        user,
+                                                                    )
+                                                                }
+                                                            >
+                                                                {user.is_active ? (
+                                                                    <ToggleRight className="h-4 w-4 text-green-500" />
+                                                                ) : (
+                                                                    <ToggleLeft className="h-4 w-4 text-gray-400" />
+                                                                )}
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>
+                                                                {user.is_active
+                                                                    ? 'Deactivate'
+                                                                    : 'Activate'}
+                                                            </p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="lg"
+                                                                onClick={() =>
+                                                                    setDeleteUser(
+                                                                        user,
+                                                                    )
+                                                                }
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>Delete User</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
                                             </div>
                                         </TableCell>
                                     </TableRow>

@@ -23,6 +23,12 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 import type { BreadcrumbItem } from '@/types';
 
 interface Category {
@@ -95,21 +101,23 @@ export default function CategoryIndex() {
 
     return (
         <>
-            <Head title="Categories" />
+            <Head title="Product Categories" />
 
             <div className="flex flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold">Categories</h1>
+                    <h1 className="text-2xl font-bold">Product Categories</h1>
                     <Dialog open={isOpen} onOpenChange={setIsOpen}>
                         <DialogTrigger asChild>
                             <Button size="lg">
                                 <Plus className="mr-2 h-4 w-4" />
-                                Add Category
+                                Add Product Category
                             </Button>
                         </DialogTrigger>
                         <DialogContent>
                             <DialogHeader>
-                                <DialogTitle>Add New Category</DialogTitle>
+                                <DialogTitle>
+                                    Add New Product Category
+                                </DialogTitle>
                                 <DialogDescription>
                                     Create a new product category.
                                 </DialogDescription>
@@ -180,26 +188,48 @@ export default function CategoryIndex() {
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex items-center justify-end gap-2">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="lg"
-                                                    onClick={() =>
-                                                        handleEdit(category)
-                                                    }
-                                                >
-                                                    <Pencil className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="lg"
-                                                    onClick={() =>
-                                                        setDeleteCategory(
-                                                            category,
-                                                        )
-                                                    }
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="lg"
+                                                                onClick={() =>
+                                                                    handleEdit(
+                                                                        category,
+                                                                    )
+                                                                }
+                                                            >
+                                                                <Pencil className="h-4 w-4" />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>Edit Category</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="lg"
+                                                                onClick={() =>
+                                                                    setDeleteCategory(
+                                                                        category,
+                                                                    )
+                                                                }
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>
+                                                                Delete Category
+                                                            </p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
                                             </div>
                                         </TableCell>
                                     </TableRow>

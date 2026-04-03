@@ -56,7 +56,7 @@ const allNavItems: NavItem[] = [
         icon: Box,
     },
     {
-        title: 'Categories',
+        title: 'Product Categories',
         href: '/categories',
         icon: Tags,
     },

@@ -343,5 +343,5 @@ UnitIndex.layout = {
             title: 'Units',
             href: '/units',
         },
-    ],
-} satisfies BreadcrumbItem[];
+    ] as BreadcrumbItem[]
+};

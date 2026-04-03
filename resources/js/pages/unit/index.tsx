@@ -1,6 +1,6 @@
-import { Head, useForm, usePage } from '@inertiajs/react';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { Head, useForm, usePage, router } from '@inertiajs/react';
+import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,6 +15,15 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Pagination,
+    PaginationContent,
+    PaginationEllipsis,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from '@/components/ui/pagination';
 import {
     Table,
     TableBody,
@@ -41,15 +50,43 @@ interface Unit {
 
 interface Props {
     [key: string]: unknown;
-    units: Unit[];
+    units: {
+        data: Unit[];
+        current_page: number;
+        last_page: number;
+        per_page: number;
+        total: number;
+    };
+    filters: {
+        search: string;
+    };
 }
 
 export default function UnitIndex() {
-    const { units } = usePage<Props>().props;
+    const { units, filters } = usePage<Props>().props;
 
     const [isOpen, setIsOpen] = useState(false);
     const [editUnit, setEditUnit] = useState<Unit | null>(null);
     const [deleteUnit, setDeleteUnit] = useState<Unit | null>(null);
+    const [searchQuery, setSearchQuery] = useState(filters.search || '');
+    const [searchTerm, setSearchTerm] = useState(filters.search || '');
+
+    // Debounce search
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            router.get(
+                '/units',
+                { search: searchTerm },
+                {
+                    preserveState: true,
+                    preserveScroll: true,
+                    replace: true,
+                },
+            );
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
 
     const createForm = useForm({
         name: '',
@@ -185,6 +222,21 @@ export default function UnitIndex() {
                 </div>
 
                 <div className="rounded-xl border border-sidebar-border/70 p-6">
+                    <div className="mb-4 flex gap-4">
+                        <div className="relative flex-1">
+                            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                placeholder="Search units..."
+                                value={searchQuery}
+                                onChange={(e) => {
+                                    setSearchQuery(e.target.value);
+                                    setSearchTerm(e.target.value);
+                                }}
+                                className="pl-9"
+                            />
+                        </div>
+                    </div>
+
                     <div className="rounded-md border">
                         <Table>
                             <TableHeader>
@@ -204,7 +256,7 @@ export default function UnitIndex() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {units.map((unit) => (
+                                {units.data.map((unit) => (
                                     <TableRow key={unit.id}>
                                         <TableCell className="text-sm">
                                             {unit.id}
@@ -261,7 +313,7 @@ export default function UnitIndex() {
                                         </TableCell>
                                     </TableRow>
                                 ))}
-                                {units.length === 0 && (
+                                {units.data.length === 0 && (
                                     <TableRow>
                                         <TableCell
                                             colSpan={4}
@@ -275,6 +327,78 @@ export default function UnitIndex() {
                             </TableBody>
                         </Table>
                     </div>
+
+                    {/* Pagination */}
+                    {units.last_page >= 1 && (
+                        <div className="mt-4">
+                            <Pagination>
+                                <PaginationContent>
+                                    <PaginationItem>
+                                        <PaginationPrevious
+                                            href={
+                                                units.current_page > 1
+                                                    ? `?page=${units.current_page - 1}${filters.search ? `&search=${filters.search}` : ''}`
+                                                    : undefined
+                                            }
+                                            className={
+                                                units.current_page <= 1
+                                                    ? 'pointer-events-none opacity-50'
+                                                    : ''
+                                            }
+                                        />
+                                    </PaginationItem>
+
+                                    {Array.from(
+                                        { length: units.last_page },
+                                        (_, i) => i + 1,
+                                    )
+                                        .filter(
+                                            (page) =>
+                                                page === 1 ||
+                                                page === units.last_page ||
+                                                Math.abs(
+                                                    page - units.current_page,
+                                                ) <= 2,
+                                        )
+                                        .map((page, index, array) => (
+                                            <PaginationItem key={page}>
+                                                {index > 0 &&
+                                                page - array[index - 1] > 1 ? (
+                                                    <PaginationEllipsis />
+                                                ) : (
+                                                    <PaginationLink
+                                                        href={`?page=${page}${filters.search ? `&search=${filters.search}` : ''}`}
+                                                        isActive={
+                                                            page ===
+                                                            units.current_page
+                                                        }
+                                                    >
+                                                        {page}
+                                                    </PaginationLink>
+                                                )}
+                                            </PaginationItem>
+                                        ))}
+
+                                    <PaginationItem>
+                                        <PaginationNext
+                                            href={
+                                                units.current_page <
+                                                units.last_page
+                                                    ? `?page=${units.current_page + 1}${filters.search ? `&search=${filters.search}` : ''}`
+                                                    : undefined
+                                            }
+                                            className={
+                                                units.current_page >=
+                                                units.last_page
+                                                    ? 'pointer-events-none opacity-50'
+                                                    : ''
+                                            }
+                                        />
+                                    </PaginationItem>
+                                </PaginationContent>
+                            </Pagination>
+                        </div>
+                    )}
                 </div>
             </div>
 

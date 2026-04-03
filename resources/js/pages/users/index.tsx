@@ -1,13 +1,14 @@
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, useForm, usePage, router } from '@inertiajs/react';
 import {
     Pencil,
     Plus,
+    Search,
     Trash2,
     Key,
     ToggleLeft,
     ToggleRight,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,15 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Pagination,
+    PaginationContent,
+    PaginationEllipsis,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from '@/components/ui/pagination';
 import {
     Table,
     TableBody,
@@ -50,12 +60,21 @@ interface User {
 
 interface Props {
     [key: string]: unknown;
-    users: User[];
+    users: {
+        data: User[];
+        current_page: number;
+        last_page: number;
+        per_page: number;
+        total: number;
+    };
     roles: string[];
+    filters: {
+        search: string;
+    };
 }
 
 export default function UserIndex() {
-    const { users } = usePage<Props>().props;
+    const { users, filters } = usePage<Props>().props;
 
     const [isOpen, setIsOpen] = useState(false);
     const [editUser, setEditUser] = useState<User | null>(null);
@@ -63,6 +82,25 @@ export default function UserIndex() {
     const [resetPasswordUser, setResetPasswordUser] = useState<User | null>(
         null,
     );
+    const [searchQuery, setSearchQuery] = useState(filters.search || '');
+    const [searchTerm, setSearchTerm] = useState(filters.search || '');
+
+    // Debounce search
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            router.get(
+                '/users',
+                { search: searchTerm },
+                {
+                    preserveState: true,
+                    preserveScroll: true,
+                    replace: true,
+                },
+            );
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
 
     const createForm = useForm({
         name: '',
@@ -322,6 +360,21 @@ export default function UserIndex() {
                 </div>
 
                 <div className="rounded-xl border border-sidebar-border/70 p-6">
+                    <div className="mb-4 flex gap-4">
+                        <div className="relative flex-1">
+                            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                placeholder="Search users..."
+                                value={searchQuery}
+                                onChange={(e) => {
+                                    setSearchQuery(e.target.value);
+                                    setSearchTerm(e.target.value);
+                                }}
+                                className="pl-9"
+                            />
+                        </div>
+                    </div>
+
                     <div className="rounded-md border">
                         <Table>
                             <TableHeader>
@@ -347,7 +400,7 @@ export default function UserIndex() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {users.map((user) => (
+                                {users.data.map((user) => (
                                     <TableRow key={user.id}>
                                         <TableCell>{user.id}</TableCell>
                                         <TableCell>{user.name}</TableCell>
@@ -468,7 +521,7 @@ export default function UserIndex() {
                                         </TableCell>
                                     </TableRow>
                                 ))}
-                                {users.length === 0 && (
+                                {users.data.length === 0 && (
                                     <TableRow>
                                         <TableCell
                                             colSpan={6}
@@ -482,6 +535,78 @@ export default function UserIndex() {
                             </TableBody>
                         </Table>
                     </div>
+
+                    {/* Pagination */}
+                    {users.last_page >= 1 && (
+                        <div className="mt-4">
+                            <Pagination>
+                                <PaginationContent>
+                                    <PaginationItem>
+                                        <PaginationPrevious
+                                            href={
+                                                users.current_page > 1
+                                                    ? `?page=${users.current_page - 1}${filters.search ? `&search=${filters.search}` : ''}`
+                                                    : undefined
+                                            }
+                                            className={
+                                                users.current_page <= 1
+                                                    ? 'pointer-events-none opacity-50'
+                                                    : ''
+                                            }
+                                        />
+                                    </PaginationItem>
+
+                                    {Array.from(
+                                        { length: users.last_page },
+                                        (_, i) => i + 1,
+                                    )
+                                        .filter(
+                                            (page) =>
+                                                page === 1 ||
+                                                page === users.last_page ||
+                                                Math.abs(
+                                                    page - users.current_page,
+                                                ) <= 2,
+                                        )
+                                        .map((page, index, array) => (
+                                            <PaginationItem key={page}>
+                                                {index > 0 &&
+                                                page - array[index - 1] > 1 ? (
+                                                    <PaginationEllipsis />
+                                                ) : (
+                                                    <PaginationLink
+                                                        href={`?page=${page}${filters.search ? `&search=${filters.search}` : ''}`}
+                                                        isActive={
+                                                            page ===
+                                                            users.current_page
+                                                        }
+                                                    >
+                                                        {page}
+                                                    </PaginationLink>
+                                                )}
+                                            </PaginationItem>
+                                        ))}
+
+                                    <PaginationItem>
+                                        <PaginationNext
+                                            href={
+                                                users.current_page <
+                                                users.last_page
+                                                    ? `?page=${users.current_page + 1}${filters.search ? `&search=${filters.search}` : ''}`
+                                                    : undefined
+                                            }
+                                            className={
+                                                users.current_page >=
+                                                users.last_page
+                                                    ? 'pointer-events-none opacity-50'
+                                                    : ''
+                                            }
+                                        />
+                                    </PaginationItem>
+                                </PaginationContent>
+                            </Pagination>
+                        </div>
+                    )}
                 </div>
             </div>
 

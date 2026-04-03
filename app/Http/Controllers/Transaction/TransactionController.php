@@ -17,14 +17,29 @@ use Inertia\Response;
 
 class TransactionController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $search = $request->input('search', '');
+        $perPage = 20;
+
         $transactions = Transaction::with('user')
+            ->when($search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('receipt_number', 'like', "%{$search}%")
+                      ->orWhereHas('user', function ($q) use ($search) {
+                          $q->where('name', 'like', "%{$search}%");
+                      });
+                });
+            })
             ->orderBy('created_at', 'desc')
-            ->paginate(20);
+            ->paginate($perPage)
+            ->withQueryString();
 
         return Inertia::render('transaction/index', [
             'transactions' => $transactions,
+            'filters' => [
+                'search' => $search,
+            ],
         ]);
     }
 

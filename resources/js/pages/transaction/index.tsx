@@ -1,7 +1,17 @@
-import { Head, usePage } from '@inertiajs/react';
+import { Head, usePage, router } from '@inertiajs/react';
 import { FileText, Printer, Search } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+    Pagination,
+    PaginationContent,
+    PaginationEllipsis,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from '@/components/ui/pagination';
 import {
     Table,
     TableBody,
@@ -46,6 +56,9 @@ interface Props {
         per_page: number;
         total: number;
     };
+    filters: {
+        search: string;
+    };
 }
 
 const formatCurrency = (value: number) => {
@@ -67,7 +80,27 @@ const formatDate = (date: string) => {
 };
 
 export default function TransactionIndex() {
-    const { transactions } = usePage<Props>().props;
+    const { transactions, filters } = usePage<Props>().props;
+
+    const [searchQuery, setSearchQuery] = useState(filters.search || '');
+    const [searchTerm, setSearchTerm] = useState(filters.search || '');
+
+    // Debounce search
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            router.get(
+                '/transactions',
+                { search: searchTerm },
+                {
+                    preserveState: true,
+                    preserveScroll: true,
+                    replace: true,
+                },
+            );
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
 
     return (
         <>
@@ -84,6 +117,11 @@ export default function TransactionIndex() {
                             <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
                                 placeholder="Cari transaksi..."
+                                value={searchQuery}
+                                onChange={(e) => {
+                                    setSearchQuery(e.target.value);
+                                    setSearchTerm(e.target.value);
+                                }}
                                 className="pl-9"
                             />
                         </div>
@@ -217,24 +255,76 @@ export default function TransactionIndex() {
                     </div>
 
                     {/* Pagination */}
-                    {transactions.last_page > 1 && (
-                        <div className="mt-4 flex items-center justify-center gap-2">
-                            {Array.from(
-                                { length: transactions.last_page },
-                                (_, i) => i + 1,
-                            ).map((page) => (
-                                <Button
-                                    key={page}
-                                    variant={
-                                        page === transactions.current_page
-                                            ? 'default'
-                                            : 'outline'
-                                    }
-                                    size="lg"
-                                >
-                                    {page}
-                                </Button>
-                            ))}
+                    {transactions.last_page >= 1 && (
+                        <div className="mt-4">
+                            <Pagination>
+                                <PaginationContent>
+                                    <PaginationItem>
+                                        <PaginationPrevious
+                                            href={
+                                                transactions.current_page > 1
+                                                    ? `?page=${transactions.current_page - 1}${filters.search ? `&search=${filters.search}` : ''}`
+                                                    : undefined
+                                            }
+                                            className={
+                                                transactions.current_page <= 1
+                                                    ? 'pointer-events-none opacity-50'
+                                                    : ''
+                                            }
+                                        />
+                                    </PaginationItem>
+
+                                    {Array.from(
+                                        { length: transactions.last_page },
+                                        (_, i) => i + 1,
+                                    )
+                                        .filter(
+                                            (page) =>
+                                                page === 1 ||
+                                                page ===
+                                                    transactions.last_page ||
+                                                Math.abs(
+                                                    page -
+                                                        transactions.current_page,
+                                                ) <= 2,
+                                        )
+                                        .map((page, index, array) => (
+                                            <PaginationItem key={page}>
+                                                {index > 0 &&
+                                                page - array[index - 1] > 1 ? (
+                                                    <PaginationEllipsis />
+                                                ) : (
+                                                    <PaginationLink
+                                                        href={`?page=${page}${filters.search ? `&search=${filters.search}` : ''}`}
+                                                        isActive={
+                                                            page ===
+                                                            transactions.current_page
+                                                        }
+                                                    >
+                                                        {page}
+                                                    </PaginationLink>
+                                                )}
+                                            </PaginationItem>
+                                        ))}
+
+                                    <PaginationItem>
+                                        <PaginationNext
+                                            href={
+                                                transactions.current_page <
+                                                transactions.last_page
+                                                    ? `?page=${transactions.current_page + 1}${filters.search ? `&search=${filters.search}` : ''}`
+                                                    : undefined
+                                            }
+                                            className={
+                                                transactions.current_page >=
+                                                transactions.last_page
+                                                    ? 'pointer-events-none opacity-50'
+                                                    : ''
+                                            }
+                                        />
+                                    </PaginationItem>
+                                </PaginationContent>
+                            </Pagination>
                         </div>
                     )}
                 </div>

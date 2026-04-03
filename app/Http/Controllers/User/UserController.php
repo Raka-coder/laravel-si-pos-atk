@@ -15,22 +15,41 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $search = $request->input('search', '');
+        $perPage = 10;
+
         $users = User::with('roles')
+            ->when($search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%");
+                });
+            })
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate($perPage)
+            ->withQueryString();
 
         return Inertia::render('users/index', [
-            'users' => $users->map(fn ($user) => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'is_active' => $user->is_active,
-                'role' => $user->roles->first()?->name ?? 'cashier',
-                'created_at' => $user->created_at->toISOString(),
-            ]),
-            'roles' => Role::all()->pluck('name'),
+            'users' => [
+                'data' => $users->getCollection()->map(fn ($user) => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'is_active' => $user->is_active,
+                    'role' => $user->roles->first()?->name ?? 'cashier',
+                    'created_at' => $user->created_at->toISOString(),
+                ])->values(),
+                'current_page' => $users->currentPage(),
+                'last_page' => $users->lastPage(),
+                'per_page' => $users->perPage(),
+                'total' => $users->total(),
+            ],
+            'roles' => Role::all()->pluck('name')->values()->toArray(),
+            'filters' => [
+                'search' => $search,
+            ],
         ]);
     }
 

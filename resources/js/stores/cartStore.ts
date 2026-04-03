@@ -57,7 +57,9 @@ export const useCartStore = create<CartStore>((set, get) => ({
         );
 
         if (existingItem) {
-            if (existingItem.quantity >= product.stock) return;
+            if (existingItem.quantity >= product.stock) {
+return;
+}
 
             const updatedItems = items.map((item) =>
                 item.product.id === product.id
@@ -98,6 +100,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
 
         if (quantity <= 0) {
             get().removeItem(productId);
+
             return;
         }
 

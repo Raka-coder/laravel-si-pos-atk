@@ -1,6 +1,7 @@
-import { useState } from 'react';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -21,7 +22,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import InputError from '@/components/input-error';
 import type { BreadcrumbItem } from '@/types';
 
 interface ExpenseCategory {
@@ -128,7 +128,10 @@ export default function ExpenseIndex() {
     };
 
     const handleUpdate = () => {
-        if (!editExpense) return;
+        if (!editExpense) {
+return;
+}
+
         editForm.patch(`/expenses/${editExpense.id}`, {
             onSuccess: () => {
                 editForm.reset();
@@ -138,7 +141,10 @@ export default function ExpenseIndex() {
     };
 
     const handleDelete = () => {
-        if (!deleteExpense) return;
+        if (!deleteExpense) {
+return;
+}
+
         deleteForm.delete(`/expenses/${deleteExpense.id}`, {
             onSuccess: () => {
                 setDeleteExpense(null);

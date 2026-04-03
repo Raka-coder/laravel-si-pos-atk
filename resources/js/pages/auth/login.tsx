@@ -1,4 +1,5 @@
 import { Form, Head } from '@inertiajs/react';
+import { useState } from 'react';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
@@ -7,13 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { register } from '@/routes';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
@@ -29,6 +24,10 @@ export default function Login({
     canResetPassword,
     canRegister,
 }: Props) {
+    const [selectedRole, setSelectedRole] = useState<'owner' | 'cashier'>(
+        'cashier',
+    );
+
     return (
         <>
             <Head title="Log in" />
@@ -42,20 +41,34 @@ export default function Login({
                     <>
                         <div className="grid gap-6">
                             <div className="grid gap-2">
-                                <Label htmlFor="role">Role</Label>
-                                <Select name="role" required>
-                                    <SelectTrigger id="role" tabIndex={1}>
-                                        <SelectValue placeholder="Pilih role" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="owner">
+                                <Label
+                                    htmlFor="role"
+                                    className="text-xs tracking-wide text-muted-foreground uppercase"
+                                >
+                                    Pilih Role
+                                </Label>
+                                <Tabs
+                                    value={selectedRole}
+                                    onValueChange={(value) =>
+                                        setSelectedRole(
+                                            value as 'owner' | 'cashier',
+                                        )
+                                    }
+                                >
+                                    <TabsList className="grid w-full grid-cols-2">
+                                        <TabsTrigger value="owner">
                                             Owner
-                                        </SelectItem>
-                                        <SelectItem value="cashier">
+                                        </TabsTrigger>
+                                        <TabsTrigger value="cashier">
                                             Cashier
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                        </TabsTrigger>
+                                    </TabsList>
+                                </Tabs>
+                                <input
+                                    type="hidden"
+                                    name="role"
+                                    value={selectedRole}
+                                />
                                 <InputError message={errors.role} />
                             </div>
 

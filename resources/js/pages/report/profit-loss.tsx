@@ -141,6 +141,7 @@ export default function ProfitLossReport() {
                                     );
                                     const expenseAmount = expense?.total || 0;
                                     const net = sale.total - expenseAmount;
+
                                     return (
                                         <tr
                                             key={sale.date}

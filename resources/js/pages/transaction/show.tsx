@@ -1,6 +1,7 @@
-import { useState } from 'react';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { Pencil, Printer } from 'lucide-react';
+import { useState } from 'react';
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -14,7 +15,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import InputError from '@/components/input-error';
 import type { BreadcrumbItem } from '@/types';
 
 interface Product {
@@ -111,6 +111,7 @@ export default function TransactionShow() {
         const subtotal = items.reduce((sum, item) => {
             const itemTotal =
                 item.price_sell * item.quantity - (item.discount_amount || 0);
+
             return sum + itemTotal;
         }, 0);
         const discountAmount = editForm.data.discount_amount || 0;
@@ -130,6 +131,7 @@ export default function TransactionShow() {
 
         if (field === 'product_id') {
             const product = products.find((p) => p.id === Number(value));
+
             if (product) {
                 newItems[index] = {
                     ...newItems[index],
@@ -196,7 +198,10 @@ export default function TransactionShow() {
     };
 
     const handleRemoveItem = (index: number) => {
-        if (editForm.data.items.length <= 1) return;
+        if (editForm.data.items.length <= 1) {
+return;
+}
+
         const newItems = editForm.data.items.filter((_, i) => i !== index);
         const totals = calculateTotals(newItems);
         editForm.setData({

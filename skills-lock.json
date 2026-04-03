@@ -5,6 +5,16 @@
       "source": "anthropics/skills",
       "sourceType": "github",
       "computedHash": "063a0e6448123cd359ad0044cc46b0e490cc7964d45ef4bb9fd842bd2ffbca67"
+    },
+    "hooked-ux": {
+      "source": "wondelai/skills",
+      "sourceType": "github",
+      "computedHash": "21071166f94d9ec8ff063eccde279124767662a029161629f4b1250de0a7a499"
+    },
+    "refactoring-ui": {
+      "source": "wondelai/skills",
+      "sourceType": "github",
+      "computedHash": "cdf42009a0eec7fa9b0174a8f5de234bd1d6fe25ec81cb6cdcf7866ad74f9909"
     }
   }
 }

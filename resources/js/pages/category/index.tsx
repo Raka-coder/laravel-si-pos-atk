@@ -1,6 +1,7 @@
-import { useState } from 'react';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -14,7 +15,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import InputError from '@/components/input-error';
 import type { BreadcrumbItem } from '@/types';
 
 interface Category {
@@ -61,7 +61,10 @@ export default function CategoryIndex() {
     };
 
     const handleUpdate = () => {
-        if (!editCategory) return;
+        if (!editCategory) {
+return;
+}
+
         editForm.patch(`/categories/${editCategory.id}`, {
             onSuccess: () => {
                 editForm.reset();
@@ -71,7 +74,10 @@ export default function CategoryIndex() {
     };
 
     const handleDelete = () => {
-        if (!deleteCategory) return;
+        if (!deleteCategory) {
+return;
+}
+
         deleteForm.delete(`/categories/${deleteCategory.id}`, {
             onSuccess: () => {
                 setDeleteCategory(null);

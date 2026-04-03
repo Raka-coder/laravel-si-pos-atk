@@ -1,6 +1,7 @@
-import { useState } from 'react';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -14,7 +15,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import InputError from '@/components/input-error';
 import type { BreadcrumbItem } from '@/types';
 
 interface Unit {
@@ -64,7 +64,10 @@ export default function UnitIndex() {
     };
 
     const handleUpdate = () => {
-        if (!editUnit) return;
+        if (!editUnit) {
+return;
+}
+
         editForm.patch(`/units/${editUnit.id}`, {
             onSuccess: () => {
                 editForm.reset();
@@ -74,7 +77,10 @@ export default function UnitIndex() {
     };
 
     const handleDelete = () => {
-        if (!deleteUnit) return;
+        if (!deleteUnit) {
+return;
+}
+
         deleteForm.delete(`/units/${deleteUnit.id}`, {
             onSuccess: () => {
                 setDeleteUnit(null);

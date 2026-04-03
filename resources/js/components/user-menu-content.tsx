@@ -1,5 +1,5 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { LogOut, Palette, Settings } from 'lucide-react';
+import { LogOut, Settings } from 'lucide-react';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
@@ -9,8 +9,8 @@ import {
 import { UserInfo } from '@/components/user-info';
 import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
 import { logout } from '@/routes';
-import { edit as profileEdit } from '@/routes/profile';
 import { edit as appearanceEdit } from '@/routes/appearance';
+import { edit as profileEdit } from '@/routes/profile';
 import type { User } from '@/types';
 
 type Props = {

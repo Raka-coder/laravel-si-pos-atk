@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { Textarea } from '@headlessui/react';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { Trash2, Upload } from 'lucide-react';
+import { useState } from 'react';
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,7 +13,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import InputError from '@/components/input-error';
 import type { BreadcrumbItem } from '@/types';
 
 interface ShopSettings {
@@ -74,6 +75,7 @@ export default function ShopSettingsPage() {
 
     const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
+
         if (file) {
             form.setData('logo', file);
             setLogoPreview(URL.createObjectURL(file));
@@ -82,6 +84,7 @@ export default function ShopSettingsPage() {
 
     const handleQrisChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
+
         if (file) {
             form.setData('qris_image', file);
             setQrisPreview(URL.createObjectURL(file));
@@ -131,7 +134,7 @@ export default function ShopSettingsPage() {
                                 <Label htmlFor="address">Address</Label>
                                 <textarea
                                     id="address"
-                                    className="min-h-[80px] rounded-md border px-3 py-2 text-sm"
+                                    className="min-h-20 rounded-md border px-3 py-2 text-sm"
                                     value={form.data.address}
                                     onChange={(e) =>
                                         form.setData('address', e.target.value)
@@ -334,9 +337,9 @@ export default function ShopSettingsPage() {
                                 <Label htmlFor="receipt_footer">
                                     Receipt Footer Text
                                 </Label>
-                                <textarea
+                                <Textarea
                                     id="receipt_footer"
-                                    className="min-h-[80px] rounded-md border px-3 py-2 text-sm"
+                                    className="min-h-20 rounded-md border px-3 py-2 text-sm"
                                     value={form.data.receipt_footer}
                                     onChange={(e) =>
                                         form.setData(

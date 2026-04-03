@@ -1,4 +1,4 @@
-revisi fitur user management saat ini
+revisi fitur login form
 
 request fitur
-Fitur active pada manage user belum usai, saya test dengan aktifkan 1 test user, dan tidak merespons secara aktif, saya ingin jika checkbox tidak di centang aktif, user tersebut bisa login ke sistem POS dengan role kasir, pastikan indikator pada table dapat diperbarui sesuai dengan statusnya
+Perbaiki desain UI form login pada component dropdown role, buat opsi role menggunakan component switch/toggle button dengan role owner dan admin

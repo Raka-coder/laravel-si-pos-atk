@@ -21,6 +21,14 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import type { BreadcrumbItem } from '@/types';
 
 interface Product {
@@ -268,32 +276,34 @@ export default function TransactionShow() {
 
                                     <div className="space-y-6 py-4">
                                         <div className="overflow-x-auto rounded-md border">
-                                            <table className="w-full min-w-150">
-                                                <thead className="border-b bg-muted/50">
-                                                    <tr>
-                                                        <th className="px-4 py-3 text-left text-sm font-medium">
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead className="text-left">
                                                             Product
-                                                        </th>
-                                                        <th className="px-4 py-3 text-right text-sm font-medium">
+                                                        </TableHead>
+                                                        <TableHead className="text-right">
                                                             Price
-                                                        </th>
-                                                        <th className="px-4 py-3 text-center text-sm font-medium">
+                                                        </TableHead>
+                                                        <TableHead className="text-center">
                                                             Qty
-                                                        </th>
-                                                        <th className="px-4 py-3 text-right text-sm font-medium">
+                                                        </TableHead>
+                                                        <TableHead className="text-right">
                                                             Discount
-                                                        </th>
-                                                        <th className="px-4 py-3 text-right text-sm font-medium">
+                                                        </TableHead>
+                                                        <TableHead className="text-right">
                                                             Subtotal
-                                                        </th>
-                                                        <th className="w-12 px-4 py-3"></th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y">
+                                                        </TableHead>
+                                                        <TableHead className="w-12"></TableHead>
+                                                    </TableRow>
+                                                </TableHeader>
+                                                <TableBody>
                                                     {editForm.data.items.map(
                                                         (item, index) => (
-                                                            <tr key={index}>
-                                                                <td className="px-4 py-3">
+                                                            <TableRow
+                                                                key={index}
+                                                            >
+                                                                <TableCell>
                                                                     <Select
                                                                         value={
                                                                             item.product_id
@@ -336,8 +346,8 @@ export default function TransactionShow() {
                                                                             )}
                                                                         </SelectContent>
                                                                     </Select>
-                                                                </td>
-                                                                <td className="px-4 py-3">
+                                                                </TableCell>
+                                                                <TableCell className="text-right">
                                                                     <Input
                                                                         type="number"
                                                                         className="w-24 text-right"
@@ -356,8 +366,8 @@ export default function TransactionShow() {
                                                                             )
                                                                         }
                                                                     />
-                                                                </td>
-                                                                <td className="px-4 py-3">
+                                                                </TableCell>
+                                                                <TableCell className="text-center">
                                                                     <Input
                                                                         type="number"
                                                                         className="w-20 text-center"
@@ -377,8 +387,8 @@ export default function TransactionShow() {
                                                                             )
                                                                         }
                                                                     />
-                                                                </td>
-                                                                <td className="px-4 py-3">
+                                                                </TableCell>
+                                                                <TableCell className="text-right">
                                                                     <Input
                                                                         type="number"
                                                                         className="w-24 text-right"
@@ -397,13 +407,13 @@ export default function TransactionShow() {
                                                                             )
                                                                         }
                                                                     />
-                                                                </td>
-                                                                <td className="px-4 py-3 text-right font-medium">
+                                                                </TableCell>
+                                                                <TableCell className="text-right font-medium">
                                                                     {formatCurrency(
                                                                         item.subtotal,
                                                                     )}
-                                                                </td>
-                                                                <td className="px-4 py-3">
+                                                                </TableCell>
+                                                                <TableCell>
                                                                     <Button
                                                                         variant="ghost"
                                                                         size="icon"
@@ -416,12 +426,12 @@ export default function TransactionShow() {
                                                                     >
                                                                         ×
                                                                     </Button>
-                                                                </td>
-                                                            </tr>
+                                                                </TableCell>
+                                                            </TableRow>
                                                         ),
                                                     )}
-                                                </tbody>
-                                            </table>
+                                                </TableBody>
+                                            </Table>
                                         </div>
 
                                         <Button
@@ -654,27 +664,27 @@ export default function TransactionShow() {
                     </CardHeader>
                     <CardContent>
                         <div className="rounded-md border">
-                            <table className="w-full">
-                                <thead className="border-b bg-muted/50">
-                                    <tr>
-                                        <th className="px-4 py-3 text-left text-sm font-medium">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead className="text-left">
                                             Product
-                                        </th>
-                                        <th className="px-4 py-3 text-right text-sm font-medium">
+                                        </TableHead>
+                                        <TableHead className="text-right">
                                             Price
-                                        </th>
-                                        <th className="px-4 py-3 text-center text-sm font-medium">
+                                        </TableHead>
+                                        <TableHead className="text-center">
                                             Qty
-                                        </th>
-                                        <th className="px-4 py-3 text-right text-sm font-medium">
+                                        </TableHead>
+                                        <TableHead className="text-right">
                                             Subtotal
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y">
+                                        </TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
                                     {transaction.items.map((item) => (
-                                        <tr key={item.id}>
-                                            <td className="px-4 py-3">
+                                        <TableRow key={item.id}>
+                                            <TableCell>
                                                 <div className="font-medium">
                                                     {item.product_name}
                                                 </div>
@@ -684,22 +694,22 @@ export default function TransactionShow() {
                                                         item.price_buy_snapshot,
                                                     )}
                                                 </div>
-                                            </td>
-                                            <td className="px-4 py-3 text-right">
+                                            </TableCell>
+                                            <TableCell className="text-right">
                                                 {formatCurrency(
                                                     item.price_sell,
                                                 )}
-                                            </td>
-                                            <td className="px-4 py-3 text-center">
+                                            </TableCell>
+                                            <TableCell className="text-center">
                                                 {item.quantity}
-                                            </td>
-                                            <td className="px-4 py-3 text-right font-medium">
+                                            </TableCell>
+                                            <TableCell className="text-right font-medium">
                                                 {formatCurrency(item.subtotal)}
-                                            </td>
-                                        </tr>
+                                            </TableCell>
+                                        </TableRow>
                                     ))}
-                                </tbody>
-                            </table>
+                                </TableBody>
+                            </Table>
                         </div>
                     </CardContent>
                 </Card>

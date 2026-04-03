@@ -61,7 +61,7 @@ export default function CategoryIndex() {
     const deleteForm = useForm({});
 
     const handleCreate = () => {
-        createForm.post('/categories', {
+        createForm.post('/product-categories', {
             onSuccess: () => {
                 createForm.reset();
                 setIsOpen(false);
@@ -79,7 +79,7 @@ export default function CategoryIndex() {
             return;
         }
 
-        editForm.patch(`/categories/${editCategory.id}`, {
+        editForm.patch(`/product-categories/${editCategory.id}`, {
             onSuccess: () => {
                 editForm.reset();
                 setEditCategory(null);
@@ -92,7 +92,7 @@ export default function CategoryIndex() {
             return;
         }
 
-        deleteForm.delete(`/categories/${deleteCategory.id}`, {
+        deleteForm.delete(`/product-categories/${deleteCategory.id}`, {
             onSuccess: () => {
                 setDeleteCategory(null);
             },
@@ -333,7 +333,7 @@ CategoryIndex.layout = {
     breadcrumbs: [
         {
             title: 'Categories',
-            href: '/categories',
+            href: '/product-categories',
         },
     ] as BreadcrumbItem[],
 };

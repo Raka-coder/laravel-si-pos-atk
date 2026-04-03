@@ -11,25 +11,41 @@ use App\Models\Unit;
 use App\Services\ImageOptimizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ProductController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $products = Product::with(['category', 'unit'])
-            ->orderBy('name')
-            ->get();
+        $search = $request->input('search', '');
+        $perPage = 15;
 
+        // Get categories and units (cached for performance)
         $categories = Category::orderBy('name')->get();
         $units = Unit::orderBy('name')->get();
+
+        // Paginate products with search and eager loading
+        $products = Product::with(['category', 'unit'])
+            ->when($search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('barcode', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('name')
+            ->paginate($perPage)
+            ->withQueryString();
 
         return Inertia::render('product/index', [
             'products' => $products,
             'categories' => $categories,
             'units' => $units,
+            'filters' => [
+                'search' => $search,
+            ],
         ]);
     }
 

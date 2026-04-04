@@ -34,6 +34,13 @@ import {
     PaginationPrevious,
 } from '@/components/ui/pagination';
 import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import {
     Table,
     TableBody,
     TableCell,
@@ -306,20 +313,24 @@ export default function UserIndex() {
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="role">Role</Label>
-                                    <select
-                                        id="role"
-                                        className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    <Select
                                         value={createForm.data.role}
-                                        onChange={(e) =>
-                                            createForm.setData(
-                                                'role',
-                                                e.target.value,
-                                            )
+                                        onValueChange={(value) =>
+                                            createForm.setData('role', value)
                                         }
                                     >
-                                        <option value="cashier">Cashier</option>
-                                        <option value="owner">Owner</option>
-                                    </select>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select a role" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="cashier">
+                                                Cashier
+                                            </SelectItem>
+                                            <SelectItem value="owner">
+                                                Owner
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <input
@@ -400,9 +411,14 @@ export default function UserIndex() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {users.data.map((user) => (
+                                {users.data.map((user, index) => (
                                     <TableRow key={user.id}>
-                                        <TableCell>{user.id}</TableCell>
+                                        <TableCell>
+                                            {(users.current_page - 1) *
+                                                users.per_page +
+                                                index +
+                                                1}
+                                        </TableCell>
                                         <TableCell>{user.name}</TableCell>
                                         <TableCell>{user.email}</TableCell>
                                         <TableCell>
@@ -685,17 +701,22 @@ export default function UserIndex() {
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="edit-role">Role</Label>
-                            <select
-                                id="edit-role"
-                                className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            <Select
                                 value={editForm.data.role}
-                                onChange={(e) =>
-                                    editForm.setData('role', e.target.value)
+                                onValueChange={(value) =>
+                                    editForm.setData('role', value)
                                 }
                             >
-                                <option value="cashier">Cashier</option>
-                                <option value="owner">Owner</option>
-                            </select>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a role" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="cashier">
+                                        Cashier
+                                    </SelectItem>
+                                    <SelectItem value="owner">Owner</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div className="flex items-center gap-2">
                             <input

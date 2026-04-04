@@ -14,7 +14,6 @@ class UpdateProductRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'barcode' => ['required', 'string', 'max:50', 'unique:products,barcode,'.$this->product->id],
             'name' => ['required', 'string', 'max:255'],
             'buy_price' => ['required', 'numeric', 'min:0'],
             'sell_price' => ['required', 'numeric', 'min:0'],
@@ -24,9 +23,10 @@ class UpdateProductRequest extends FormRequest
                 'nullable',
                 'image',
                 'mimes:jpg,jpeg,png,gif,webp',
-                'max:2048', // Max 2MB
-                'dimensions:max_width=1920,max_height=1920', // Max 1920x1920
+                'max:2048',
+                'dimensions:max_width=1920,max_height=1920',
             ],
+            'remove_image' => ['boolean'],
             'is_active' => ['boolean'],
             'category_id' => ['nullable', 'exists:categories,id'],
             'unit_id' => ['nullable', 'exists:units,id'],

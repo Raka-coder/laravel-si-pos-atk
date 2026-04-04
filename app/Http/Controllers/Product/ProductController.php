@@ -32,7 +32,7 @@ class ProductController extends Controller
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('barcode', 'like', "%{$search}%");
+                        ->orWhere('barcode', 'like', "%{$search}%");
                 });
             })
             ->orderBy('name')
@@ -55,10 +55,10 @@ class ProductController extends Controller
 
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('products', 'public');
-            $fullPath = storage_path('app/public/' . $imagePath);
+            $fullPath = storage_path('app/public/'.$imagePath);
 
             // Optimize image
-            $optimizer = new ImageOptimizer();
+            $optimizer = new ImageOptimizer;
             $optimizedPath = $optimizer->optimize($fullPath, 800, 800, 80);
 
             // Generate thumbnail
@@ -78,10 +78,27 @@ class ProductController extends Controller
     {
         $validated = $request->validated();
 
+        // Handle remove image
+        if ($request->boolean('remove_image') && $product->image) {
+            $oldPath = storage_path('app/public/'.$product->image);
+            $thumbPath = str_replace('.webp', '_thumb.webp', $oldPath);
+
+            if (file_exists($oldPath)) {
+                unlink($oldPath);
+            }
+            if (file_exists($thumbPath)) {
+                unlink($thumbPath);
+            }
+
+            Storage::disk('public')->delete($product->image);
+            $validated['image'] = null;
+        }
+
+        // Handle new image upload
         if ($request->hasFile('image')) {
             // Delete old image and thumbnail
             if ($product->image) {
-                $oldPath = storage_path('app/public/' . $product->image);
+                $oldPath = storage_path('app/public/'.$product->image);
                 $thumbPath = str_replace('.webp', '_thumb.webp', $oldPath);
 
                 if (file_exists($oldPath)) {
@@ -96,9 +113,9 @@ class ProductController extends Controller
 
             // Upload and optimize new image
             $imagePath = $request->file('image')->store('products', 'public');
-            $fullPath = storage_path('app/public/' . $imagePath);
+            $fullPath = storage_path('app/public/'.$imagePath);
 
-            $optimizer = new ImageOptimizer();
+            $optimizer = new ImageOptimizer;
             $optimizedPath = $optimizer->optimize($fullPath, 800, 800, 80);
             $optimizer->generateThumbnail($optimizedPath, 200);
 
@@ -114,7 +131,7 @@ class ProductController extends Controller
     public function destroy(Product $product): RedirectResponse
     {
         if ($product->image) {
-            $oldPath = storage_path('app/public/' . $product->image);
+            $oldPath = storage_path('app/public/'.$product->image);
             $thumbPath = str_replace('.webp', '_thumb.webp', $oldPath);
 
             if (file_exists($oldPath)) {

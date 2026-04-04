@@ -24,10 +24,10 @@ class UserController extends Controller
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%");
+                        ->orWhere('email', 'like', "%{$search}%");
                 });
             })
-            ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'asc')
             ->paginate($perPage)
             ->withQueryString();
 

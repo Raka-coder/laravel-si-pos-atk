@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Services\ProductCodeGenerator;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['barcode', 'name', 'buy_price', 'sell_price', 'stock', 'min_stock', 'image', 'is_active', 'category_id', 'unit_id'])]
+#[Fillable(['product_code', 'barcode', 'name', 'buy_price', 'sell_price', 'stock', 'min_stock', 'image', 'is_active', 'category_id', 'unit_id'])]
 class Product extends Model
 {
     use HasFactory;
@@ -22,6 +23,16 @@ class Product extends Model
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (Product $product) {
+            if (empty($product->product_code)) {
+                $generator = app(ProductCodeGenerator::class);
+                $product->product_code = $generator->generate();
+            }
+        });
     }
 
     public function category(): BelongsTo

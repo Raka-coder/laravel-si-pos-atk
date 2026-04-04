@@ -60,7 +60,8 @@ interface Unit {
 
 interface Product {
     id: number;
-    barcode: string;
+    product_code: string;
+    barcode: string | null;
     name: string;
     buy_price: number;
     sell_price: number;
@@ -123,7 +124,6 @@ export default function ProductIndex() {
     }, [searchTerm]);
 
     const createForm = useForm({
-        barcode: '',
         name: '',
         buy_price: '',
         sell_price: '',
@@ -136,7 +136,7 @@ export default function ProductIndex() {
     });
 
     const editForm = useForm({
-        barcode: '',
+        product_code: '',
         name: '',
         buy_price: '',
         sell_price: '',
@@ -146,13 +146,13 @@ export default function ProductIndex() {
         unit_id: '',
         is_active: true,
         image: null as File | null,
+        remove_image: false,
     });
 
     const deleteForm = useForm({});
 
     const handleCreate = () => {
         const formData = new FormData();
-        formData.append('barcode', createForm.data.barcode);
         formData.append('name', createForm.data.name);
         formData.append('buy_price', createForm.data.buy_price);
         formData.append('sell_price', createForm.data.sell_price);
@@ -179,7 +179,7 @@ export default function ProductIndex() {
     const handleEdit = (product: Product) => {
         setEditProduct(product);
         editForm.setData({
-            barcode: product.barcode,
+            product_code: product.product_code,
             name: product.name,
             buy_price: String(product.buy_price),
             sell_price: String(product.sell_price),
@@ -189,6 +189,7 @@ export default function ProductIndex() {
             unit_id: product.unit_id ? String(product.unit_id) : '',
             is_active: product.is_active,
             image: null,
+            remove_image: false,
         });
         setEditImagePreview(product.image ? `/storage/${product.image}` : null);
     };
@@ -199,7 +200,6 @@ export default function ProductIndex() {
         }
 
         const formData = new FormData();
-        formData.append('barcode', editForm.data.barcode);
         formData.append('name', editForm.data.name);
         formData.append('buy_price', editForm.data.buy_price);
         formData.append('sell_price', editForm.data.sell_price);
@@ -213,6 +213,10 @@ export default function ProductIndex() {
             formData.append('image', editForm.data.image);
         }
 
+        if (editForm.data.remove_image) {
+            formData.append('remove_image', '1');
+        }
+
         // Add _method for PUT request (Laravel method spoofing)
         formData.append('_method', 'PUT');
 
@@ -220,7 +224,7 @@ export default function ProductIndex() {
         router.post(`/products/${editProduct.id}`, formData, {
             preserveScroll: true,
             onSuccess: () => {
-                editForm.reset();
+                editForm.setData('remove_image', false);
                 setEditImagePreview(null);
                 setEditProduct(null);
             },
@@ -268,24 +272,6 @@ export default function ProductIndex() {
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="grid gap-4 py-4">
-                                <div className="grid gap-2">
-                                    <Label htmlFor="barcode">Barcode</Label>
-                                    <Input
-                                        id="barcode"
-                                        name="barcode"
-                                        value={createForm.data.barcode}
-                                        onChange={(e) =>
-                                            createForm.setData(
-                                                'barcode',
-                                                e.target.value,
-                                            )
-                                        }
-                                        placeholder="Product barcode"
-                                    />
-                                    <InputError
-                                        message={createForm.errors.barcode}
-                                    />
-                                </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="name">Name</Label>
                                     <Input
@@ -563,7 +549,7 @@ export default function ProductIndex() {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Image</TableHead>
-                                <TableHead>Barcode</TableHead>
+                                <TableHead>Product Code</TableHead>
                                 <TableHead>Name</TableHead>
                                 <TableHead>Category</TableHead>
                                 <TableHead>Unit</TableHead>
@@ -603,7 +589,7 @@ export default function ProductIndex() {
                                         )}
                                     </TableCell>
                                     <TableCell className="font-mono text-sm">
-                                        {product.barcode}
+                                        {product.product_code}
                                     </TableCell>
                                     <TableCell className="text-sm">
                                         {product.name}
@@ -794,16 +780,16 @@ export default function ProductIndex() {
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="edit-barcode">Barcode</Label>
+                            <Label htmlFor="edit-product_code">
+                                Product Code
+                            </Label>
                             <Input
-                                id="edit-barcode"
-                                name="barcode"
-                                value={editForm.data.barcode}
-                                onChange={(e) =>
-                                    editForm.setData('barcode', e.target.value)
-                                }
+                                id="edit-product_code"
+                                name="product_code"
+                                value={editForm.data.product_code}
+                                disabled
+                                className="bg-muted"
                             />
-                            <InputError message={editForm.errors.barcode} />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="edit-name">Name</Label>
@@ -950,52 +936,75 @@ export default function ProductIndex() {
                         <div className="grid gap-2">
                             <Label htmlFor="edit-image">Product Image</Label>
                             {editImagePreview && (
-                                <div className="mb-2">
+                                <div className="mb-2 flex items-center gap-4">
                                     <img
                                         src={editImagePreview}
                                         alt="Current image"
                                         className="h-32 w-32 rounded-lg object-cover"
                                     />
+                                    <Button
+                                        type="button"
+                                        variant="destructive"
+                                        size="sm"
+                                        onClick={() => {
+                                            editForm.setData(
+                                                'remove_image',
+                                                true,
+                                            );
+                                            setEditImagePreview(null);
+                                        }}
+                                    >
+                                        Remove Image
+                                    </Button>
                                 </div>
                             )}
-                            <Input
-                                id="edit-image"
-                                name="image"
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => {
-                                    const file = e.target.files?.[0];
+                            {!editImagePreview && (
+                                <>
+                                    <Input
+                                        id="edit-image"
+                                        name="image"
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
 
-                                    if (file) {
-                                        // Validate file size (max 2MB)
-                                        if (file.size > 2 * 1024 * 1024) {
-                                            alert(
-                                                'Ukuran gambar tidak boleh lebih dari 2MB',
-                                            );
+                                            if (file) {
+                                                // Validate file size (max 2MB)
+                                                if (
+                                                    file.size >
+                                                    2 * 1024 * 1024
+                                                ) {
+                                                    alert(
+                                                        'Ukuran gambar tidak boleh lebih dari 2MB',
+                                                    );
 
-                                            e.target.value = '';
+                                                    e.target.value = '';
 
-                                            return;
-                                        }
+                                                    return;
+                                                }
 
-                                        editForm.setData('image', file);
+                                                editForm.setData('image', file);
 
-                                        const reader = new FileReader();
-                                        reader.onload = (event) => {
-                                            setEditImagePreview(
-                                                event.target?.result as string,
-                                            );
-                                        };
-                                        reader.readAsDataURL(file);
-                                    }
-                                }}
-                            />
-                            <p className="text-xs text-muted-foreground">
-                                Max size: 2MB. Format: JPG, PNG, GIF, WEBP.
-                                Image akan di-optimasi otomatis.
-                            </p>
-
-                            <InputError message={editForm.errors.image} />
+                                                const reader = new FileReader();
+                                                reader.onload = (event) => {
+                                                    setEditImagePreview(
+                                                        event.target
+                                                            ?.result as string,
+                                                    );
+                                                };
+                                                reader.readAsDataURL(file);
+                                            }
+                                        }}
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        Max size: 2MB. Format: JPG, PNG, GIF,
+                                        WEBP. Image akan di-optimasi otomatis.
+                                    </p>
+                                    <InputError
+                                        message={editForm.errors.image}
+                                    />
+                                </>
+                            )}
                         </div>
                     </div>
                     <DialogFooter>

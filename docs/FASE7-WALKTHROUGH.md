@@ -252,3 +252,59 @@ Pastikan `is_active` ada di fillable array di `app/Models/User.php`. Jika toggle
 - Enable email verification jika diperlukan
 - Tambahkan lebih granular permissions
 - Tambahkan audit trail dengan package lain (misal: spatie/laravel-activitylog)
+
+## Product Code Feature
+
+### Overview
+
+Auto-generated unique product code dengan format "PRD" + 6 digit angka (PRD000001, PRD000002, dst).
+
+### Features
+
+- **Format**: PRD + 6 digit (contoh: PRD000001)
+- **Unik**: Tidak mungkin duplikat
+- **Tidak di-reuse**: Meskipun produk dihapus, nomor tidak digunakan kembali
+- **Auto-generated**: Otomatis dibuat saat create produk baru
+
+### Implementation
+
+#### Database Migration
+
+- Tabel: `products`
+- Kolom: `product_code` (varchar 20, unique)
+- Migration: `2026_04_04_053608_add_product_code_to_products_table.php`
+
+#### Model
+
+- `app/Models/Product.php`: Menambahkan event `creating` untuk auto-generate kode
+- Menambahkan `product_code` ke fillable array
+
+#### Service
+
+- `app/Services/ProductCodeGenerator.php`:
+    - Menggunakan database transaction dengan `lockForUpdate()` untuk prevent race condition
+    - Mengambil nomor terakhir dari database dan increment
+    - Format dengan zero-padding 6 digit
+
+#### How It Works
+
+1. Saat produk baru dibuat (POST /products), model Product触发 creating event
+2. Jika `product_code` kosong, panggil ProductCodeGenerator
+3. Generator mengunci tabel, ambil nomor terakhir, tambahkan 1
+4. Format: PRD + 6 digit (contoh: PRD000001)
+5. Simpan ke database
+
+### Existing Products
+
+Untuk produk yang sudah ada sebelumnya, jalankan perintah berikut di tinker:
+
+```php
+$products = App\Models\Product::all();
+$generator = app(App\Services\ProductCodeGenerator::class);
+foreach ($products as $product) {
+    if (empty($product->product_code)) {
+        $product->product_code = $generator->generate();
+        $product->save();
+    }
+}
+```

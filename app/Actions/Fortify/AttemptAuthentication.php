@@ -18,7 +18,6 @@ class AttemptAuthentication
             ]);
 
             $credentials = $request->only(Fortify::username(), 'password');
-            $credentials['is_active'] = true;
 
             $user = User::where('email', $request->{Fortify::username()})->first();
 

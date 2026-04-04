@@ -1,6 +1,6 @@
-import { Head, useForm, usePage } from '@inertiajs/react';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,6 +15,15 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Pagination,
+    PaginationContent,
+    PaginationEllipsis,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from '@/components/ui/pagination';
 import {
     Table,
     TableBody,
@@ -40,11 +49,19 @@ interface ExpenseCategory {
 
 interface Props {
     [key: string]: unknown;
-    categories: ExpenseCategory[];
+    categories: {
+        data: ExpenseCategory[];
+        current_page: number;
+        last_page: number;
+        total: number;
+    };
+    filters: {
+        search: string | null;
+    };
 }
 
 export default function ExpenseCategoryIndex() {
-    const { categories } = usePage<Props>().props;
+    const { categories, filters } = usePage<Props>().props;
 
     const [isOpen, setIsOpen] = useState(false);
     const [editCategory, setEditCategory] = useState<ExpenseCategory | null>(
@@ -52,6 +69,30 @@ export default function ExpenseCategoryIndex() {
     );
     const [deleteCategory, setDeleteCategory] =
         useState<ExpenseCategory | null>(null);
+    const [search, setSearch] = useState(filters.search ?? '');
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            const params = new URLSearchParams(window.location.search);
+            if (search) {
+                params.set('search', search);
+            } else {
+                params.delete('search');
+            }
+            params.delete('page');
+            router.get(
+                `${window.location.pathname}?${params.toString()}`,
+                {},
+                {
+                    preserveState: true,
+                    preserveScroll: true,
+                    replace: true,
+                },
+            );
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [search]);
 
     const createForm = useForm({
         name: '',
@@ -100,6 +141,13 @@ export default function ExpenseCategoryIndex() {
                 setDeleteCategory(null);
             },
         });
+    };
+
+    const buildPageUrl = (page: number) => {
+        const params = new URLSearchParams();
+        params.set('page', String(page));
+        if (filters.search) params.set('search', filters.search);
+        return `?${params.toString()}`;
     };
 
     return (
@@ -164,6 +212,19 @@ export default function ExpenseCategoryIndex() {
                 </div>
 
                 <div className="rounded-xl border border-sidebar-border/70 p-6">
+                    <div className="mb-4 flex items-center gap-2">
+                        <div className="relative flex-1">
+                            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                type="text"
+                                placeholder="Search categories..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                className="pl-9"
+                            />
+                        </div>
+                    </div>
+
                     <div className="rounded-md border">
                         <Table>
                             <TableHeader>
@@ -176,7 +237,7 @@ export default function ExpenseCategoryIndex() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {categories.map((category) => (
+                                {categories.data.map((category) => (
                                     <TableRow key={category.id}>
                                         <TableCell>{category.id}</TableCell>
                                         <TableCell>{category.name}</TableCell>
@@ -228,7 +289,7 @@ export default function ExpenseCategoryIndex() {
                                         </TableCell>
                                     </TableRow>
                                 ))}
-                                {categories.length === 0 && (
+                                {categories.data.length === 0 && (
                                     <TableRow>
                                         <TableCell
                                             colSpan={3}
@@ -242,6 +303,86 @@ export default function ExpenseCategoryIndex() {
                             </TableBody>
                         </Table>
                     </div>
+
+                    {categories.last_page >= 1 && (
+                        <div className="mt-4">
+                            <Pagination>
+                                <PaginationContent>
+                                    <PaginationItem>
+                                        <PaginationPrevious
+                                            href={
+                                                categories.current_page > 1
+                                                    ? buildPageUrl(
+                                                          categories.current_page -
+                                                              1,
+                                                      )
+                                                    : undefined
+                                            }
+                                            className={
+                                                categories.current_page <= 1
+                                                    ? 'pointer-events-none opacity-50'
+                                                    : ''
+                                            }
+                                        />
+                                    </PaginationItem>
+
+                                    {Array.from(
+                                        { length: categories.last_page },
+                                        (_, i) => i + 1,
+                                    )
+                                        .filter(
+                                            (page) =>
+                                                page === 1 ||
+                                                page === categories.last_page ||
+                                                Math.abs(
+                                                    page -
+                                                        categories.current_page,
+                                                ) <= 2,
+                                        )
+                                        .map((page, index, array) => (
+                                            <PaginationItem key={page}>
+                                                {index > 0 &&
+                                                page - array[index - 1] > 1 ? (
+                                                    <PaginationEllipsis />
+                                                ) : (
+                                                    <PaginationLink
+                                                        href={buildPageUrl(
+                                                            page,
+                                                        )}
+                                                        isActive={
+                                                            page ===
+                                                            categories.current_page
+                                                        }
+                                                    >
+                                                        {page}
+                                                    </PaginationLink>
+                                                )}
+                                            </PaginationItem>
+                                        ))}
+
+                                    <PaginationItem>
+                                        <PaginationNext
+                                            href={
+                                                categories.current_page <
+                                                categories.last_page
+                                                    ? buildPageUrl(
+                                                          categories.current_page +
+                                                              1,
+                                                      )
+                                                    : undefined
+                                            }
+                                            className={
+                                                categories.current_page >=
+                                                categories.last_page
+                                                    ? 'pointer-events-none opacity-50'
+                                                    : ''
+                                            }
+                                        />
+                                    </PaginationItem>
+                                </PaginationContent>
+                            </Pagination>
+                        </div>
+                    )}
                 </div>
             </div>
 

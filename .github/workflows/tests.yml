@@ -50,7 +50,7 @@ jobs:
         run: php artisan key:generate
 
       - name: Run Migrations
-        run: php artisan migrate --env=testing
+        run: php artisan migrate:fresh --force
 
       - name: Clear Cache
         run: php artisan config:cache && php artisan cache:clear

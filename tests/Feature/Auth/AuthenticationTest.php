@@ -4,8 +4,6 @@ namespace Tests\Feature\Auth;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\RateLimiter;
-use Laravel\Fortify\Features;
 use Tests\TestCase;
 
 class AuthenticationTest extends TestCase
@@ -25,7 +23,7 @@ class AuthenticationTest extends TestCase
 
         $user = User::factory()->owner()->create();
 
-        $response = $this->post(route('login.store'), [
+        $response = $this->post(route('login'), [
             'email' => $user->email,
             'password' => 'password',
             'role' => 'owner',
@@ -42,11 +40,14 @@ class AuthenticationTest extends TestCase
 
     public function test_users_can_not_authenticate_with_invalid_password()
     {
-        $user = User::factory()->create();
+        $this->withoutTwoFactor();
 
-        $this->post(route('login.store'), [
+        $user = User::factory()->owner()->create();
+
+        $this->post(route('login'), [
             'email' => $user->email,
             'password' => 'wrong-password',
+            'role' => 'owner',
         ]);
 
         $this->assertGuest();
@@ -54,7 +55,9 @@ class AuthenticationTest extends TestCase
 
     public function test_users_can_logout()
     {
-        $user = User::factory()->create();
+        $this->withoutTwoFactor();
+
+        $user = User::factory()->owner()->create();
 
         $response = $this->actingAs($user)->post(route('logout'));
 
@@ -64,13 +67,22 @@ class AuthenticationTest extends TestCase
 
     public function test_users_are_rate_limited()
     {
-        $user = User::factory()->create();
+        $this->withoutTwoFactor();
 
-        RateLimiter::increment(md5('login'.implode('|', [$user->email, '127.0.0.1'])), amount: 5);
+        $user = User::factory()->owner()->create();
 
-        $response = $this->post(route('login.store'), [
+        for ($i = 0; $i < 6; $i++) {
+            $this->post(route('login'), [
+                'email' => $user->email,
+                'password' => 'wrong-password',
+                'role' => 'owner',
+            ]);
+        }
+
+        $response = $this->post(route('login'), [
             'email' => $user->email,
             'password' => 'wrong-password',
+            'role' => 'owner',
         ]);
 
         $response->assertTooManyRequests();

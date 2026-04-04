@@ -74,11 +74,13 @@ export default function ExpenseCategoryIndex() {
     useEffect(() => {
         const timer = setTimeout(() => {
             const params = new URLSearchParams(window.location.search);
+
             if (search) {
                 params.set('search', search);
             } else {
                 params.delete('search');
             }
+
             params.delete('page');
             router.get(
                 `${window.location.pathname}?${params.toString()}`,
@@ -146,7 +148,11 @@ export default function ExpenseCategoryIndex() {
     const buildPageUrl = (page: number) => {
         const params = new URLSearchParams();
         params.set('page', String(page));
-        if (filters.search) params.set('search', filters.search);
+
+        if (filters.search) {
+params.set('search', filters.search);
+}
+
         return `?${params.toString()}`;
     };
 

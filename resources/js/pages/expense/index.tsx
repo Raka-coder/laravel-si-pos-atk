@@ -124,11 +124,13 @@ export default function ExpenseIndex() {
     useEffect(() => {
         const timer = setTimeout(() => {
             const params = new URLSearchParams(window.location.search);
+
             if (search) {
                 params.set('search', search);
             } else {
                 params.delete('search');
             }
+
             params.delete('page');
             router.get(
                 `${window.location.pathname}?${params.toString()}`,
@@ -212,10 +214,23 @@ export default function ExpenseIndex() {
     const buildPageUrl = (page: number) => {
         const params = new URLSearchParams();
         params.set('page', String(page));
-        if (filters.search) params.set('search', filters.search);
-        if (filters.category_id) params.set('category_id', filters.category_id);
-        if (filters.date_from) params.set('date_from', filters.date_from);
-        if (filters.date_to) params.set('date_to', filters.date_to);
+
+        if (filters.search) {
+params.set('search', filters.search);
+}
+
+        if (filters.category_id) {
+params.set('category_id', filters.category_id);
+}
+
+        if (filters.date_from) {
+params.set('date_from', filters.date_from);
+}
+
+        if (filters.date_to) {
+params.set('date_to', filters.date_to);
+}
+
         return `?${params.toString()}`;
     };
 

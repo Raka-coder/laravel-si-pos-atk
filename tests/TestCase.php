@@ -13,4 +13,13 @@ abstract class TestCase extends BaseTestCase
             $this->markTestSkipped($message ?? "Fortify feature [{$feature}] is not enabled.");
         }
     }
+
+    protected function withoutTwoFactor(): void
+    {
+        config(['fortify.features' => [
+            Features::registration(),
+            Features::resetPasswords(),
+            Features::emailVerification(),
+        ]]);
+    }
 }

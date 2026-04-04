@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Spatie\Permission\Models\Role;
 
 /**
  * @extends Factory<User>
@@ -56,5 +57,27 @@ class UserFactory extends Factory
             'two_factor_recovery_codes' => encrypt(json_encode(['recovery-code-1'])),
             'two_factor_confirmed_at' => now(),
         ]);
+    }
+
+    /**
+     * Indicate that the user has the owner role.
+     */
+    public function owner(): static
+    {
+        return $this->afterCreating(function (User $user) {
+            $role = Role::firstOrCreate(['name' => 'owner', 'guard_name' => 'web']);
+            $user->assignRole($role);
+        });
+    }
+
+    /**
+     * Indicate that the user has the cashier role.
+     */
+    public function cashier(): static
+    {
+        return $this->afterCreating(function (User $user) {
+            $role = Role::firstOrCreate(['name' => 'cashier', 'guard_name' => 'web']);
+            $user->assignRole($role);
+        });
     }
 }

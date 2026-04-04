@@ -41,6 +41,11 @@ class TransactionService
     {
         return DB::transaction(function () use ($data) {
             $userId = auth()->id();
+            $paymentMethod = $data['payment_method'];
+
+            // Determine payment status based on payment method
+            // Cash: immediately paid, QRIS/Midtrans: pending until payment confirmed
+            $paymentStatus = in_array($paymentMethod, ['cash']) ? 'paid' : 'pending';
 
             $transaction = Transaction::create([
                 'receipt_number' => $this->generateReceiptNumber(),
@@ -48,46 +53,102 @@ class TransactionService
                 'discount_amount' => $data['discount_amount'] ?? 0,
                 'tax_amount' => $data['tax_amount'],
                 'total_price' => $data['total_price'],
-                'payment_method' => $data['payment_method'],
-                'payment_status' => 'paid',
-                'amount_paid' => $data['amount_paid'],
-                'change_amount' => $data['change_amount'],
+                'payment_method' => $paymentMethod,
+                'payment_status' => $paymentStatus,
+                'amount_paid' => $data['amount_paid'] ?? 0,
+                'change_amount' => $data['change_amount'] ?? 0,
                 'note' => $data['note'] ?? null,
                 'transaction_date' => now(),
                 'user_id' => $userId,
             ]);
 
+            // Always save transaction items so they're available for Midtrans display
+            // Stock will be deducted only after payment confirmation for qris/midtrans
             foreach ($data['items'] as $item) {
-                $product = Product::find($item['product_id']);
+                $this->saveTransactionItem($item, $transaction, $userId);
+            }
+
+            return $transaction;
+        });
+    }
+
+    /**
+     * Save transaction item without deducting stock (for pending payments)
+     */
+    private function saveTransactionItem(array $item, Transaction $transaction, int $userId): void
+    {
+        $product = Product::find($item['product_id']);
+
+        TransactionItem::create([
+            'transaction_id' => $transaction->id,
+            'product_id' => $item['product_id'],
+            'product_name' => $product->name,
+            'price_buy_snapshot' => $item['price_buy_snapshot'] ?? $product->buy_price,
+            'price_sell' => $item['price_sell'] ?? $item['price'],
+            'quantity' => $item['quantity'],
+            'discount_amount' => $item['discount_amount'] ?? 0,
+            'subtotal' => $item['subtotal'] ?? ($item['price_sell'] ?? $item['price'] * $item['quantity']),
+        ]);
+    }
+
+    /**
+     * Process a single transaction item (update stock, create movement)
+     */
+    private function processTransactionItem(array $item, Transaction $transaction, int $userId): void
+    {
+        // First save the item
+        $this->saveTransactionItem($item, $transaction, $userId);
+
+        // Then deduct stock
+        $product = Product::find($item['product_id']);
+        $stockBefore = $product->stock;
+
+        $product->decrement('stock', $item['quantity']);
+        $product->refresh();
+
+        StockMovement::create([
+            'movement_type' => 'sale',
+            'qty' => $item['quantity'],
+            'stock_before' => $stockBefore,
+            'stock_after' => $product->stock,
+            'reason' => 'Penjualan - '.$transaction->receipt_number,
+            'product_id' => $item['product_id'],
+            'user_id' => $userId,
+            'reference_id' => $transaction->id,
+        ]);
+    }
+
+    /**
+     * Process payment confirmed transaction (for QRIS/Midtrans)
+     */
+    public function confirmPayment(Transaction $transaction): void
+    {
+        DB::transaction(function () use ($transaction) {
+            // Update payment status
+            $transaction->update([
+                'payment_status' => 'paid',
+                'amount_paid' => $transaction->total_price,
+            ]);
+
+            // Deduct stock for all items
+            foreach ($transaction->items as $item) {
+                $product = Product::find($item->product_id);
                 $stockBefore = $product->stock;
 
-                TransactionItem::create([
-                    'transaction_id' => $transaction->id,
-                    'product_id' => $item['product_id'],
-                    'product_name' => $product->name,
-                    'price_buy_snapshot' => $item['price_buy_snapshot'] ?? $product->buy_price,
-                    'price_sell' => $item['price_sell'] ?? $item['price'],
-                    'quantity' => $item['quantity'],
-                    'discount_amount' => $item['discount_amount'] ?? 0,
-                    'subtotal' => $item['subtotal'] ?? ($item['price_sell'] ?? $item['price'] * $item['quantity']),
-                ]);
-
-                $product->decrement('stock', $item['quantity']);
+                $product->decrement('stock', $item->quantity);
                 $product->refresh();
 
                 StockMovement::create([
                     'movement_type' => 'sale',
-                    'qty' => $item['quantity'],
+                    'qty' => $item->quantity,
                     'stock_before' => $stockBefore,
                     'stock_after' => $product->stock,
                     'reason' => 'Penjualan - '.$transaction->receipt_number,
-                    'product_id' => $item['product_id'],
-                    'user_id' => $userId,
+                    'product_id' => $item->product_id,
+                    'user_id' => $transaction->user_id,
                     'reference_id' => $transaction->id,
                 ]);
             }
-
-            return $transaction;
         });
     }
 

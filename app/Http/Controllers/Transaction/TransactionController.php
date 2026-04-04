@@ -8,6 +8,7 @@ use App\Models\ShopSetting;
 use App\Models\StockMovement;
 use App\Models\Transaction;
 use App\Models\TransactionItem;
+use App\Services\MidtransService;
 use App\Services\TransactionService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -26,9 +27,9 @@ class TransactionController extends Controller
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('receipt_number', 'like', "%{$search}%")
-                      ->orWhereHas('user', function ($q) use ($search) {
-                          $q->where('name', 'like', "%{$search}%");
-                      });
+                        ->orWhereHas('user', function ($q) use ($search) {
+                            $q->where('name', 'like', "%{$search}%");
+                        });
                 });
             })
             ->orderBy('created_at', 'desc')
@@ -51,7 +52,7 @@ class TransactionController extends Controller
             'discount_amount' => $request->input('discount_amount', 0),
             'tax_amount' => $request->input('tax_amount', 0),
             'total_price' => $request->input('total_price', 0),
-            'payment_method' => $request->input('payment_method'),
+            'payment_method' => $request->input('payment_method', 'cash'),
             'amount_paid' => $request->input('amount_paid', 0),
             'change_amount' => $request->input('change_amount', 0),
             'note' => $request->input('note'),
@@ -59,6 +60,62 @@ class TransactionController extends Controller
 
         $transaction = app(TransactionService::class)->createTransaction($data);
 
+        // For Midtrans/QRIS, return token info
+        $paymentMethod = $data['payment_method'];
+
+        if (in_array($paymentMethod, ['midtrans', 'qris'])) {
+            try {
+                $midtransService = app(MidtransService::class);
+
+                \Log::info('Midtrans Service Config', [
+                    'isConfigured' => $midtransService->isConfigured(),
+                    'serverKey' => $midtransService->isConfigured() ? 'set' : 'missing',
+                ]);
+
+                if ($midtransService->isConfigured()) {
+                    $snapResult = $midtransService->createSnapToken($transaction);
+
+                    \Log::info('Midtrans Snap Result', $snapResult);
+
+                    if ($snapResult['success']) {
+                        return response()->json([
+                            'success' => true,
+                            'transaction_id' => $transaction->id,
+                            'receipt_number' => $transaction->receipt_number,
+                            'payment_method' => $paymentMethod,
+                            'snap_token' => $snapResult['token'],
+                            'redirect_url' => $snapResult['redirect_url'],
+                        ]);
+                    } else {
+                        return response()->json([
+                            'success' => false,
+                            'error' => $snapResult['error'] ?? 'Failed to create snap token',
+                        ], 500);
+                    }
+                } else {
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'Midtrans is not configured. Please configure your keys in Shop Settings.',
+                    ], 500);
+                }
+            } catch (\Exception $e) {
+                \Log::error('Midtrans Payment Error: '.$e->getMessage(), [
+                    'trace' => $e->getTraceAsString(),
+                ]);
+
+                // If Midtrans fails, mark as failed
+                $transaction->update([
+                    'payment_status' => 'cancelled',
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Payment initialization failed: '.$e->getMessage(),
+                ], 500);
+            }
+        }
+
+        // For cash, redirect to transaction detail
         return redirect()->route('transactions.show', $transaction->id);
     }
 
@@ -109,6 +166,7 @@ class TransactionController extends Controller
             'products' => $products,
             'taxRate' => $shop->tax_rate,
             'paperSize' => $shop->paper_size,
+            'midtransClientKey' => config('midtrans.client_key') ?: env('MIDTRANS_CLIENT_KEY', ''),
         ]);
     }
 

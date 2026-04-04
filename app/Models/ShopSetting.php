@@ -15,6 +15,9 @@ class ShopSetting extends Model
         'logo_path',
         'qris_image_path',
         'midtrans_merchant_id',
+        'midtrans_client_key',
+        'midtrans_server_key',
+        'midtrans_is_production',
         'tax_rate',
         'receipt_footer',
         'paper_size',
@@ -22,6 +25,7 @@ class ShopSetting extends Model
 
     protected $casts = [
         'tax_rate' => 'decimal:2',
+        'midtrans_is_production' => 'boolean',
     ];
 
     public static function getShop(): self

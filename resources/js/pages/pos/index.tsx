@@ -15,6 +15,22 @@ import { Label } from '@/components/ui/label';
 import { useCartStore } from '@/stores/cartStore';
 import type { BreadcrumbItem } from '@/types';
 
+declare global {
+    interface Window {
+        snap?: {
+            pay: (
+                token: string,
+                options: {
+                    onSuccess: (result: unknown) => void;
+                    onPending: (result: unknown) => void;
+                    onError: (result: unknown) => void;
+                    onClose: () => void;
+                },
+            ) => void;
+        };
+    }
+}
+
 interface Product {
     id: number;
     barcode: string;
@@ -33,6 +49,15 @@ interface Props {
     [key: string]: unknown;
     products: Product[];
     taxRate: number;
+    midtransClientKey?: string;
+}
+
+interface MidtransTransactionResponse {
+    success: boolean;
+    transaction_id: number;
+    snap_token?: string;
+    redirect_url?: string;
+    error?: string;
 }
 
 const formatCurrency = (value: number) => {
@@ -44,7 +69,11 @@ const formatCurrency = (value: number) => {
 };
 
 export default function POSIndex() {
-    const { products, taxRate: initialTaxRate } = usePage<Props>().props;
+    const {
+        products,
+        taxRate: initialTaxRate,
+        midtransClientKey,
+    } = usePage<Props>().props;
 
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<number | null>(
@@ -53,6 +82,10 @@ export default function POSIndex() {
     const [isPaymentOpen, setIsPaymentOpen] = useState(false);
     const [amountPaid, setAmountPaid] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
+    const [paymentMethod, setPaymentMethod] = useState<
+        'cash' | 'qris' | 'midtrans'
+    >('cash');
+    const [paymentError, setPaymentError] = useState<string | null>(null);
 
     const {
         items,
@@ -100,7 +133,123 @@ export default function POSIndex() {
         setAmountPaid(String(Math.ceil(total / 1000) * 1000));
     };
 
-    const handleProcessPayment = () => {
+    const handleProcessPayment = async () => {
+        // For QRIS/Midtrans, handle differently
+        if (paymentMethod === 'qris' || paymentMethod === 'midtrans') {
+            if (!midtransClientKey) {
+                setPaymentError(
+                    'Midtrans belum dikonfigurasi. Cek Client Key di pengaturan toko.',
+                );
+
+                return;
+            }
+
+            setIsProcessing(true);
+            setPaymentError(null);
+
+            try {
+                const response = await fetch('/transactions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN':
+                            document
+                                .querySelector('meta[name="csrf-token"]')
+                                ?.getAttribute('content') || '',
+                    },
+                    body: JSON.stringify({
+                        items: getItemsForBackend(),
+                        subtotal,
+                        discount_amount: 0,
+                        tax_amount: taxAmount,
+                        total_price: total,
+                        payment_method: paymentMethod,
+                        amount_paid: total,
+                        change_amount: 0,
+                        note: '',
+                    }),
+                });
+
+                const data: MidtransTransactionResponse = await response.json();
+
+                if (data.success && data.snap_token) {
+                    const snapToken = data.snap_token;
+
+                    localStorage.setItem(
+                        'pending_transaction_id',
+                        String(data.transaction_id),
+                    );
+
+                    if (!window.snap) {
+                        if (data.redirect_url) {
+                            window.location.href = data.redirect_url;
+
+                            return;
+                        }
+
+                        setPaymentError(
+                            'Snap belum siap. Muat ulang halaman lalu coba lagi.',
+                        );
+                        setIsProcessing(false);
+
+                        return;
+                    }
+
+                    setIsPaymentOpen(false);
+
+                    window.setTimeout(() => {
+                        window.snap?.pay(snapToken, {
+                            onSuccess: function (_result: unknown) {
+                                console.log('Payment success:', _result);
+                                setIsProcessing(false);
+                                clearCart();
+                                localStorage.removeItem(
+                                    'pending_transaction_id',
+                                );
+                                router.visit(
+                                    `/transactions/${data.transaction_id}`,
+                                );
+                            },
+                            onPending: function (_result: unknown) {
+                                console.log('Payment pending:', _result);
+                                setIsProcessing(false);
+                                clearCart();
+                                localStorage.removeItem(
+                                    'pending_transaction_id',
+                                );
+                                router.visit(
+                                    `/transactions/${data.transaction_id}`,
+                                );
+                            },
+                            onError: function (_result: unknown) {
+                                console.log('Payment error:', _result);
+                                setPaymentError(
+                                    'Pembayaran gagal. Silakan coba lagi.',
+                                );
+                                setIsProcessing(false);
+                                setIsPaymentOpen(true);
+                            },
+                            onClose: function () {
+                                setPaymentError('Pembayaran dibatalkan.');
+                                setIsProcessing(false);
+                                setIsPaymentOpen(true);
+                            },
+                        });
+                    }, 100);
+                } else {
+                    setPaymentError(data.error || 'Gagal memulai pembayaran');
+                    setIsProcessing(false);
+                }
+            } catch {
+                setPaymentError('Terjadi kesalahan. Silakan coba lagi.');
+                setIsProcessing(false);
+            }
+
+            return;
+        }
+
+        // For cash payment
+
         const paid = parseFloat(amountPaid) || 0;
 
         if (paid < total) {
@@ -380,11 +529,58 @@ export default function POSIndex() {
                     <DialogHeader>
                         <DialogTitle>Pembayaran</DialogTitle>
                         <DialogDescription>
-                            Masukkan jumlah pembayaran dari customer
+                            Pilih metode pembayaran
                         </DialogDescription>
                     </DialogHeader>
 
                     <div className="space-y-4 py-4">
+                        {/* Payment Method Selection */}
+                        <div className="grid grid-cols-3 gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setPaymentMethod('cash')}
+                                className={`flex flex-col items-center justify-center gap-2 rounded-lg border-2 p-3 transition-all ${
+                                    paymentMethod === 'cash'
+                                        ? 'border-green-500 bg-green-50 text-green-700 dark:bg-green-950'
+                                        : 'border-border bg-background text-muted-foreground hover:border-green-300'
+                                }`}
+                            >
+                                <span className="text-2xl">💵</span>
+                                <span className="text-sm font-medium">
+                                    Tunai
+                                </span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setPaymentMethod('qris')}
+                                className={`flex flex-col items-center justify-center gap-2 rounded-lg border-2 p-3 transition-all ${
+                                    paymentMethod === 'qris'
+                                        ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-950'
+                                        : 'border-border bg-background text-muted-foreground hover:border-blue-300'
+                                }`}
+                            >
+                                <span className="text-2xl">📱</span>
+                                <span className="text-sm font-medium">
+                                    QRIS
+                                </span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setPaymentMethod('midtrans')}
+                                className={`flex flex-col items-center justify-center gap-2 rounded-lg border-2 p-3 transition-all ${
+                                    paymentMethod === 'midtrans'
+                                        ? 'border-purple-500 bg-purple-50 text-purple-700 dark:bg-purple-950'
+                                        : 'border-border bg-background text-muted-foreground hover:border-purple-300'
+                                }`}
+                            >
+                                <span className="text-2xl">💳</span>
+                                <span className="text-sm font-medium">
+                                    Midtrans
+                                </span>
+                            </button>
+                        </div>
+
+                        {/* Total Display */}
                         <div className="rounded-lg bg-muted p-4">
                             <div className="text-sm text-muted-foreground">
                                 Total Pembayaran
@@ -394,25 +590,54 @@ export default function POSIndex() {
                             </div>
                         </div>
 
-                        <div className="grid gap-2">
-                            <Label htmlFor="amount">Jumlah Bayar</Label>
-                            <Input
-                                id="amount"
-                                type="number"
-                                value={amountPaid}
-                                onChange={(e) => setAmountPaid(e.target.value)}
-                                placeholder="Masukkan jumlah..."
-                            />
-                        </div>
+                        {/* Cash Payment Fields */}
+                        {paymentMethod === 'cash' && (
+                            <div className="grid gap-2">
+                                <Label htmlFor="amount">Jumlah Bayar</Label>
+                                <Input
+                                    id="amount"
+                                    type="number"
+                                    value={amountPaid}
+                                    onChange={(e) =>
+                                        setAmountPaid(e.target.value)
+                                    }
+                                    placeholder="Masukkan jumlah..."
+                                />
+                                {parseFloat(amountPaid) >= total && (
+                                    <div className="rounded-lg bg-green-50 p-3 dark:bg-green-900">
+                                        <div className="text-sm text-green-700 dark:text-green-300">
+                                            Kembalian
+                                        </div>
+                                        <div className="text-lg font-bold text-green-700 dark:text-green-300">
+                                            {formatCurrency(
+                                                Math.max(0, changeAmount),
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
-                        {parseFloat(amountPaid) >= total && (
-                            <div className="rounded-lg bg-green-50 p-4 dark:bg-green-900">
-                                <div className="text-sm text-green-700 dark:text-green-300">
-                                    Kembalian
+                        {/* QRIS/Midtrans Info */}
+                        {(paymentMethod === 'qris' ||
+                            paymentMethod === 'midtrans') && (
+                            <div className="rounded-lg bg-blue-50 p-4 dark:bg-blue-950">
+                                <div className="text-sm text-blue-700 dark:text-blue-300">
+                                    {paymentMethod === 'qris'
+                                        ? 'Bayar dengan QR Code (QRIS)'
+                                        : 'Bayar dengan Midtrans (Kartu, GoPay, ShopeePay, dll)'}
                                 </div>
-                                <div className="text-xl font-bold text-green-700 dark:text-green-300">
-                                    {formatCurrency(Math.max(0, changeAmount))}
+                                <div className="mt-2 text-xs text-blue-600 dark:text-blue-400">
+                                    Klik "Proses Pembayaran" untuk membuka
+                                    metode pembayaran digital
                                 </div>
+                            </div>
+                        )}
+
+                        {/* Error Message */}
+                        {paymentError && (
+                            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-950 dark:text-red-400">
+                                {paymentError}
                             </div>
                         )}
                     </div>
@@ -429,7 +654,9 @@ export default function POSIndex() {
                             size="lg"
                             onClick={handleProcessPayment}
                             disabled={
-                                isProcessing || parseFloat(amountPaid) < total
+                                isProcessing ||
+                                (paymentMethod === 'cash' &&
+                                    parseFloat(amountPaid) < total)
                             }
                         >
                             {isProcessing

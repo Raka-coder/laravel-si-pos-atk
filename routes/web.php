@@ -4,6 +4,7 @@ use App\Http\Controllers\Category\CategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Expense\ExpenseController;
 use App\Http\Controllers\ExpenseCategory\ExpenseCategoryController;
+use App\Http\Controllers\Payment\MidtransCallbackController;
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\Settings\ShopSettingController;
@@ -20,6 +21,10 @@ Route::get('/', function () {
         'canRegister' => Features::enabled(Features::registration()),
     ]);
 })->name('home');
+
+// Midtrans webhook (no auth required - verified by signature)
+Route::post('midtrans/notification', [MidtransCallbackController::class, 'handleNotification'])->name('midtrans.notification');
+Route::get('midtrans/redirect', [MidtransCallbackController::class, 'handleRedirect'])->name('midtrans.redirect');
 
 Route::middleware(['auth', 'verified', 'role:owner'])->group(function () {
     Route::resource('users', UserController::class)->except(['create', 'edit']);

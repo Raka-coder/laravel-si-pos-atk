@@ -21,6 +21,7 @@ class TransactionController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search', '');
+        $paymentMethod = $request->input('payment_method', 'all');
         $perPage = 20;
 
         $transactions = Transaction::with('user')
@@ -32,6 +33,9 @@ class TransactionController extends Controller
                         });
                 });
             })
+            ->when($paymentMethod && $paymentMethod !== 'all', function ($query) use ($paymentMethod) {
+                $query->where('payment_method', $paymentMethod);
+            })
             ->orderBy('created_at', 'desc')
             ->paginate($perPage)
             ->withQueryString();
@@ -40,6 +44,7 @@ class TransactionController extends Controller
             'transactions' => $transactions,
             'filters' => [
                 'search' => $search,
+                'payment_method' => $paymentMethod,
             ],
         ]);
     }

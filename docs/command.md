@@ -1,4 +1,3 @@
-revisi fitur login form
-
 request fitur
-Perbaiki desain UI form login pada component dropdown role, buat opsi role menggunakan component switch/toggle button dengan role owner dan admin
+Tambahkan fitur sorting/filter dengan komponen dropdown shadcn pada halaman transaksi, buat filter kategori pembayaran (tunai, qris, midtrans), letakkan disamping search bar
+

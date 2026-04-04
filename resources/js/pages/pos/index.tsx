@@ -1,6 +1,16 @@
 import { Head, usePage, router } from '@inertiajs/react';
-import { Minus, Plus, Search, ShoppingCart, Trash2, X } from 'lucide-react';
+import { Minus, Plus, Search, ShoppingCart, Trash2, BanknoteIcon, QrCodeIcon, CreditCardIcon, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -86,6 +96,7 @@ export default function POSIndex() {
         'cash' | 'qris' | 'midtrans'
     >('cash');
     const [paymentError, setPaymentError] = useState<string | null>(null);
+    const [isClearCartDialogOpen, setIsClearCartDialogOpen] = useState(false);
 
     const {
         items,
@@ -284,9 +295,12 @@ export default function POSIndex() {
     };
 
     const handleClearCart = () => {
-        if (confirm('Apakah Anda yakin ingin mengosongkan keranjang?')) {
-            clearCart();
-        }
+        setIsClearCartDialogOpen(true);
+    };
+
+    const confirmClearCart = () => {
+        clearCart();
+        setIsClearCartDialogOpen(false);
     };
 
     const changeAmount = parseFloat(amountPaid) - total;
@@ -545,7 +559,7 @@ export default function POSIndex() {
                                         : 'border-border bg-background text-muted-foreground hover:border-green-300'
                                 }`}
                             >
-                                <span className="text-2xl">💵</span>
+                                <BanknoteIcon />
                                 <span className="text-sm font-medium">
                                     Tunai
                                 </span>
@@ -559,7 +573,7 @@ export default function POSIndex() {
                                         : 'border-border bg-background text-muted-foreground hover:border-blue-300'
                                 }`}
                             >
-                                <span className="text-2xl">📱</span>
+                                <QrCodeIcon className="text-2xl" />
                                 <span className="text-sm font-medium">
                                     QRIS
                                 </span>
@@ -573,7 +587,7 @@ export default function POSIndex() {
                                         : 'border-border bg-background text-muted-foreground hover:border-purple-300'
                                 }`}
                             >
-                                <span className="text-2xl">💳</span>
+                                <CreditCardIcon className="text-2xl" />
                                 <span className="text-sm font-medium">
                                     Midtrans
                                 </span>
@@ -666,6 +680,37 @@ export default function POSIndex() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* Clear Cart Confirmation Dialog */}
+            <AlertDialog
+                open={isClearCartDialogOpen}
+                onOpenChange={setIsClearCartDialogOpen}
+            >
+                <AlertDialogContent>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-4 right-4 h-6 w-6"
+                        onClick={() => setIsClearCartDialogOpen(false)}
+                    >
+                        <X className="h-4 w-4" />
+                    </Button>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Clear Cart</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to clear the cart? All items
+                            will be removed and this action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmClearCart}>
+                            Clear
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </>
     );
 }

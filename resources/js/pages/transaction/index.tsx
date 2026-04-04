@@ -13,6 +13,13 @@ import {
     PaginationPrevious,
 } from '@/components/ui/pagination';
 import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import {
     Table,
     TableBody,
     TableCell,
@@ -58,6 +65,7 @@ interface Props {
     };
     filters: {
         search: string;
+        payment_method: string;
     };
 }
 
@@ -84,23 +92,55 @@ export default function TransactionIndex() {
 
     const [searchQuery, setSearchQuery] = useState(filters.search || '');
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
+    const [paymentMethod, setPaymentMethod] = useState(
+        filters.payment_method || 'all',
+    );
 
     // Debounce search
     useEffect(() => {
+        const params: Record<string, string> = {};
+
+        if (searchTerm) {
+            params.search = searchTerm;
+        }
+
+        if (paymentMethod && paymentMethod !== 'all') {
+            params.payment_method = paymentMethod;
+        }
+
         const timer = setTimeout(() => {
-            router.get(
-                '/transactions',
-                { search: searchTerm },
-                {
-                    preserveState: true,
-                    preserveScroll: true,
-                    replace: true,
-                },
-            );
+            router.get('/transactions', params, {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true,
+            });
         }, 500);
 
         return () => clearTimeout(timer);
-    }, [searchTerm]);
+    }, [searchTerm, paymentMethod]);
+
+    const handlePaymentMethodChange = (value: string) => {
+        setPaymentMethod(value);
+    };
+
+    // Get current filters for pagination
+    const getPaginationLink = (page: number) => {
+        const params = new URLSearchParams();
+
+        if (searchTerm) {
+            params.set('search', searchTerm);
+        }
+
+        if (paymentMethod && paymentMethod !== 'all') {
+            params.set('payment_method', paymentMethod);
+        }
+
+        if (page > 1) {
+            params.set('page', page.toString());
+        }
+
+        return params.toString() ? `?${params.toString()}` : '';
+    };
 
     return (
         <>
@@ -112,7 +152,7 @@ export default function TransactionIndex() {
                 </div>
 
                 <div className="rounded-xl border border-sidebar-border/70 p-6">
-                    <div className="mb-4 flex gap-4">
+                    <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                         <div className="relative flex-1">
                             <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
@@ -125,6 +165,25 @@ export default function TransactionIndex() {
                                 className="pl-9"
                             />
                         </div>
+
+                        <Select
+                            value={paymentMethod}
+                            onValueChange={handlePaymentMethodChange}
+                        >
+                            <SelectTrigger className="w-45">
+                                <SelectValue placeholder="Metode Pembayaran" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">
+                                    Semua Metode
+                                </SelectItem>
+                                <SelectItem value="cash">Cash</SelectItem>
+                                <SelectItem value="qris">QRIS</SelectItem>
+                                <SelectItem value="midtrans">
+                                    Midtrans
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
 
                     <div className="rounded-md border">
@@ -263,7 +322,10 @@ export default function TransactionIndex() {
                                         <PaginationPrevious
                                             href={
                                                 transactions.current_page > 1
-                                                    ? `?page=${transactions.current_page - 1}${filters.search ? `&search=${filters.search}` : ''}`
+                                                    ? getPaginationLink(
+                                                          transactions.current_page -
+                                                              1,
+                                                      )
                                                     : undefined
                                             }
                                             className={
@@ -295,7 +357,9 @@ export default function TransactionIndex() {
                                                     <PaginationEllipsis />
                                                 ) : (
                                                     <PaginationLink
-                                                        href={`?page=${page}${filters.search ? `&search=${filters.search}` : ''}`}
+                                                        href={getPaginationLink(
+                                                            page,
+                                                        )}
                                                         isActive={
                                                             page ===
                                                             transactions.current_page
@@ -312,7 +376,10 @@ export default function TransactionIndex() {
                                             href={
                                                 transactions.current_page <
                                                 transactions.last_page
-                                                    ? `?page=${transactions.current_page + 1}${filters.search ? `&search=${filters.search}` : ''}`
+                                                    ? getPaginationLink(
+                                                          transactions.current_page +
+                                                              1,
+                                                      )
                                                     : undefined
                                             }
                                             className={

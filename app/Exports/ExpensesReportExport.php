@@ -3,10 +3,14 @@
 namespace App\Exports;
 
 use App\Models\Expense;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 
+/**
+ * @implements WithMapping<Expense>
+ */
 class ExpensesReportExport implements FromCollection, WithHeadings, WithMapping
 {
     protected $startDate;
@@ -19,7 +23,7 @@ class ExpensesReportExport implements FromCollection, WithHeadings, WithMapping
         $this->endDate = $endDate;
     }
 
-    public function collection()
+    public function collection(): Collection
     {
         return Expense::with(['user', 'category'])
             ->whereBetween('date', [$this->startDate, $this->endDate])

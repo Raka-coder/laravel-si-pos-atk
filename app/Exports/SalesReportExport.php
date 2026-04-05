@@ -3,10 +3,14 @@
 namespace App\Exports;
 
 use App\Models\Transaction;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 
+/**
+ * @implements WithMapping<Transaction>
+ */
 class SalesReportExport implements FromCollection, WithHeadings, WithMapping
 {
     protected $startDate;
@@ -19,7 +23,7 @@ class SalesReportExport implements FromCollection, WithHeadings, WithMapping
         $this->endDate = $endDate.' 23:59:59';
     }
 
-    public function collection()
+    public function collection(): Collection
     {
         return Transaction::with(['user', 'items.product'])
             ->whereBetween('created_at', [$this->startDate, $this->endDate])

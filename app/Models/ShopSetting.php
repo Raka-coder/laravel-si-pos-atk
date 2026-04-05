@@ -4,6 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @method static ShopSetting create(array $attributes = [])
+ * @method static ShopSetting|null first()
+ */
 class ShopSetting extends Model
 {
     protected $fillable = [
@@ -30,7 +34,8 @@ class ShopSetting extends Model
 
     public static function getShop(): self
     {
-        $shop = self::first();
+        $shop = self::query()->first();
+
         if (! $shop) {
             $shop = self::create([
                 'shop_name' => 'Toko ATK',

@@ -45,9 +45,11 @@ jobs:
 
       - name: Copy Environment File
         run: cp .env.example .env && cp .env.example .env.testing
-
+      
       - name: Generate Application Key
-        run: php artisan key:generate
+        run: |
+            php artisan key:generate
+            php artisan key:generate --env=testing
 
       - name: Run Migrations
         run: php artisan migrate:fresh --force

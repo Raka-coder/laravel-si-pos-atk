@@ -45,15 +45,15 @@ jobs:
 
       - name: Copy Environment File
         run: cp .env.example .env && cp .env.example .env.testing
-      
+
       - name: Generate Application Key
         run: php artisan key:generate
 
       - name: Run Migrations
         run: php artisan migrate:fresh --force
 
-      - name: Clear Cache
-        run: php artisan config:cache && php artisan cache:clear
+      - name: Clear Config Cache
+        run: php artisan config:clear
 
       - name: Build Assets
         run: npm run build

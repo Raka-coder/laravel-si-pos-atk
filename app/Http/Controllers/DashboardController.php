@@ -121,7 +121,7 @@ class DashboardController extends Controller
             ]);
         } else {
             // Kasir - bukan owner, tampilkan cashier dashboard dengan data hari ini
-            $hourlyRevenue = Transaction::selectRaw('HOUR(created_at) as hour, SUM(total_price) as revenue')
+            $hourlyRevenue = Transaction::selectRaw("strftime('%H', created_at) as hour, SUM(total_price) as revenue")
                 ->where('payment_status', 'paid')
                 ->whereDate('created_at', today())
                 ->groupBy('hour')

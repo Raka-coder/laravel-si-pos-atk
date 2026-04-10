@@ -21,6 +21,14 @@ class MidtransService
 
     public function __construct()
     {
+        $this->loadConfiguration();
+    }
+
+    /**
+     * Load configuration from Shop Settings or environment
+     */
+    public function loadConfiguration(): void
+    {
         // Priority: Shop Settings > Environment Variables
         $shop = ShopSetting::getShop();
 

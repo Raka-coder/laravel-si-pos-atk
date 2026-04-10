@@ -25,6 +25,8 @@ class MidtransCallbackController extends Controller
 
         try {
             $midtransService = app(MidtransService::class);
+            $midtransService->loadConfiguration(); // Reload config to get latest ShopSetting
+
             $result = $midtransService->handleNotification($notification);
 
             if ($result['success']) {

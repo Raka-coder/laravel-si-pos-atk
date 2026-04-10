@@ -2,15 +2,29 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['movement_type', 'qty', 'stock_before', 'stock_after', 'reason', 'product_id', 'user_id', 'reference_id'])]
 class StockMovement extends Model
 {
     use HasFactory;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var list<string>
+     */
+    protected $fillable = [
+        'movement_type',
+        'qty',
+        'stock_before',
+        'stock_after',
+        'reason',
+        'product_id',
+        'user_id',
+        'reference_id',
+    ];
 
     protected function casts(): array
     {

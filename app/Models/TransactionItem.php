@@ -3,15 +3,29 @@
 namespace App\Models;
 
 use Database\Factories\TransactionItemFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['transaction_id', 'product_id', 'product_name', 'price_buy_snapshot', 'price_sell', 'quantity', 'discount_amount', 'subtotal'])]
 class TransactionItem extends Model
 {
     use HasFactory;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var list<string>
+     */
+    protected $fillable = [
+        'transaction_id',
+        'product_id',
+        'product_name',
+        'price_buy_snapshot',
+        'price_sell',
+        'quantity',
+        'discount_amount',
+        'subtotal',
+    ];
 
     public $timestamps = false;
 

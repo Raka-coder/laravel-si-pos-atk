@@ -3,16 +3,35 @@
 namespace App\Models;
 
 use Database\Factories\TransactionFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['receipt_number', 'subtotal', 'discount_amount', 'tax_amount', 'total_price', 'payment_method', 'payment_status', 'payment_reference', 'amount_paid', 'change_amount', 'note', 'transaction_date', 'user_id'])]
 class Transaction extends Model
 {
     use HasFactory;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var list<string>
+     */
+    protected $fillable = [
+        'receipt_number',
+        'subtotal',
+        'discount_amount',
+        'tax_amount',
+        'total_price',
+        'payment_method',
+        'payment_status',
+        'payment_reference',
+        'amount_paid',
+        'change_amount',
+        'note',
+        'transaction_date',
+        'user_id',
+    ];
 
     protected function casts(): array
     {

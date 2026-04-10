@@ -1,16 +1,23 @@
-import AppLogoIcon from '@/components/app-logo-icon';
-
-export default function AppLogo() {
+export default function AppLogo({
+    collapsed = false,
+}: {
+    collapsed?: boolean;
+}) {
     return (
-        <>
-            <div className="flex aspect-square size-8 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
-                <AppLogoIcon className="size-5 fill-current text-white dark:text-black" />
+        <div className="flex items-center gap-3">
+            <div className="flex aspect-square size-9 items-center justify-center">
+                <img src="/logo.svg" alt="ATK Sync Logo" className="size-7" />
             </div>
-            <div className="ml-1 grid flex-1 text-left text-sm">
-                <span className="mb-0.5 truncate leading-tight font-semibold">
-                    POS ATK Sync
-                </span>
-            </div>
-        </>
+            {!collapsed && (
+                <div className="flex flex-col">
+                    <span className="text-sm leading-tight font-bold tracking-tight">
+                        ATK Sync
+                    </span>
+                    <span className="text-[12px] text-muted-foreground">
+                        Point of Sale
+                    </span>
+                </div>
+            )}
+        </div>
     );
 }

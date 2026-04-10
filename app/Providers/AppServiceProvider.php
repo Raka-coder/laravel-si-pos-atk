@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\Product;
+use App\Observers\ProductObserver;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -24,10 +26,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Product::observe(ProductObserver::class);
+
         $this->configureDefaults();
-        if(config('app.env') === 'production') {
-            URL::forceScheme('https');
-        }
+        // if(config('app.env') === 'production') {
+        //     URL::forceScheme('https');
+        // }
     }
 
     /**

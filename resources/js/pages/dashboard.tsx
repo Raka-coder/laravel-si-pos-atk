@@ -6,6 +6,11 @@ import {
     TrendingUp,
     Wallet,
 } from 'lucide-react';
+import CategoryRevenueChart from '@/components/charts/CategoryRevenueChart';
+import MonthlyComparisonChart from '@/components/charts/MonthlyComparisonChart';
+import PaymentMethodChart from '@/components/charts/PaymentMethodChart';
+import RevenueChart from '@/components/charts/RevenueChart';
+import TopProductsChart from '@/components/charts/TopProductsChart';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { dashboard } from '@/routes';
@@ -21,6 +26,8 @@ interface Stats {
     today_revenue: number;
     today_expenses?: number;
     month_expenses?: number;
+    month_revenue?: number;
+    month_profit?: number;
 }
 
 interface Product {
@@ -32,11 +39,30 @@ interface Product {
     unit: { short_name: string } | null;
 }
 
+interface ChartData {
+    daily_revenue: { date: string; revenue: number; transactions: number }[];
+    payment_methods: { payment_method: string; count: number; total: number }[];
+    top_products: {
+        product_id: number;
+        product_name: string;
+        total_qty: number;
+        total_revenue: number;
+    }[];
+    category_revenue: { category_name: string | null; revenue: number }[];
+    monthly_revenue: {
+        year: number;
+        month: number;
+        revenue: number;
+        transactions: number;
+    }[];
+}
+
 interface Props {
     [key: string]: unknown;
     stats: Stats;
     lowStockProducts?: Product[];
     isCashier?: boolean;
+    chartData?: ChartData;
 }
 
 const formatCurrency = (value: number) => {
@@ -52,6 +78,7 @@ export default function Dashboard() {
         stats,
         lowStockProducts = [],
         isCashier = false,
+        chartData,
     } = usePage<Props>().props;
 
     return (
@@ -59,7 +86,7 @@ export default function Dashboard() {
             <Head title="Dashboard" />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <h1 className="text-2xl font-bold">
-                    {isCashier ? 'Cashier Dashboard' : 'Dashboard'}
+                    {isCashier ? 'Cashier Dashboard' : 'Owner Dashboard'}
                 </h1>
 
                 {isCashier ? (
@@ -125,6 +152,7 @@ export default function Dashboard() {
                     </div>
                 ) : (
                     <>
+                        {/* KPI Cards Row */}
                         <div className="grid auto-rows-min gap-4 md:grid-cols-2 lg:md:grid-cols-4">
                             <Card>
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -155,11 +183,58 @@ export default function Dashboard() {
                                         {formatCurrency(stats.today_revenue)}
                                     </div>
                                     <p className="text-xs text-muted-foreground">
-                                        Total income
+                                        Total income today
                                     </p>
                                 </CardContent>
                             </Card>
 
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium">
+                                        Monthly Revenue
+                                    </CardTitle>
+                                    <CreditCard className="h-4 w-4 text-muted-foreground" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold">
+                                        {formatCurrency(
+                                            stats.month_revenue || 0,
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">
+                                        This month
+                                    </p>
+                                </CardContent>
+                            </Card>
+
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium">
+                                        Monthly Profit
+                                    </CardTitle>
+                                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div
+                                        className={`text-2xl font-bold ${
+                                            (stats.month_profit || 0) >= 0
+                                                ? 'text-green-600'
+                                                : 'text-red-600'
+                                        }`}
+                                    >
+                                        {formatCurrency(
+                                            stats.month_profit || 0,
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">
+                                        Revenue - Expenses
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        {/* Secondary KPI Row */}
+                        <div className="grid auto-rows-min gap-4 md:grid-cols-4">
                             <Card>
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                     <CardTitle className="text-sm font-medium">
@@ -175,6 +250,25 @@ export default function Dashboard() {
                                     </div>
                                     <p className="text-xs text-muted-foreground">
                                         Total expenses
+                                    </p>
+                                </CardContent>
+                            </Card>
+
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium">
+                                        Monthly Expenses
+                                    </CardTitle>
+                                    <CreditCard className="h-4 w-4 text-muted-foreground" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold text-red-600">
+                                        {formatCurrency(
+                                            stats.month_expenses || 0,
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">
+                                        This month
                                     </p>
                                 </CardContent>
                             </Card>
@@ -224,6 +318,109 @@ export default function Dashboard() {
                             </Card>
                         </div>
 
+                        {/* Charts Row 1 */}
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <Card className="p-4">
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-base font-semibold">
+                                        Revenue Trend (30 Days)
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    {chartData?.daily_revenue ? (
+                                        <RevenueChart
+                                            data={chartData.daily_revenue}
+                                        />
+                                    ) : (
+                                        <div className="flex h-48 items-center justify-center text-muted-foreground">
+                                            Loading...
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+
+                            <Card className="p-4">
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-base font-semibold">
+                                        Payment Methods (30 Days)
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    {chartData?.payment_methods ? (
+                                        <PaymentMethodChart
+                                            data={chartData.payment_methods}
+                                        />
+                                    ) : (
+                                        <div className="flex h-48 items-center justify-center text-muted-foreground">
+                                            Loading...
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        {/* Charts Row 2 */}
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <Card className="p-4">
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-base font-semibold">
+                                        Top Selling Products (30 Days)
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    {chartData?.top_products ? (
+                                        <TopProductsChart
+                                            data={chartData.top_products}
+                                        />
+                                    ) : (
+                                        <div className="flex h-48 items-center justify-center text-muted-foreground">
+                                            Loading...
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+
+                            <Card className="p-4">
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-base font-semibold">
+                                        Revenue by Category (30 Days)
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    {chartData?.category_revenue ? (
+                                        <CategoryRevenueChart
+                                            data={chartData.category_revenue}
+                                        />
+                                    ) : (
+                                        <div className="flex h-48 items-center justify-center text-muted-foreground">
+                                            Loading...
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        {/* Monthly Comparison */}
+                        <Card className="p-4">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-base font-semibold">
+                                    Monthly Comparison (6 Months)
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                {chartData?.monthly_revenue ? (
+                                    <MonthlyComparisonChart
+                                        data={chartData.monthly_revenue}
+                                    />
+                                ) : (
+                                    <div className="flex h-48 items-center justify-center text-muted-foreground">
+                                        Loading...
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        {/* Low Stock Alert & Quick Actions */}
                         <div className="grid gap-4 md:grid-cols-2">
                             {lowStockProducts.length > 0 && (
                                 <Card className="border-red-500">

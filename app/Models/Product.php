@@ -3,16 +3,33 @@
 namespace App\Models;
 
 use App\Services\ProductCodeGenerator;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['product_code', 'barcode', 'name', 'buy_price', 'sell_price', 'stock', 'min_stock', 'image', 'is_active', 'category_id', 'unit_id'])]
 class Product extends Model
 {
     use HasFactory;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var list<string>
+     */
+    protected $fillable = [
+        'product_code',
+        'barcode',
+        'name',
+        'buy_price',
+        'sell_price',
+        'stock',
+        'min_stock',
+        'image',
+        'is_active',
+        'category_id',
+        'unit_id',
+    ];
 
     protected function casts(): array
     {

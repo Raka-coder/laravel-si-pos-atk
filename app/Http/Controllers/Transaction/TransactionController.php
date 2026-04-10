@@ -194,11 +194,17 @@ class TransactionController extends Controller
             foreach ($oldItems as $oldItem) {
                 $product = $oldItem->product;
                 if ($product) {
-                    $product->increment('stock', $oldItem->quantity);
+                    $stockBefore = $product->stock;
+
+                    Product::withoutEvents(function () use ($product, $oldItem) {
+                        $product->increment('stock', $oldItem->quantity);
+                    });
+                    $product->refresh();
+
                     StockMovement::create([
                         'movement_type' => 'return',
                         'qty' => $oldItem->quantity,
-                        'stock_before' => $product->stock + $oldItem->quantity,
+                        'stock_before' => $stockBefore,
                         'stock_after' => $product->stock,
                         'reason' => 'Edit transaction #'.$transaction->receipt_number,
                         'product_id' => $product->id,
@@ -215,7 +221,12 @@ class TransactionController extends Controller
                 $product = Product::find($item['product_id']);
                 $newQuantity = $item['quantity'];
 
-                $product->decrement('stock', $newQuantity);
+                $stockBefore = $product->stock;
+
+                Product::withoutEvents(function () use ($product, $newQuantity) {
+                    $product->decrement('stock', $newQuantity);
+                });
+                $product->refresh();
 
                 $itemSubtotal = ($item['price_sell'] * $newQuantity) - ($item['discount_amount'] ?? 0);
                 $subtotal += $itemSubtotal;
@@ -234,7 +245,7 @@ class TransactionController extends Controller
                 StockMovement::create([
                     'movement_type' => 'sale',
                     'qty' => $newQuantity,
-                    'stock_before' => $product->stock + $newQuantity,
+                    'stock_before' => $stockBefore,
                     'stock_after' => $product->stock,
                     'reason' => 'Edit transaction #'.$transaction->receipt_number,
                     'product_id' => $product->id,

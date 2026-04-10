@@ -62,10 +62,16 @@ class TransactionService
                 'user_id' => $userId,
             ]);
 
-            // Always save transaction items so they're available for Midtrans display
-            // Stock will be deducted only after payment confirmation for qris/midtrans
-            foreach ($data['items'] as $item) {
-                $this->saveTransactionItem($item, $transaction, $userId);
+            // For cash: deduct stock and create stock movements immediately
+            // For QRIS/Midtrans: only save items, stock deducted on payment confirmation
+            if ($paymentMethod === 'cash') {
+                foreach ($data['items'] as $item) {
+                    $this->processTransactionItem($item, $transaction, $userId);
+                }
+            } else {
+                foreach ($data['items'] as $item) {
+                    $this->saveTransactionItem($item, $transaction, $userId);
+                }
             }
 
             return $transaction;
@@ -99,11 +105,13 @@ class TransactionService
         // First save the item
         $this->saveTransactionItem($item, $transaction, $userId);
 
-        // Then deduct stock
+        // Then deduct stock (without triggering observer to avoid duplicate stock movement)
         $product = Product::find($item['product_id']);
         $stockBefore = $product->stock;
 
-        $product->decrement('stock', $item['quantity']);
+        Product::withoutEvents(function () use ($product, $item) {
+            $product->decrement('stock', $item['quantity']);
+        });
         $product->refresh();
 
         StockMovement::create([
@@ -135,7 +143,9 @@ class TransactionService
                 $product = Product::find($item->product_id);
                 $stockBefore = $product->stock;
 
-                $product->decrement('stock', $item->quantity);
+                Product::withoutEvents(function () use ($product, $item) {
+                    $product->decrement('stock', $item->quantity);
+                });
                 $product->refresh();
 
                 StockMovement::create([
@@ -161,12 +171,14 @@ class TransactionService
     ): StockMovement {
         $stockBefore = $product->stock;
 
-        match ($type) {
-            'in' => $product->increment('stock', $qty),
-            'out' => $product->decrement('stock', $qty),
-            'adjustment' => $product->update(['stock' => $qty]),
-            default => null,
-        };
+        Product::withoutEvents(function () use ($product, $type, $qty) {
+            match ($type) {
+                'in' => $product->increment('stock', $qty),
+                'out' => $product->decrement('stock', $qty),
+                'adjustment' => $product->update(['stock' => $qty]),
+                default => null,
+            };
+        });
 
         $product->refresh();
 

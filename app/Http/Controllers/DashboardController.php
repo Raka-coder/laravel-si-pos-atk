@@ -119,11 +119,63 @@ class DashboardController extends Controller
                     'monthly_revenue' => $monthlyRevenue,
                 ],
             ]);
-        }
+        } else {
+            // Kasir - bukan owner, tampilkan cashier dashboard dengan data hari ini
+            $hourlyRevenue = Transaction::selectRaw('HOUR(created_at) as hour, SUM(total_price) as revenue')
+                ->where('payment_status', 'paid')
+                ->whereDate('created_at', today())
+                ->groupBy('hour')
+                ->orderBy('hour')
+                ->get();
 
-        return Inertia::render('dashboard', [
-            'stats' => $stats,
-            'isCashier' => true,
-        ]);
+            $hourlyData = [];
+            for ($h = 0; $h < 24; $h++) {
+                $hourDataRow = $hourlyRevenue->firstWhere('hour', $h);
+                $hourlyData[] = [
+                    'hour' => str_pad($h, 2, '0', STR_PAD_LEFT).':00',
+                    'revenue' => $hourDataRow ? (float) $hourDataRow->revenue : 0,
+                ];
+            }
+
+            $todayPaymentMethods = Transaction::selectRaw('payment_method, COUNT(*) as count, SUM(total_price) as total')
+                ->where('payment_status', 'paid')
+                ->whereDate('created_at', today())
+                ->groupBy('payment_method')
+                ->get();
+
+            $todayTopProducts = TransactionItem::selectRaw('product_id, product_name, SUM(quantity) as total_qty, SUM(subtotal) as total_revenue')
+                ->whereHas('transaction', function ($q) {
+                    $q->where('payment_status', 'paid')
+                        ->whereDate('created_at', today());
+                })
+                ->groupBy('product_id', 'product_name')
+                ->orderByDesc('total_qty')
+                ->limit(5)
+                ->get();
+
+            $peakHour = $hourlyRevenue->sortByDesc('revenue')->first()?->hour ?? null;
+
+            $avgTransaction = $todayTransactions->count() > 0
+                ? $todayTransactions->sum('total_price') / $todayTransactions->count()
+                : 0;
+
+            $stats = array_merge($stats, [
+                'avg_transaction' => $avgTransaction,
+                'peak_hour' => $peakHour,
+            ]);
+
+            return Inertia::render('dashboard', [
+                'stats' => $stats,
+                'isCashier' => true,
+                'hourlyRevenue' => $hourlyData,
+                'todayPaymentMethods' => $todayPaymentMethods,
+                'todayTopProducts' => $todayTopProducts,
+                'lowStockProducts' => Product::with(['category', 'unit'])
+                    ->whereColumn('stock', '<', 'min_stock')
+                    ->orderBy('stock', 'asc')
+                    ->limit(5)
+                    ->get(),
+            ]);
+        }
     }
 }

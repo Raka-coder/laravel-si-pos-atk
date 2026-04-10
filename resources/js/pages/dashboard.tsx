@@ -1,6 +1,7 @@
 import { Head, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
+    Clock,
     CreditCard,
     Package,
     TrendingUp,
@@ -8,6 +9,7 @@ import {
 } from 'lucide-react';
 import CategoryRevenueChart from '@/components/charts/CategoryRevenueChart';
 import MonthlyComparisonChart from '@/components/charts/MonthlyComparisonChart';
+import HourlySalesChart from '@/components/charts/HourlySalesChart';
 import PaymentMethodChart from '@/components/charts/PaymentMethodChart';
 import RevenueChart from '@/components/charts/RevenueChart';
 import TopProductsChart from '@/components/charts/TopProductsChart';
@@ -28,6 +30,8 @@ interface Stats {
     month_expenses?: number;
     month_revenue?: number;
     month_profit?: number;
+    avg_transaction?: number;
+    peak_hour?: number;
 }
 
 interface Product {
@@ -57,12 +61,33 @@ interface ChartData {
     }[];
 }
 
+interface HourlyData {
+    hour: string;
+    revenue: number;
+}
+
+interface TodayPaymentMethod {
+    payment_method: string;
+    count: number;
+    total: number;
+}
+
+interface TodayTopProduct {
+    product_id: number;
+    product_name: string;
+    total_qty: number;
+    total_revenue: number;
+}
+
 interface Props {
     [key: string]: unknown;
     stats: Stats;
     lowStockProducts?: Product[];
     isCashier?: boolean;
     chartData?: ChartData;
+    hourlyRevenue?: HourlyData[];
+    todayPaymentMethods?: TodayPaymentMethod[];
+    todayTopProducts?: TodayTopProduct[];
 }
 
 const formatCurrency = (value: number) => {
@@ -79,7 +104,12 @@ export default function Dashboard() {
         lowStockProducts = [],
         isCashier = false,
         chartData,
+        hourlyRevenue = [],
+        todayPaymentMethods = [],
+        todayTopProducts = [],
     } = usePage<Props>().props;
+
+    const peakHour = stats.peak_hour as number | undefined;
 
     return (
         <>
@@ -90,65 +120,236 @@ export default function Dashboard() {
                 </h1>
 
                 {isCashier ? (
-                    <div className="grid auto-rows-min gap-4 md:grid-cols-2">
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">
-                                    Today's Sales
+                    <div className="flex flex-col gap-4">
+                        {/* KPI Cards */}
+                        <div className="grid auto-rows-min gap-4 md:grid-cols-2 lg:grid-cols-4">
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium">
+                                        Today's Sales
+                                    </CardTitle>
+                                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold">
+                                        {stats.today_sales}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">
+                                        Transactions
+                                    </p>
+                                </CardContent>
+                            </Card>
+
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium">
+                                        Today's Revenue
+                                    </CardTitle>
+                                    <Wallet className="h-4 w-4 text-muted-foreground" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold">
+                                        {formatCurrency(stats.today_revenue)}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">
+                                        Total income
+                                    </p>
+                                </CardContent>
+                            </Card>
+
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium">
+                                        Avg. Transaction
+                                    </CardTitle>
+                                    <CreditCard className="h-4 w-4 text-muted-foreground" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold">
+                                        {formatCurrency(
+                                            stats.avg_transaction || 0,
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">
+                                        Per transaction
+                                    </p>
+                                </CardContent>
+                            </Card>
+
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium">
+                                        Peak Hour
+                                    </CardTitle>
+                                    <Clock className="h-4 w-4 text-muted-foreground" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold">
+                                        {peakHour !== undefined
+                                            ? `${String(peakHour).padStart(2, '0')}:00`
+                                            : '-'}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">
+                                        Busiest hour
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        {/* Hourly Sales Chart */}
+                        <Card className="p-4">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-base font-semibold">
+                                    Hourly Sales Today
                                 </CardTitle>
-                                <TrendingUp className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold">
-                                    {stats.today_sales}
-                                </div>
-                                <p className="text-xs text-muted-foreground">
-                                    Transactions
-                                </p>
+                                {hourlyRevenue.length > 0 ? (
+                                    <HourlySalesChart data={hourlyRevenue} />
+                                ) : (
+                                    <div className="flex h-48 items-center justify-center text-muted-foreground">
+                                        No data
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
 
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">
-                                    Today's Revenue
-                                </CardTitle>
-                                <Wallet className="h-4 w-4 text-muted-foreground" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">
-                                    {formatCurrency(stats.today_revenue)}
-                                </div>
-                                <p className="text-xs text-muted-foreground">
-                                    Total income
-                                </p>
-                            </CardContent>
-                        </Card>
+                        {/* Charts Row */}
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <Card className="p-4">
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-base font-semibold">
+                                        Payment Methods Today
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    {todayPaymentMethods.length > 0 ? (
+                                        <PaymentMethodChart
+                                            data={todayPaymentMethods}
+                                        />
+                                    ) : (
+                                        <div className="flex h-48 items-center justify-center text-muted-foreground">
+                                            No data
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
 
-                        <Card className="md:col-span-2">
-                            <CardHeader>
-                                <CardTitle>Quick Actions</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="flex flex-wrap gap-2">
-                                    <Button asChild size="lg">
-                                        <a href="/pos">
-                                            <TrendingUp className="mr-2 h-4 w-4" />
-                                            Open POS
-                                        </a>
-                                    </Button>
-                                    <Button asChild variant="outline" size="lg">
-                                        <a href="/transactions">
-                                            <Wallet className="mr-2 h-4 w-4" />
-                                            Transactions
-                                        </a>
-                                    </Button>
-                                    <Button asChild variant="outline" size="lg">
-                                        <a href="/reports/sales">Reports</a>
-                                    </Button>
-                                </div>
-                            </CardContent>
-                        </Card>
+                            <Card className="p-4">
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-base font-semibold">
+                                        Top Products Today
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    {todayTopProducts.length > 0 ? (
+                                        <TopProductsChart
+                                            data={todayTopProducts.map((p) => ({
+                                                product_id: p.product_id,
+                                                product_name: p.product_name,
+                                                total_qty: p.total_qty,
+                                                total_revenue: p.total_revenue,
+                                            }))}
+                                        />
+                                    ) : (
+                                        <div className="flex h-48 items-center justify-center text-muted-foreground">
+                                            No data
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        {/* Low Stock Alert & Quick Actions */}
+                        <div className="grid gap-4 md:grid-cols-2">
+                            {lowStockProducts.length > 0 && (
+                                <Card className="border-red-500">
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <AlertTriangle className="h-5 w-5 text-red-500" />
+                                            Low Stock Alert
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="rounded-md border">
+                                            <table className="w-full">
+                                                <thead className="border-b bg-muted/50">
+                                                    <tr>
+                                                        <th className="px-3 py-2 text-left text-xs font-medium">
+                                                            Product
+                                                        </th>
+                                                        <th className="px-3 py-2 text-right text-xs font-medium">
+                                                            Stock
+                                                        </th>
+                                                        <th className="px-3 py-2 text-right text-xs font-medium">
+                                                            Min
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y">
+                                                    {lowStockProducts.map(
+                                                        (product) => (
+                                                            <tr
+                                                                key={product.id}
+                                                            >
+                                                                <td className="px-3 py-2 text-sm">
+                                                                    {
+                                                                        product.name
+                                                                    }
+                                                                </td>
+                                                                <td className="px-3 py-2 text-right text-sm font-medium text-red-500">
+                                                                    {
+                                                                        product.stock
+                                                                    }
+                                                                </td>
+                                                                <td className="px-3 py-2 text-right text-sm text-muted-foreground">
+                                                                    {
+                                                                        product.min_stock
+                                                                    }
+                                                                </td>
+                                                            </tr>
+                                                        ),
+                                                    )}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
+
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Quick Actions</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="flex flex-wrap gap-2">
+                                        <Button asChild size="lg">
+                                            <a href="/pos">
+                                                <TrendingUp className="mr-2 h-4 w-4" />
+                                                Open POS
+                                            </a>
+                                        </Button>
+                                        <Button
+                                            asChild
+                                            variant="outline"
+                                            size="lg"
+                                        >
+                                            <a href="/transactions">
+                                                <Wallet className="mr-2 h-4 w-4" />
+                                                Transactions
+                                            </a>
+                                        </Button>
+                                        <Button
+                                            asChild
+                                            variant="outline"
+                                            size="lg"
+                                        >
+                                            <a href="/reports/sales">Reports</a>
+                                        </Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
                     </div>
                 ) : (
                     <>

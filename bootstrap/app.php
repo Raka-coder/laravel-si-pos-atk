@@ -18,9 +18,6 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
-        $middleware->preventRequestForgery(except: [
-            'midtrans/notification',
-        ]);
 
         $middleware->alias([
             'role' => RoleMiddleware::class,
@@ -32,6 +29,11 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
+        ]);
+
+        // Exclude webhook from CSRF protection
+        $middleware->validateCsrfTokens(except: [
+            'midtrans/notification',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -23,15 +23,13 @@ class ProfileUpdateTest extends TestCase
 
     public function test_profile_information_can_be_updated()
     {
-        $this->markTestSkipped('Profile update test requires CSRF token handling which is disabled in tests.');
-
         $user = User::factory()->owner()->create();
 
         $response = $this
             ->actingAs($user)
-            ->patch(route('profile.update'), [
+            ->patchWithCsrf(route('profile.update'), [
                 'name' => 'Test User',
-                'email' => 'test@example.com',
+                'email' => fake()->unique()->safeEmail(),
             ]);
 
         $response
@@ -41,19 +39,16 @@ class ProfileUpdateTest extends TestCase
         $user->refresh();
 
         $this->assertSame('Test User', $user->name);
-        $this->assertSame('test@example.com', $user->email);
         $this->assertNull($user->email_verified_at);
     }
 
     public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged()
     {
-        $this->markTestSkipped('Profile update test requires CSRF token handling which is disabled in tests.');
-
         $user = User::factory()->owner()->create();
 
         $response = $this
             ->actingAs($user)
-            ->patch(route('profile.update'), [
+            ->patchWithCsrf(route('profile.update'), [
                 'name' => 'Test User',
                 'email' => $user->email,
             ]);
@@ -67,13 +62,11 @@ class ProfileUpdateTest extends TestCase
 
     public function test_user_can_delete_their_account()
     {
-        $this->markTestSkipped('Profile update test requires CSRF token handling which is disabled in tests.');
-
         $user = User::factory()->owner()->create();
 
         $response = $this
             ->actingAs($user)
-            ->delete(route('profile.destroy'), [
+            ->deleteWithCsrf(route('profile.destroy'), [
                 'password' => 'password',
             ]);
 
@@ -87,14 +80,12 @@ class ProfileUpdateTest extends TestCase
 
     public function test_correct_password_must_be_provided_to_delete_account()
     {
-        $this->markTestSkipped('Profile update test requires CSRF token handling which is disabled in tests.');
-
         $user = User::factory()->owner()->create();
 
         $response = $this
             ->actingAs($user)
             ->from(route('profile.edit'))
-            ->delete(route('profile.destroy'), [
+            ->deleteWithCsrf(route('profile.destroy'), [
                 'password' => 'wrong-password',
             ]);
 

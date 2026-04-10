@@ -91,39 +91,37 @@ class SecurityTest extends TestCase
 
     public function test_password_can_be_updated()
     {
-        $this->markTestSkipped('Security test requires CSRF token handling which is disabled in tests.');
-
         $user = User::factory()->owner()->create();
+
+        $newPassword = 'Test@'.fake()->password(12, 20);
 
         $response = $this
             ->actingAs($user)
             ->from(route('security.edit'))
-            ->put(route('user-password.update'), [
+            ->putWithCsrf(route('user-password.update'), [
                 'current_password' => 'password',
-                'password' => 'new-password',
-                'password_confirmation' => 'new-password',
+                'password' => $newPassword,
+                'password_confirmation' => $newPassword,
             ]);
 
         $response
             ->assertSessionHasNoErrors()
             ->assertRedirect(route('security.edit'));
 
-        $this->assertTrue(Hash::check('new-password', $user->refresh()->password));
+        $this->assertTrue(Hash::check($newPassword, $user->refresh()->password));
     }
 
     public function test_correct_password_must_be_provided_to_update_password()
     {
-        $this->markTestSkipped('Security test requires CSRF token handling which is disabled in tests.');
-
         $user = User::factory()->owner()->create();
 
         $response = $this
             ->actingAs($user)
             ->from(route('security.edit'))
-            ->put(route('user-password.update'), [
+            ->putWithCsrf(route('user-password.update'), [
                 'current_password' => 'wrong-password',
-                'password' => 'new-password',
-                'password_confirmation' => 'new-password',
+                'password' => 'Test@'.fake()->password(12, 20),
+                'password_confirmation' => 'Test@'.fake()->password(12, 20),
             ]);
 
         $response

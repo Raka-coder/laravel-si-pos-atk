@@ -26,18 +26,13 @@ class RegistrationTest extends TestCase
 
     public function test_new_users_can_register()
     {
-        $this->markTestSkipped('Registration test requires CSRF token handling and role assignment after registration.');
-
-        // Get the register page first to establish session and CSRF token
-        $this->get(route('register'));
-
-        $response = $this->withHeaders([
-            'X-CSRF-TOKEN' => csrf_token(),
-        ])->post(route('register'), [
+        $this->markTestSkipped('Registration requires automatic role assignment after user creation.');
+        
+        $response = $this->postWithCsrf(route('register'), [
             'name' => 'Test User',
             'email' => 'test@example.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            'password' => 'SecureP@ssw0rd123',
+            'password_confirmation' => 'SecureP@ssw0rd123',
         ]);
 
         $this->assertAuthenticated();

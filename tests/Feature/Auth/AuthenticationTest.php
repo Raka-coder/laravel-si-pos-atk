@@ -23,12 +23,7 @@ class AuthenticationTest extends TestCase
 
         $user = User::factory()->owner()->create();
 
-        // Get the login page first to establish session and CSRF token
-        $this->get(route('login'));
-
-        $response = $this->withHeaders([
-            'X-CSRF-TOKEN' => csrf_token(),
-        ])->post(route('login'), [
+        $response = $this->postWithCsrf(route('login'), [
             'email' => $user->email,
             'password' => 'password',
             'role' => 'owner',
@@ -50,7 +45,7 @@ class AuthenticationTest extends TestCase
 
         $user = User::factory()->owner()->create();
 
-        $this->post(route('login'), [
+        $this->postWithCsrf(route('login'), [
             'email' => $user->email,
             'password' => 'wrong-password',
             'role' => 'owner',
@@ -61,18 +56,12 @@ class AuthenticationTest extends TestCase
 
     public function test_users_can_logout()
     {
-        $this->markTestSkipped('Logout test requires proper session handling which is affected by CSRF disabling in tests.');
-
         $this->withoutTwoFactor();
 
         $user = User::factory()->owner()->create();
 
-        // Login first to establish session
-        $this->get(route('login'));
-
-        $this->withHeaders([
-            'X-CSRF-TOKEN' => csrf_token(),
-        ])->post(route('login'), [
+        // Login first
+        $this->postWithCsrf(route('login'), [
             'email' => $user->email,
             'password' => 'password',
             'role' => 'owner',
@@ -80,8 +69,8 @@ class AuthenticationTest extends TestCase
 
         $this->assertAuthenticated();
 
-        // Now logout
-        $response = $this->post(route('logout'));
+        // Logout with CSRF token
+        $response = $this->postWithCsrf(route('logout'));
 
         $this->assertGuest();
         $response->assertRedirect('/');
@@ -93,22 +82,15 @@ class AuthenticationTest extends TestCase
 
         $user = User::factory()->owner()->create();
 
-        // Establish session
-        $this->get(route('login'));
-
         for ($i = 0; $i < 6; $i++) {
-            $this->withHeaders([
-                'X-CSRF-TOKEN' => csrf_token(),
-            ])->post(route('login'), [
+            $this->postWithCsrf(route('login'), [
                 'email' => $user->email,
                 'password' => 'wrong-password',
                 'role' => 'owner',
             ]);
         }
 
-        $response = $this->withHeaders([
-            'X-CSRF-TOKEN' => csrf_token(),
-        ])->post(route('login'), [
+        $response = $this->postWithCsrf(route('login'), [
             'email' => $user->email,
             'password' => 'wrong-password',
             'role' => 'owner',

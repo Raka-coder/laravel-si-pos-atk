@@ -19,7 +19,8 @@ class DashboardTest extends TestCase
 
     public function test_authenticated_users_can_visit_the_dashboard()
     {
-        $user = User::factory()->create();
+        // Create a user with cashier role (non-owner)
+        $user = User::factory()->cashier()->create();
         $this->actingAs($user);
 
         $this->get(route('dashboard'))

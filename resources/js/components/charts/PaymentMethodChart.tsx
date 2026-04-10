@@ -141,7 +141,7 @@ export default function PaymentMethodChart({ data }: Props) {
                     verticalAlign="middle"
                     layout="vertical"
                     formatter={(value) => (
-                        <span className="text-sm font-medium text-slate-600">
+                        <span className="text-sm font-bold text-foreground">
                             {value as string}
                         </span>
                     )}

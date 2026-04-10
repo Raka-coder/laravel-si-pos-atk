@@ -62,7 +62,7 @@ class ExpenseCategoryController extends Controller
 
         Cache::forget('expense_categories_all');
 
-        return back();
+        return back()->with('success', 'Kategori pengeluaran berhasil ditambahkan.');
     }
 
     public function update(UpdateExpenseCategoryRequest $request, ExpenseCategory $expense_category): RedirectResponse
@@ -71,7 +71,7 @@ class ExpenseCategoryController extends Controller
 
         Cache::forget('expense_categories_all');
 
-        return back();
+        return back()->with('success', 'Kategori pengeluaran berhasil diperbarui.');
     }
 
     public function destroy(ExpenseCategory $expense_category): RedirectResponse
@@ -80,6 +80,6 @@ class ExpenseCategoryController extends Controller
 
         Cache::forget('expense_categories_all');
 
-        return back();
+        return back()->with('success', 'Kategori pengeluaran berhasil dihapus.');
     }
 }

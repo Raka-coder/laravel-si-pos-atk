@@ -71,7 +71,7 @@ class ProductController extends Controller
 
         Product::create($validated);
 
-        return back();
+        return back()->with('success', 'Produk berhasil ditambahkan.');
     }
 
     public function update(UpdateProductRequest $request, Product $product): RedirectResponse
@@ -125,7 +125,7 @@ class ProductController extends Controller
 
         $product->update($validated);
 
-        return back();
+        return back()->with('success', 'Produk berhasil diperbarui.');
     }
 
     public function destroy(Product $product): RedirectResponse
@@ -146,7 +146,7 @@ class ProductController extends Controller
 
         $product->delete();
 
-        return back();
+        return back()->with('success', 'Produk berhasil dihapus.');
     }
 
     public function byBarcode(string $barcode): JsonResponse

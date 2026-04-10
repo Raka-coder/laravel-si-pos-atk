@@ -21,10 +21,10 @@ class UnitController extends Controller
         $units = Unit::when($search, function ($query, $search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('short_name', 'like', "%{$search}%");
+                    ->orWhere('short_name', 'like', "%{$search}%");
             });
         })
-            ->orderBy('name')
+            ->orderBy('id')
             ->paginate($perPage)
             ->withQueryString();
 
@@ -40,20 +40,20 @@ class UnitController extends Controller
     {
         Unit::create($request->validated());
 
-        return back();
+        return back()->with('success', 'Satuan berhasil ditambahkan.');
     }
 
     public function update(UpdateUnitRequest $request, Unit $unit): RedirectResponse
     {
         $unit->update($request->validated());
 
-        return back();
+        return back()->with('success', 'Satuan berhasil diperbarui.');
     }
 
     public function destroy(Unit $unit): RedirectResponse
     {
         $unit->delete();
 
-        return back();
+        return back()->with('success', 'Satuan berhasil dihapus.');
     }
 }

@@ -67,20 +67,20 @@ class ExpenseController extends Controller
 
         Cache::forget('expense_categories_list');
 
-        return back();
+        return back()->with('success', 'Pengeluaran berhasil ditambahkan.');
     }
 
     public function update(UpdateExpenseRequest $request, Expense $expense): RedirectResponse
     {
         $expense->update($request->validated());
 
-        return back();
+        return back()->with('success', 'Pengeluaran berhasil diperbarui.');
     }
 
     public function destroy(Expense $expense): RedirectResponse
     {
         $expense->delete();
 
-        return back();
+        return back()->with('success', 'Pengeluaran berhasil dihapus.');
     }
 }

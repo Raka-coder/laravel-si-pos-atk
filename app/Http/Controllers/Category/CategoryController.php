@@ -37,20 +37,20 @@ class CategoryController extends Controller
     {
         Category::create($request->validated());
 
-        return back();
+        return back()->with('success', 'Kategori berhasil ditambahkan.');
     }
 
     public function update(UpdateCategoryRequest $request, Category $category): RedirectResponse
     {
         $category->update($request->validated());
 
-        return back();
+        return back()->with('success', 'Kategori berhasil diperbarui.');
     }
 
     public function destroy(Category $category): RedirectResponse
     {
         $category->delete();
 
-        return back();
+        return back()->with('success', 'Kategori berhasil dihapus.');
     }
 }

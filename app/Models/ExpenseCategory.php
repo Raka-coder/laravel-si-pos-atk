@@ -27,6 +27,9 @@ class ExpenseCategory extends Model
         ];
     }
 
+    /**
+     * @return HasMany<Expense, $this>
+     */
     public function expenses(): HasMany
     {
         return $this->hasMany(Expense::class);

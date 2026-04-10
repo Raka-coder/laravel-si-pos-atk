@@ -136,6 +136,7 @@ export default function UnitIndex() {
         deleteForm.delete(`/units/${deleteUnit.id}`, {
             onSuccess: () => {
                 setDeleteUnit(null);
+                deleteForm.reset();
             },
         });
     };

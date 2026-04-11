@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Category\CategoryController;
+use App\Http\Controllers\Chat\ChatController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Expense\ExpenseController;
 use App\Http\Controllers\ExpenseCategory\ExpenseCategoryController;
@@ -43,6 +44,10 @@ Route::middleware(['auth', 'verified', 'role:owner'])->group(function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
+
+    Route::get('chat', [ChatController::class, 'index'])->name('chat');
+    Route::post('chat/send', [ChatController::class, 'send'])->name('chat.send');
+    Route::post('chat/reset', [ChatController::class, 'reset'])->name('chat.reset');
 
     Route::get('pos', [TransactionController::class, 'pos'])->name('pos');
 

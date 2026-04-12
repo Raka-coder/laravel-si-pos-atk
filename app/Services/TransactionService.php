@@ -44,8 +44,8 @@ class TransactionService
             $paymentMethod = $data['payment_method'];
 
             // Determine payment status based on payment method
-            // Cash: immediately paid, QRIS/Midtrans: pending until payment confirmed
-            $paymentStatus = in_array($paymentMethod, ['cash']) ? 'paid' : 'pending';
+            // Cash & Static QRIS: immediately paid, Midtrans: pending until payment confirmed
+            $paymentStatus = in_array($paymentMethod, ['cash', 'qris']) ? 'paid' : 'pending';
 
             $transaction = Transaction::create([
                 'receipt_number' => $this->generateReceiptNumber(),
@@ -62,9 +62,9 @@ class TransactionService
                 'user_id' => $userId,
             ]);
 
-            // For cash: deduct stock and create stock movements immediately
-            // For QRIS/Midtrans: only save items, stock deducted on payment confirmation
-            if ($paymentMethod === 'cash') {
+            // For cash & static QRIS: deduct stock and create stock movements immediately
+            // For Midtrans: only save items, stock deducted on payment confirmation
+            if (in_array($paymentMethod, ['cash', 'qris'])) {
                 foreach ($data['items'] as $item) {
                     $this->processTransactionItem($item, $transaction, $userId);
                 }

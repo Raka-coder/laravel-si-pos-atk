@@ -65,10 +65,10 @@ class TransactionController extends Controller
 
         $transaction = app(TransactionService::class)->createTransaction($data);
 
-        // For Midtrans/QRIS, return token info
+        // For Midtrans, return token info
         $paymentMethod = $data['payment_method'];
 
-        if (in_array($paymentMethod, ['midtrans', 'qris'])) {
+        if ($paymentMethod === 'midtrans') {
             try {
                 $midtransService = app(MidtransService::class);
 
@@ -169,6 +169,7 @@ class TransactionController extends Controller
 
         return Inertia::render('pos/index', [
             'products' => $products,
+            'shop' => $shop,
             'taxRate' => $shop->tax_rate,
             'paperSize' => $shop->paper_size,
             'midtransClientKey' => config('midtrans.client_key') ?: env('MIDTRANS_CLIENT_KEY', ''),

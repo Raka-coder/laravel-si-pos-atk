@@ -1,5 +1,16 @@
 import { Head, usePage, router } from '@inertiajs/react';
-import { Minus, Plus, Search, ShoppingCart, Trash2, BanknoteIcon, QrCodeIcon, CreditCardIcon, X } from 'lucide-react';
+import {
+    Minus,
+    Plus,
+    Search,
+    ShoppingCart,
+    Trash2,
+    BanknoteIcon,
+    QrCodeIcon,
+    CreditCardIcon,
+    X,
+    CheckCircle2,
+} from 'lucide-react';
 import { useState, useEffect } from 'react';
 import {
     AlertDialog,
@@ -11,6 +22,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -22,6 +34,14 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetFooter,
+    SheetHeader,
+    SheetTitle,
+} from '@/components/ui/sheet';
 import { useCartStore } from '@/stores/cartStore';
 import type { BreadcrumbItem } from '@/types';
 
@@ -55,9 +75,20 @@ interface Product {
     unit: { id: number; name: string; short_name: string } | null;
 }
 
+interface Shop {
+    id: number;
+    name: string;
+    address: string | null;
+    phone: string | null;
+    logo_path: string | null;
+    qris_image_path: string | null;
+    tax_rate: number;
+}
+
 interface Props {
     [key: string]: unknown;
     products: Product[];
+    shop: Shop;
     taxRate: number;
     midtransClientKey?: string;
 }
@@ -81,6 +112,7 @@ const formatCurrency = (value: number) => {
 export default function POSIndex() {
     const {
         products,
+        shop,
         taxRate: initialTaxRate,
         midtransClientKey,
     } = usePage<Props>().props;
@@ -90,6 +122,7 @@ export default function POSIndex() {
         null,
     );
     const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+    const [isQrisPopupOpen, setIsQrisPopupOpen] = useState(false);
     const [amountPaid, setAmountPaid] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState<
@@ -141,12 +174,19 @@ export default function POSIndex() {
         }
 
         setIsPaymentOpen(true);
+        setPaymentMethod('cash');
         setAmountPaid(String(Math.ceil(total / 1000) * 1000));
     };
 
+    const handleSelectQris = () => {
+        setPaymentMethod('qris');
+        // Always open QRIS popup when QRIS is selected
+        setIsQrisPopupOpen(true);
+    };
+
     const handleProcessPayment = async () => {
-        // For QRIS/Midtrans, handle differently
-        if (paymentMethod === 'qris' || paymentMethod === 'midtrans') {
+        // For Midtrans handle differently
+        if (paymentMethod === 'midtrans') {
             if (!midtransClientKey) {
                 setPaymentError(
                     'Midtrans belum dikonfigurasi. Cek Client Key di pengaturan toko.',
@@ -259,9 +299,17 @@ export default function POSIndex() {
             return;
         }
 
-        // For cash payment
+        // For cash or static qris payment
+        if (paymentMethod === 'qris' && !shop.qris_image_path) {
+            setPaymentError(
+                'QR Code QRIS belum diunggah. Hubungi admin untuk upload QR Code di Pengaturan Toko.',
+            );
 
-        const paid = parseFloat(amountPaid) || 0;
+            return;
+        }
+
+        const paid =
+            paymentMethod === 'qris' ? total : parseFloat(amountPaid) || 0;
 
         if (paid < total) {
             alert('Jumlah pembayaran kurang!');
@@ -279,7 +327,7 @@ export default function POSIndex() {
                 discount_amount: 0,
                 tax_amount: taxAmount,
                 total_price: total,
-                payment_method: 'cash',
+                payment_method: paymentMethod,
                 amount_paid: paid,
                 change_amount: paid - total,
                 note: '',
@@ -566,7 +614,7 @@ export default function POSIndex() {
                             </button>
                             <button
                                 type="button"
-                                onClick={() => setPaymentMethod('qris')}
+                                onClick={handleSelectQris}
                                 className={`flex flex-col items-center justify-center gap-2 rounded-lg border-2 p-3 transition-all ${
                                     paymentMethod === 'qris'
                                         ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-950'
@@ -632,18 +680,28 @@ export default function POSIndex() {
                             </div>
                         )}
 
-                        {/* QRIS/Midtrans Info */}
-                        {(paymentMethod === 'qris' ||
-                            paymentMethod === 'midtrans') && (
+                        {/* QRIS Static Info */}
+                        {paymentMethod === 'qris' && (
                             <div className="rounded-lg bg-blue-50 p-4 dark:bg-blue-950">
                                 <div className="text-sm text-blue-700 dark:text-blue-300">
-                                    {paymentMethod === 'qris'
-                                        ? 'Bayar dengan QR Code (QRIS)'
-                                        : 'Bayar dengan Midtrans (Kartu, GoPay, ShopeePay, dll)'}
+                                    Bayar dengan QRIS Static
                                 </div>
                                 <div className="mt-2 text-xs text-blue-600 dark:text-blue-400">
-                                    Klik "Proses Pembayaran" untuk membuka
-                                    metode pembayaran digital
+                                    Scan QR Code dan pastikan pembayaran berhasil
+                                    di aplikasi pelanggan.
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Midtrans Info */}
+                        {paymentMethod === 'midtrans' && (
+                            <div className="rounded-lg bg-purple-50 p-4 dark:bg-purple-950">
+                                <div className="text-sm text-purple-700 dark:text-purple-300">
+                                    Bayar dengan Midtrans
+                                </div>
+                                <div className="mt-2 text-xs text-purple-600 dark:text-purple-400">
+                                    Klik "Proses Pembayaran" untuk membuka Snap
+                                    popup (Kartu, GoPay, ShopeePay, dll)
                                 </div>
                             </div>
                         )}
@@ -680,6 +738,142 @@ export default function POSIndex() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* QRIS Image Sheet - Compact & Professional */}
+            <Sheet open={isQrisPopupOpen} onOpenChange={setIsQrisPopupOpen}>
+                <SheetContent className="w-90 sm:max-w-none" side="right">
+                    <SheetHeader className="pb-3">
+                        <div className="flex items-center">
+                            <SheetTitle>QRIS Payment</SheetTitle>
+                            <Badge variant="secondary" className="text-xs ml-2">
+                                Static QR
+                            </Badge>
+                        </div>
+                        <SheetDescription>
+                            Scan menggunakan e-wallet atau mobile banking
+                        </SheetDescription>
+                    </SheetHeader>
+
+                    <div className="flex flex-col gap-4 overflow-y-auto py-2" style={{ maxHeight: 'calc(100vh - 200px)' }}>
+                        {/* Amount - Compact */}
+                        <div className="rounded-lg bg-primary/5 p-3 text-center">
+                            <div className="text-xs font-medium text-muted-foreground">
+                                Total
+                            </div>
+                            <div className="mt-0.5 text-2xl font-bold text-primary">
+                                {formatCurrency(total)}
+                            </div>
+                        </div>
+
+                        {/* QR Code - Compact */}
+                        {shop.qris_image_path ? (
+                            <div className="flex justify-center">
+                                <div className="relative rounded-lg border bg-background p-2 shadow-sm">
+                                    <img
+                                        src={`/storage/${shop.qris_image_path}`}
+                                        alt="QRIS Code"
+                                        className="h-48 w-48 object-contain"
+                                    />
+                                    <Badge className="absolute -top-2 -right-2 h-6 px-2">
+                                        QRIS
+                                    </Badge>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-destructive/30 bg-destructive/5 py-10">
+                                <QrCodeIcon className="mb-2 h-10 w-10 text-destructive/50" />
+                                <div className="text-center">
+                                    <div className="text-sm font-medium text-destructive">
+                                        QR Code Belum Tersedia
+                                    </div>
+                                    <a
+                                        href="/shop"
+                                        className="mt-1 inline-block text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground"
+                                    >
+                                        Upload di Pengaturan Toko →
+                                    </a>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Instructions - Compact */}
+                        {shop.qris_image_path && (
+                            <div className="space-y-2 rounded-lg bg-muted/50 p-3">
+                                <div className="text-xs font-semibold text-foreground">
+                                    Cara Pembayaran:
+                                </div>
+                                <ol className="space-y-1 text-xs text-muted-foreground">
+                                    <li className="flex items-start gap-2">
+                                        <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary">
+                                            1
+                                        </span>
+                                        <span>Buka e-wallet atau mobile banking</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary">
+                                            2
+                                        </span>
+                                        <span>Pilih scan QR</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary">
+                                            3
+                                        </span>
+                                        <span>Scan QR code di atas</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary">
+                                            4
+                                        </span>
+                                        <span>
+                                            Pastikan nominal{' '}
+                                            <span className="font-medium text-foreground">
+                                                {formatCurrency(total)}
+                                            </span>
+                                        </span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary">
+                                            5
+                                        </span>
+                                        <span>Selesaikan pembayaran</span>
+                                    </li>
+                                </ol>
+                            </div>
+                        )}
+                    </div>
+
+                    <SheetFooter className="flex-col gap-3 border-t pt-4 sm:flex-row">
+                        <Button
+                            variant="outline"
+                            onClick={() => {
+                                setIsQrisPopupOpen(false);
+                                setPaymentMethod('cash');
+                            }}
+                            className="w-full sm:flex-1"
+                        >
+                            Batal
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                setIsQrisPopupOpen(false);
+                                handleProcessPayment();
+                            }}
+                            disabled={!shop.qris_image_path}
+                            className="w-full sm:flex-1"
+                        >
+                            {!shop.qris_image_path ? (
+                                'QR Belum Tersedia'
+                            ) : (
+                                <>
+                                    <CheckCircle2 className="mr-1.5 h-4 w-4" />
+                                    Sudah Bayar
+                                </>
+                            )}
+                        </Button>
+                    </SheetFooter>
+                </SheetContent>
+            </Sheet>
 
             {/* Clear Cart Confirmation Dialog */}
             <AlertDialog

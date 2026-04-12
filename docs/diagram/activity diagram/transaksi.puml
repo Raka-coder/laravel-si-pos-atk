@@ -1,0 +1,52 @@
+@startuml
+start
+:Kasir login ke sistem;
+:Memilih menu POS;
+
+repeat
+  :Cari produk (scan barcode / nama);
+  :Input jumlah produk;
+  :Tambah ke keranjang;
+  :Tampilkan subtotal sementara;
+  :Kasir ingin tambah produk lain?;
+repeat while (Ya) is (Tidak)
+
+:Tampilkan ringkasan keranjang;
+:Kasir klik "Checkout";
+
+if (Pelanggan minta diskon?) then (Ya)
+  :Input diskon (persen / nominal);
+  :Hitung ulang total;
+else (Tidak)
+endif
+
+:Tampilkan total akhir + pajak;
+:Kasir pilih metode pembayaran;
+
+if (Metode = Cash?) then (Ya)
+  :Input jumlah uang diterima;
+  :Hitung kembalian;
+  :Tampilkan jumlah kembalian;
+elseif (Metode = QRIS?) then (Ya)
+  :Tampilkan QRIS statis toko;
+  :Tunggu konfirmasi pembayaran;
+elseif (Metode = Midtrans?) then (Ya)
+  :Generate Snap token;
+  :Tampilkan popup Midtrans;
+  :Customer selesaikan pembayaran;
+  :Terima webhook notifikasi;
+else (Lainnya)
+endif
+
+:Simpan transaksi ke database;
+:Kurangi stok produk secara otomatis;
+:Catat stock movement (type: sale);
+:Generate receipt number;
+:Tampilkan halaman sukses;
+if (Cetak struk?) then (Ya)
+  :Cetak struk thermal (58mm/80mm);
+else (Tidak)
+endif
+
+stop
+@enduml

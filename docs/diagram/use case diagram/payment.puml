@@ -1,0 +1,32 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecaseBackgroundColor #FFF0F5
+skinparam usecaseBorderColor #8E44AD
+
+actor "Kasir" as cashier
+actor "Midtrans Gateway" as midtrans
+actor "Customer" as customer
+
+rectangle "Sistem POS ATK - Payment Integration" {
+
+  usecase "Pilih Metode Midtrans" as UC23
+  usecase "Generate Token Snap" as UC38
+  usecase "Handle Webhook Notification" as UC39
+  usecase "Verifikasi Status Pembayaran" as UC40
+  usecase "Tampilkan Popup Pembayaran" as UC41_PAY
+}
+
+cashier --> UC23
+customer --> UC41_PAY
+
+midtrans --> UC39
+midtrans --> UC40
+
+UC23 .> UC38 : includes
+UC38 .> UC40 : includes
+UC38 .> UC41_PAY : includes
+UC39 .> UC40 : includes
+
+@enduml

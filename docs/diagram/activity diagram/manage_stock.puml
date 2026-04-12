@@ -1,0 +1,43 @@
+@startuml
+start
+:Owner login ke sistem;
+:Memilih menu "Inventori / Stok";
+
+partition "Cek Stok" {
+  :Tampilkan daftar produk dengan stok;
+  :Filter berdasarkan kategori (opsional);
+  :Tampilkan peringatan produk stok menipis (stock <= min_stock);
+}
+
+partition "Adjust Stok (Opname)" {
+  :Pilih produk yang akan disesuaikan;
+  :Klik tombol "Adjust Stok";
+  :Tampilkan form adjust stok;
+  :Input stok baru (fisik);
+  :Input alasan penyesuaian;
+  :Sistem hitung selisih stok;
+  
+  if (Selisih > 0?) then (Ya)
+    :Movement type = "in";
+    :Catat: stock_before, stock_after, qty (+);
+  elseif (Selisih < 0?) then (Ya)
+    :Movement type = "out";
+    :Catat: stock_before, stock_after, qty (-);
+  else (Tidak)
+    :Tidak ada perubahan;
+  endif
+  
+  :Simpan stock movement;
+  :Update stok produk;
+  :Tampilkan notifikasi sukses;
+}
+
+partition "Riwayat Stok" {
+  :Pilih produk;
+  :Klik "Riwayat Stok";
+  :Tampilkan log pergerakan stok;
+  :Filter berdasarkan tanggal / movement type (opsional);
+}
+
+stop
+@enduml

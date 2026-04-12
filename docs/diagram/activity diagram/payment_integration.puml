@@ -1,0 +1,39 @@
+@startuml
+start
+:Kasir pilih metode "Midtrans";
+:Sistem panggil Transaction::create() - status PENDING;
+:Sistem panggil Midtrans::generateSnapToken();
+
+partition "Midtrans Snap" {
+  :Tampilkan popup Snap.js;
+  :Customer pilih metode pembayaran:
+  - Kartu Kredit;
+  - GoPay / OVO / Dana;
+  - Transfer Bank;
+  - QRIS;
+  
+  if (Kartu Kredit?) then (Ya)
+    :Input nomor kartu, expiry, CVV;
+    :Jika 3DS, input OTP;
+  else (E-Wallet)
+    :Redirect ke aplikasi e-wallet;
+    :Konfirmasi pembayaran;
+  endif
+}
+
+partition "Webhook & Verifikasi" {
+  :Midtrans kirim notifikasi ke endpoint webhook;
+  :Verifikasi signature key;
+  :Update payment_status menjadi "paid";
+  :Catat payment_reference;
+  :Update stok jika perlu;
+}
+
+partition "Tampilkan Hasil" {
+  :Tampilkan halaman sukses;
+  :Tampilkan receipt_number;
+  :Cetak struk (opsional);
+}
+
+stop
+@enduml

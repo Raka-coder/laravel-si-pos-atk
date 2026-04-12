@@ -1,0 +1,46 @@
+@startuml
+start
+:User (Owner/Kasir) login ke sistem;
+:Memilih menu "AI Assistant";
+
+partition "Mulai Percakapan" {
+  if (Percakapan baru?) then (Ya)
+    :Sistem buat chat_conversation baru;
+    :Set title berdasarkan topik;
+  else (Tidak)
+    :Pilih percakapan dari history;
+    :Load 10 pesan terakhir sebagai konteks;
+  endif
+}
+
+partition "Bertanya" {
+  :User ketik pertanyaan bisnis;
+  :Klik tombol "Kirim";
+  :Simpan pertanyaan ke chat_messages (role: user);
+  
+  :Sistem kumpulkan data konteks bisnis:
+  - Stok terkini;
+  - Penjualan hari ini;
+  - Produk terlaris;
+  - Pengeluaran terbaru;
+  
+  :Kirim prompt + konteks ke AI model (OpenRouter/Hugging Face);
+  :AI generate respons;
+  :Simpan jawaban ke chat_messages (role: assistant);
+  :Tampilkan jawaban ke user;
+  
+  if (User perlu follow-up?) then (Ya)
+    :Lanjutkan percakapan dengan konteks yang sama;
+  else (Tidak)
+  endif
+}
+
+partition "Contoh Pertanyaan" {
+  :"Berapa stok pulpen yang menipis?";
+  :"Apa produk terlaris minggu ini?";
+  :"Rekomendasi restock untuk buku tulis?";
+  :"Kenapa laba bulan ini turun?";
+}
+
+stop
+@enduml

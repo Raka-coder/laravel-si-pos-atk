@@ -1,0 +1,43 @@
+@startuml
+start
+:Owner login ke sistem;
+:Memilih menu "Produk";
+
+if (Aksi yang dipilih?) then (Tambah Produk)
+  :Klik tombol "Tambah Produk";
+  :Tampilkan form produk;
+  :Input nama produk;
+  :Pilih kategori;
+  :Pilih satuan (unit);
+  :Input harga beli & harga jual;
+  :Input stok awal;
+  :Input batas minimum stok;
+  :Upload gambar produk (opsional);
+  :Sistem generate SKU otomatis;
+  :Simpan produk ke database;
+  :Tampilkan notifikasi sukses;
+  
+elseif (Aksi yang dipilih?) then (Edit Produk)
+  :Pilih produk dari daftar;
+  :Klik tombol "Edit";
+  :Tampilkan form dengan data existing;
+  :Ubah data yang diperlukan;
+  :Simpan perubahan;
+  :Update timestamp updated_at;
+  :Tampilkan notifikasi sukses;
+  
+elseif (Aksi yang dipilih?) then (Hapus Produk)
+  :Pilih produk dari daftar;
+  :Klik tombol "Hapus";
+  :Tampilkan dialog konfirmasi;
+  if (Konfirmasi?) then (Ya)
+    :Hapus produk dari database;
+    :Tampilkan notifikasi sukses;
+  else (Tidak)
+    :Batalkan penghapusan;
+  endif
+else (Lainnya)
+endif
+
+stop
+@enduml

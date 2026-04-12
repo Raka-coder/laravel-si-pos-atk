@@ -1,0 +1,75 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecaseBackgroundColor #E8F4FD
+skinparam usecaseBorderColor #2C3E50
+
+actor "Owner / Superadmin" as owner
+
+rectangle "Sistem POS ATK - Manajemen & Laporan" {
+
+  package "Manajemen Master Data" {
+    usecase "Kelola Produk (CRUD)" as UC05
+    usecase "Kelola Kategori (CRUD)" as UC06
+    usecase "Kelola Unit (CRUD)" as UC07
+    usecase "Generate SKU Otomatis" as UC09
+    usecase "Kelola Kategori Pengeluaran (CRUD)" as UC10
+  }
+
+  package "Manajemen Stok" {
+    usecase "Lihat Stok" as UC11
+    usecase "Adjust Stok (Opname)" as UC12
+    usecase "Lihat Riwayat Pergerakan Stok" as UC13
+    usecase "Peringatan Stok Menipis" as UC14
+  }
+
+  package "Manajemen Pengeluaran" {
+    usecase "CRUD Pengeluaran" as UC29
+  }
+
+  package "Laporan & Analitik" {
+    usecase "Laporan Penjualan" as UC32
+    usecase "Laporan Laba/Rugi" as UC33
+    usecase "Laporan Produk Terlaris" as UC34
+    usecase "Export ke PDF (Struk)" as UC35
+    usecase "Export ke CSV" as UC36
+    usecase "Dashboard Analitik" as UC37
+  }
+
+  package "Konfigurasi Sistem" {
+    usecase "Pengaturan Toko" as UC46
+    usecase "Upload QRIS" as UC47
+    usecase "Konfigurasi Midtrans" as UC48
+    usecase "Konfigurasi Pajak" as UC49
+    usecase "Konfigurasi Struk" as UC50
+  }
+
+  package "Manajemen Pengguna" {
+    usecase "CRUD Kasir" as UC03
+  }
+}
+
+owner --> UC05
+owner --> UC06
+owner --> UC07
+owner --> UC09
+owner --> UC10
+owner --> UC11
+owner --> UC12
+owner --> UC13
+owner --> UC14
+owner --> UC29
+owner --> UC32
+owner --> UC33
+owner --> UC34
+owner --> UC35
+owner --> UC36
+owner --> UC37
+owner --> UC46
+owner --> UC47
+owner --> UC48
+owner --> UC49
+owner --> UC50
+owner --> UC03
+@enduml

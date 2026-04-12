@@ -1,1 +1,4 @@
-Update fitur pada project ini khususnya pada pembayaran menggunakan QRIS Image, saya ingin ada fitur static QR dari image yang disimpan pada shop settings, yang dimana image tersebut akan muncul berupa image popup pada saat memilih pembayaran menggunakan metode QRIS pada menu POS checkout dengan QRIS, jadi QRIS berbeda dengan QRIS midtrans
+Refactor UI pada halaman login form:
+gunakan komponen card shadcn
+tambahkan icon pada input field (samping kiri) email&password
+refactor logo & header sesuai dengan project

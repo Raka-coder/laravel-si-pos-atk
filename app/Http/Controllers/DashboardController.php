@@ -17,6 +17,7 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
         $isOwner = $user && $user->hasRole('owner');
+        $driver = \DB::getDriverName();
 
         $todayTransactions = Transaction::whereDate('created_at', today())
             ->where('payment_status', 'paid')
@@ -99,7 +100,11 @@ class DashboardController extends Controller
                 ->get();
 
             // Monthly comparison (last 6 months)
-            $monthlyRevenue = Transaction::selectRaw('YEAR(created_at) as year, MONTH(created_at) as month, SUM(total_price) as revenue, COUNT(*) as transactions')
+            $monthlySelect = $driver === 'sqlite'
+                ? 'strftime("%Y", created_at) as year, strftime("%m", created_at) as month'
+                : 'YEAR(created_at) as year, MONTH(created_at) as month';
+
+            $monthlyRevenue = Transaction::selectRaw($monthlySelect.', SUM(total_price) as revenue, COUNT(*) as transactions')
                 ->where('payment_status', 'paid')
                 ->where('created_at', '>=', now()->subMonths(6)->startOfMonth())
                 ->groupBy('year', 'month')
@@ -121,7 +126,11 @@ class DashboardController extends Controller
             ]);
         } else {
             // Kasir - bukan owner, tampilkan cashier dashboard dengan data hari ini
-            $hourlyRevenue = Transaction::selectRaw('HOUR(created_at) as hour, SUM(total_price) as revenue')
+            $hourSelect = $driver === 'sqlite'
+                ? 'strftime("%H", created_at) as hour'
+                : 'HOUR(created_at) as hour';
+
+            $hourlyRevenue = Transaction::selectRaw($hourSelect.', SUM(total_price) as revenue')
                 ->where('payment_status', 'paid')
                 ->whereDate('created_at', today())
                 ->groupBy('hour')
@@ -130,7 +139,7 @@ class DashboardController extends Controller
 
             $hourlyData = [];
             for ($h = 0; $h < 24; $h++) {
-                $hourDataRow = $hourlyRevenue->firstWhere('hour', $h);
+                $hourDataRow = $hourlyRevenue->firstWhere('hour', (string) $h) ?? $hourlyRevenue->firstWhere('hour', (int) $h);
                 $hourlyData[] = [
                     'hour' => str_pad($h, 2, '0', STR_PAD_LEFT).':00',
                     'revenue' => $hourDataRow ? (float) $hourDataRow->revenue : 0,

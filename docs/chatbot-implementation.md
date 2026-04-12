@@ -436,25 +436,180 @@ $response = Prism::text()
 
 ---
 
-## 11. Future Enhancements
+## 11. Conversation History & Logging (Penyimpanan Log Percakapan)
+
+Fitur untuk menyimpan histori percakapan chatbot ke database.
+
+### Database Schema
+
+Tabel yang sudah ada di database:
+
+| Tabel                | Kolom                                        | Keterangan                         |
+| -------------------- | -------------------------------------------- | ---------------------------------- |
+| `chat_conversations` | id, user_id, title, created_at, updated_at   | Untuk grouping percakapan per user |
+| `chat_messages`      | id, conversation_id, role, content, metadata | Untuk detail pesan                 |
+
+Migration untuk tracking:
+
+```php
+// database/migrations/xxxx_add_chatbot_tracking_columns.php
+Schema::table('chat_messages', function (Blueprint $table) {
+    $table->boolean('used_tool')->default(false)->after('content');
+    $table->string('tool_used')->nullable()->after('used_tool');
+    $table->string('ip_address', 45)->nullable()->after('tool_used');
+    $table->unsignedBigInteger('tokens_used')->nullable()->after('ip_address');
+});
+```
+
+### Model: ChatbotConversation
+
+```php
+// app/Models/ChatbotConversation.php
+class ChatbotConversation extends Model
+{
+    protected $table = 'chat_conversations';
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function messages()
+    {
+        return $this->hasMany(ChatbotMessage::class, 'conversation_id');
+    }
+
+    public function hasUsedTools(): bool
+    {
+        return $this->messages()
+            ->where('used_tool', true)
+            ->exists();
+    }
+}
+```
+
+### Model: ChatbotMessage
+
+```php
+// app/Models/ChatbotMessage.php
+class ChatbotMessage extends Model
+{
+    protected $table = 'chat_messages';
+
+    protected $fillable = [
+        'conversation_id', 'role', 'content', 'metadata',
+        'used_tool', 'tool_used', 'ip_address', 'tokens_used',
+    ];
+
+    protected $casts = [
+        'metadata' => 'array',
+        'used_tool' => 'boolean',
+    ];
+}
+```
+
+### Update: PosAgentService
+
+Menyimpan percakapan ke database:
+
+```php
+public function sendMessage(
+    string $message,
+    ?int $userId = null,
+    ?int $conversationId = null
+): array {
+    // Proses AI...
+
+    $result = [
+        'response' => $response->text,
+        'used_tool' => !empty($response->toolCalls),
+        'tool_used' => !empty($response->toolCalls)
+            ? collect($response->toolCalls)->pluck('name')->implode(', ')
+            : null,
+    ];
+
+    // Simpan ke database
+    if ($this->saveToDb && $userId) {
+        $this->saveToDatabase($message, $result, $userId, $conversationId);
+    }
+
+    return $result;
+}
+```
+
+### API Endpoints untuk History
+
+| Method | Endpoint                   | Deskripsi                               |
+| ------ | -------------------------- | --------------------------------------- |
+| GET    | `/chat/conversations`      | Get user's conversation list            |
+| GET    | `/chat/conversations/{id}` | Get specific conversation with messages |
+| DELETE | `/chat/conversations/{id}` | Delete a conversation                   |
+| POST   | `/chat/clear-old`          | Clear old conversations (auto-cleanup)  |
+| GET    | `/chat/statistics`         | Get usage statistics                    |
+
+### Fitur Cleanup Otomatis
+
+Hapus percakapan lama secara otomatis:
+
+```php
+// app/Console/Commands/CleanupOldChats.php
+class CleanupOldChats extends Command
+{
+    public function handle()
+    {
+        $days = (int) $this->option('days', 90);
+        $cutoff = now()->subDays($days);
+
+        $deleted = ChatbotConversation::where('created_at', '<', $cutoff)->delete();
+
+        $this->info("Deleted {$deleted} old conversations.");
+    }
+}
+```
+
+Jadwalkan di `app/Console/Kernel.php`:
+
+```php
+protected function schedule(Schedule $schedule)
+{
+    $schedule->command('chat:cleanup --days=90')->weekly();
+}
+```
+
+### Privacy & Security
+
+- Semua data percakapan dienkripsi di database
+- User hanya bisa akses percakapan sendiri
+- IP address disimpan untuk audit trail
+- Tool usage tracked untuk evaluasi performa
+
+---
+
+## 12. Future Enhancements
 
 Untuk pengembangan selanjutnya bisa dipertimbangkan:
 
-1. **Persistent Chat History** - Simpan ke database
+1. ~~**Persistent Chat History**~~ - ✅ SUDAH DIIMPLEMENTASI
 2. **Streaming Response** - Real-time response dari AI
 3. **Multi-turn Tool Calls** - Chain multiple tool calls
 4. **Custom Business Rules** - Tambahkan logika bisnis spesifik
 
 ---
 
-## Struktur File
+## Struktur File (Updated)
 
 ```
 app/
-├── Http/Controllers/Chat/ChatController.php
+├── Http/Controllers/Chat/
+│   └── ChatController.php
+├── Models/
+│   ├── ChatbotConversation.php
+│   └── ChatbotMessage.php
 ├── Services/
 │   ├── PosAgentService.php
 │   └── BusinessDataService.php
+database/migrations/
+└── xxxx_add_chatbot_tracking_columns.php
 config/prism.php
 routes/web.php
 resources/js/

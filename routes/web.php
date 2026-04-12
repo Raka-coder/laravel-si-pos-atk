@@ -48,6 +48,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('chat', [ChatController::class, 'index'])->name('chat');
     Route::post('chat/send', [ChatController::class, 'send'])->name('chat.send');
     Route::post('chat/reset', [ChatController::class, 'reset'])->name('chat.reset');
+    Route::get('chat/conversations', [ChatController::class, 'conversations'])->name('chat.conversations');
+    Route::get('chat/conversations/{conversation}', [ChatController::class, 'showConversation'])->name('chat.show');
+    Route::delete('chat/conversations/{conversation}', [ChatController::class, 'deleteConversation'])->name('chat.destroy');
+    Route::post('chat/clear-old', [ChatController::class, 'clearOldConversations'])->name('chat.clear-old');
+    Route::get('chat/statistics', [ChatController::class, 'statistics'])->name('chat.statistics');
 
     Route::get('pos', [TransactionController::class, 'pos'])->name('pos');
 

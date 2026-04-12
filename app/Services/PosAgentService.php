@@ -2,6 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\ChatbotConversation;
+use App\Models\ChatbotMessage;
+use Illuminate\Support\Facades\Request;
 use Prism\Prism\Enums\Provider;
 use Prism\Prism\Facades\Prism;
 use Prism\Prism\Facades\Tool;
@@ -15,6 +18,10 @@ class PosAgentService
     private string $systemPrompt;
 
     private BusinessDataService $businessData;
+
+    private ?ChatbotConversation $conversation = null;
+
+    private bool $saveToDb = true;
 
     public function __construct()
     {
@@ -60,6 +67,34 @@ CONSTRAINTS:
 - NEVER access user data or settings
 - Only use business data: products, transactions, sales, stock, categories, expenses
 PROMPT;
+    }
+
+    public function setSaveToDb(bool $save): self
+    {
+        $this->saveToDb = $save;
+
+        return $this;
+    }
+
+    public function setConversation(?ChatbotConversation $conversation): self
+    {
+        $this->conversation = $conversation;
+
+        return $this;
+    }
+
+    public function loadConversationHistory(ChatbotConversation $conversation): void
+    {
+        $this->conversation = $conversation;
+        $messages = $conversation->messages()->orderBy('created_at')->get();
+
+        foreach ($messages as $msg) {
+            if ($msg->role === 'user') {
+                $this->conversationHistory[] = new UserMessage($msg->content);
+            } elseif ($msg->role === 'assistant') {
+                $this->conversationHistory[] = new AssistantMessage($msg->content);
+            }
+        }
     }
 
     /**
@@ -139,8 +174,11 @@ PROMPT;
         ];
     }
 
-    public function sendMessage(string $message): string
-    {
+    public function sendMessage(
+        string $message,
+        ?int $userId = null,
+        ?int $conversationId = null
+    ): array {
         $this->conversationHistory[] = new UserMessage($message);
 
         $response = Prism::text()
@@ -153,7 +191,67 @@ PROMPT;
 
         $this->conversationHistory[] = new AssistantMessage($response->text);
 
-        return $response->text;
+        $result = [
+            'response' => $response->text,
+            'used_tool' => ! empty($response->toolCalls),
+            'tool_used' => ! empty($response->toolCalls)
+                ? collect($response->toolCalls)->pluck('name')->implode(', ')
+                : null,
+        ];
+
+        if ($this->saveToDb && $userId) {
+            $this->saveToDatabase($message, $result, $userId, $conversationId);
+        }
+
+        return $result;
+    }
+
+    private function saveToDatabase(
+        string $userMessage,
+        array $result,
+        int $userId,
+        ?int $conversationId = null
+    ): void {
+        $conversation = null;
+
+        if ($conversationId) {
+            $conversation = ChatbotConversation::find($conversationId);
+        }
+
+        if (! $conversation) {
+            $conversation = ChatbotConversation::create([
+                'user_id' => $userId,
+                'title' => substr($userMessage, 0, 100),
+            ]);
+        } else {
+            if (strlen($conversation->title) < 20) {
+                $conversation->update(['title' => $userMessage]);
+            }
+        }
+
+        $ipAddress = Request::ip();
+
+        $userMsg = new ChatbotMessage([
+            'conversation_id' => $conversation->id,
+            'role' => 'user',
+            'content' => $userMessage,
+            'ip_address' => $ipAddress,
+        ]);
+        $userMsg->save();
+
+        $assistantMsg = new ChatbotMessage([
+            'conversation_id' => $conversation->id,
+            'role' => 'assistant',
+            'content' => $result['response'],
+            'used_tool' => $result['used_tool'],
+            'tool_used' => $result['tool_used'],
+            'ip_address' => $ipAddress,
+            'metadata' => [
+                'model' => 'gemini-2.5-flash',
+                'timestamp' => now()->toIso8601String(),
+            ],
+        ]);
+        $assistantMsg->save();
     }
 
     public function resetConversation(): void

@@ -54,6 +54,18 @@ function CustomTooltip({
     );
 }
 
+function getTickFill() {
+    return document.documentElement.classList.contains('dark')
+        ? '#e2e8f0'
+        : '#64748b';
+}
+
+function getYAxisTickFill() {
+    return document.documentElement.classList.contains('dark')
+        ? '#d1d5db'
+        : '#475569';
+}
+
 export default function TopProductsChart({ data }: Props) {
     if (!data || data.length === 0) {
         return <ChartEmptyState message="No product data available" />;
@@ -65,6 +77,9 @@ export default function TopProductsChart({ data }: Props) {
         revenue: Number(item.total_revenue),
     }));
 
+    const tickFill = getTickFill();
+    const yAxisTickFill = getYAxisTickFill();
+
     return (
         <ResponsiveContainer width="100%" height={300}>
             <BarChart
@@ -72,17 +87,17 @@ export default function TopProductsChart({ data }: Props) {
                 layout="vertical"
                 margin={{ top: 10, right: 10, left: 60, bottom: 0 }}
             >
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                 <XAxis
                     type="number"
-                    tick={{ fill: '#64748b', fontSize: 11 }}
+                    tick={{ fill: tickFill, fontSize: 11 }}
                     tickLine={{ stroke: '#e2e8f0' }}
                     axisLine={{ stroke: '#e2e8f0' }}
                 />
                 <YAxis
                     type="category"
                     dataKey="name"
-                    tick={{ fill: '#475569', fontSize: 11 }}
+                    tick={{ fill: yAxisTickFill, fontSize: 11 }}
                     tickLine={{ stroke: '#e2e8f0' }}
                     axisLine={{ stroke: '#e2e8f0' }}
                     width={60}

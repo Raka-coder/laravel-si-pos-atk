@@ -65,6 +65,12 @@ function CustomTooltip({
     );
 }
 
+function getPieLabelFill() {
+    return document.documentElement.classList.contains('dark')
+        ? '#d1d5db'
+        : '#475569';
+}
+
 function renderCustomizedLabel(props: PieLabelRenderProps) {
     const {
         cx = 0,
@@ -87,7 +93,11 @@ function renderCustomizedLabel(props: PieLabelRenderProps) {
             fill="white"
             textAnchor="middle"
             dominantBaseline="central"
-            style={{ color: '#475569', fontSize: '11px', fontWeight: 500 }}
+            style={{
+                fill: getPieLabelFill(),
+                fontSize: '11px',
+                fontWeight: 500,
+            }}
         >
             {name}
         </text>
@@ -135,7 +145,7 @@ export default function CategoryRevenueChart({ data }: Props) {
                     verticalAlign="middle"
                     layout="vertical"
                     formatter={(value) => (
-                        <span className="text-xs font-medium text-slate-600">
+                        <span className="text-sm font-semibold text-foreground">
                             {value as string}
                         </span>
                     )}

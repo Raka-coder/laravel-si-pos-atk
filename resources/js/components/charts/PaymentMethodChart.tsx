@@ -66,6 +66,12 @@ function CustomTooltip({
     );
 }
 
+function getPieLabelFill() {
+    return document.documentElement.classList.contains('dark')
+        ? '#d1d5db'
+        : '#475569';
+}
+
 function renderCustomizedLabel(props: PieLabelRenderProps) {
     const {
         cx = 0,
@@ -90,7 +96,11 @@ function renderCustomizedLabel(props: PieLabelRenderProps) {
             textAnchor="middle"
             dominantBaseline="central"
             className="text-xs font-medium"
-            style={{ color: '#475569', fontSize: '11px', fontWeight: 500 }}
+            style={{
+                fill: getPieLabelFill(),
+                fontSize: '11px',
+                fontWeight: 500,
+            }}
         >
             {name}: {percent * 100 >= 0 ? (percent * 100).toFixed(1) : '0.0'}%
         </text>
@@ -141,7 +151,7 @@ export default function PaymentMethodChart({ data }: Props) {
                     verticalAlign="middle"
                     layout="vertical"
                     formatter={(value) => (
-                        <span className="text-sm font-bold text-foreground">
+                        <span className="text-sm font-semibold text-foreground">
                             {value as string}
                         </span>
                     )}

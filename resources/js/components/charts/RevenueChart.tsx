@@ -68,6 +68,12 @@ function CustomTooltip({
     );
 }
 
+function getTickFill() {
+    return document.documentElement.classList.contains('dark')
+        ? '#e2e8f0'
+        : '#64748b';
+}
+
 export default function RevenueChart({ data }: Props) {
     if (!data || data.length === 0) {
         return <ChartEmptyState message="No revenue data available" />;
@@ -79,6 +85,8 @@ export default function RevenueChart({ data }: Props) {
         revenue: Number(item.revenue),
         transactions: Number(item.transactions),
     }));
+
+    const tickFill = getTickFill();
 
     return (
         <ResponsiveContainer width="100%" height={300}>
@@ -106,16 +114,16 @@ export default function RevenueChart({ data }: Props) {
                         />
                     </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                 <XAxis
                     dataKey="displayDate"
-                    tick={{ fill: '#64748b', fontSize: 11 }}
+                    tick={{ fill: tickFill, fontSize: 11 }}
                     tickLine={{ stroke: '#e2e8f0' }}
                     axisLine={{ stroke: '#e2e8f0' }}
                     dy={10}
                 />
                 <YAxis
-                    tick={{ fill: '#64748b', fontSize: 11 }}
+                    tick={{ fill: tickFill, fontSize: 11 }}
                     tickLine={{ stroke: '#e2e8f0' }}
                     axisLine={{ stroke: '#e2e8f0' }}
                     tickFormatter={(value) => formatCurrency(value)}

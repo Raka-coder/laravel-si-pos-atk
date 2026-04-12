@@ -55,6 +55,12 @@ function formatHour(hour: string): string {
     return hour;
 }
 
+function getTickFill() {
+    return document.documentElement.classList.contains('dark')
+        ? '#e2e8f0'
+        : '#64748b';
+}
+
 export default function HourlySalesChart({ data }: Props) {
     if (!data || data.length === 0) {
         return <ChartEmptyState message="No sales data available" />;
@@ -65,23 +71,25 @@ export default function HourlySalesChart({ data }: Props) {
         revenue: item.revenue,
     }));
 
+    const tickFill = getTickFill();
+
     return (
         <ResponsiveContainer width="100%" height={300}>
             <BarChart
                 data={chartData}
                 margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
             >
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                 <XAxis
                     dataKey="hour"
-                    tick={{ fill: '#64748b', fontSize: 10 }}
+                    tick={{ fill: tickFill, fontSize: 10 }}
                     tickLine={{ stroke: '#e2e8f0' }}
                     axisLine={{ stroke: '#e2e8f0' }}
                     interval={2}
                     dy={10}
                 />
                 <YAxis
-                    tick={{ fill: '#64748b', fontSize: 11 }}
+                    tick={{ fill: tickFill, fontSize: 11 }}
                     tickLine={{ stroke: '#e2e8f0' }}
                     axisLine={{ stroke: '#e2e8f0' }}
                     tickFormatter={(value) => formatCurrency(value)}

@@ -79,6 +79,12 @@ function CustomTooltip({
     );
 }
 
+function getTickFill() {
+    return document.documentElement.classList.contains('dark')
+        ? '#e2e8f0'
+        : '#64748b';
+}
+
 export default function MonthlyComparisonChart({ data }: Props) {
     if (!data || data.length === 0) {
         return <ChartEmptyState message="No monthly data available" />;
@@ -90,22 +96,24 @@ export default function MonthlyComparisonChart({ data }: Props) {
         transactions: Number(item.transactions),
     }));
 
+    const tickFill = getTickFill();
+
     return (
         <ResponsiveContainer width="100%" height={300}>
             <BarChart
                 data={chartData}
                 margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
             >
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                 <XAxis
                     dataKey="period"
-                    tick={{ fill: '#64748b', fontSize: 11 }}
+                    tick={{ fill: tickFill, fontSize: 11 }}
                     tickLine={{ stroke: '#e2e8f0' }}
                     axisLine={{ stroke: '#e2e8f0' }}
                     dy={10}
                 />
                 <YAxis
-                    tick={{ fill: '#64748b', fontSize: 11 }}
+                    tick={{ fill: tickFill, fontSize: 11 }}
                     tickLine={{ stroke: '#e2e8f0' }}
                     axisLine={{ stroke: '#e2e8f0' }}
                     tickFormatter={(value) => formatCurrency(value)}

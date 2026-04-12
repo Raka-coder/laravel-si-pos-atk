@@ -62,6 +62,9 @@ CONSTRAINTS:
 PROMPT;
     }
 
+    /**
+     * @return array<int, \Prism\Prism\Tool>
+     */
     private function createTools(): array
     {
         return [

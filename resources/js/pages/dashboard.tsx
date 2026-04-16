@@ -8,8 +8,8 @@ import {
     Wallet,
 } from 'lucide-react';
 import CategoryRevenueChart from '@/components/charts/CategoryRevenueChart';
-import MonthlyComparisonChart from '@/components/charts/MonthlyComparisonChart';
 import HourlySalesChart from '@/components/charts/HourlySalesChart';
+import MonthlyComparisonChart from '@/components/charts/MonthlyComparisonChart';
 import PaymentMethodChart from '@/components/charts/PaymentMethodChart';
 import RevenueChart from '@/components/charts/RevenueChart';
 import TopProductsChart from '@/components/charts/TopProductsChart';
@@ -123,73 +123,81 @@ export default function Dashboard() {
                     <div className="flex flex-col gap-4">
                         {/* KPI Cards */}
                         <div className="grid auto-rows-min gap-4 md:grid-cols-2 lg:grid-cols-4">
-                            <Card>
+                            <Card className="overflow-hidden border-l-4 border-l-blue-500 bg-blue-50/30 dark:bg-blue-950/10">
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                     <CardTitle className="text-sm font-medium">
                                         Today's Sales
                                     </CardTitle>
-                                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                                    <div className="rounded-full bg-blue-100 p-1.5 dark:bg-blue-900/50">
+                                        <TrendingUp className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                    </div>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="text-2xl font-bold">
+                                    <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
                                         {stats.today_sales}
                                     </div>
-                                    <p className="text-xs text-muted-foreground">
+                                    <p className="text-xs font-medium text-muted-foreground">
                                         Transactions
                                     </p>
                                 </CardContent>
                             </Card>
 
-                            <Card>
+                            <Card className="overflow-hidden border-l-4 border-l-emerald-500 bg-emerald-50/30 dark:bg-emerald-950/10">
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                     <CardTitle className="text-sm font-medium">
                                         Today's Revenue
                                     </CardTitle>
-                                    <Wallet className="h-4 w-4 text-muted-foreground" />
+                                    <div className="rounded-full bg-emerald-100 p-1.5 dark:bg-emerald-900/50">
+                                        <Wallet className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                                    </div>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="text-2xl font-bold">
+                                    <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
                                         {formatCurrency(stats.today_revenue)}
                                     </div>
-                                    <p className="text-xs text-muted-foreground">
+                                    <p className="text-xs font-medium text-muted-foreground">
                                         Total income
                                     </p>
                                 </CardContent>
                             </Card>
 
-                            <Card>
+                            <Card className="overflow-hidden border-l-4 border-l-indigo-500 bg-indigo-50/30 dark:bg-indigo-950/10">
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                     <CardTitle className="text-sm font-medium">
                                         Avg. Transaction
                                     </CardTitle>
-                                    <CreditCard className="h-4 w-4 text-muted-foreground" />
+                                    <div className="rounded-full bg-indigo-100 p-1.5 dark:bg-indigo-900/50">
+                                        <CreditCard className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                                    </div>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="text-2xl font-bold">
+                                    <div className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">
                                         {formatCurrency(
                                             stats.avg_transaction || 0,
                                         )}
                                     </div>
-                                    <p className="text-xs text-muted-foreground">
+                                    <p className="text-xs font-medium text-muted-foreground">
                                         Per transaction
                                     </p>
                                 </CardContent>
                             </Card>
 
-                            <Card>
+                            <Card className="overflow-hidden border-l-4 border-l-amber-500 bg-amber-50/30 dark:bg-amber-950/10">
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                     <CardTitle className="text-sm font-medium">
                                         Peak Hour
                                     </CardTitle>
-                                    <Clock className="h-4 w-4 text-muted-foreground" />
+                                    <div className="rounded-full bg-amber-100 p-1.5 dark:bg-amber-900/50">
+                                        <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                                    </div>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="text-2xl font-bold">
+                                    <div className="text-2xl font-bold text-amber-700 dark:text-amber-300">
                                         {peakHour !== undefined
                                             ? `${String(peakHour).padStart(2, '0')}:00`
                                             : '-'}
                                     </div>
-                                    <p className="text-xs text-muted-foreground">
+                                    <p className="text-xs font-medium text-muted-foreground">
                                         Busiest hour
                                     </p>
                                 </CardContent>
@@ -197,7 +205,7 @@ export default function Dashboard() {
                         </div>
 
                         {/* Hourly Sales Chart */}
-                        <Card className="p-4">
+                        <Card className="bg-slate-50/50 p-4 shadow-sm dark:bg-slate-900/20">
                             <CardHeader className="pb-2">
                                 <CardTitle className="text-base font-semibold">
                                     Hourly Sales Today
@@ -216,7 +224,7 @@ export default function Dashboard() {
 
                         {/* Charts Row */}
                         <div className="grid gap-4 md:grid-cols-2">
-                            <Card className="p-4">
+                            <Card className="bg-slate-50/50 p-4 shadow-sm dark:bg-slate-900/20">
                                 <CardHeader className="pb-2">
                                     <CardTitle className="text-base font-semibold">
                                         Payment Methods Today
@@ -235,7 +243,7 @@ export default function Dashboard() {
                                 </CardContent>
                             </Card>
 
-                            <Card className="p-4">
+                            <Card className="bg-slate-50/50 p-4 shadow-sm dark:bg-slate-900/20">
                                 <CardHeader className="pb-2">
                                     <CardTitle className="text-base font-semibold">
                                         Top Products Today
@@ -354,66 +362,74 @@ export default function Dashboard() {
                 ) : (
                     <>
                         {/* KPI Cards Row */}
-                        <div className="grid auto-rows-min gap-4 md:grid-cols-2 lg:md:grid-cols-4">
-                            <Card>
+                        <div className="grid auto-rows-min gap-4 md:grid-cols-2 lg:grid-cols-4">
+                            <Card className="overflow-hidden border-l-4 border-l-blue-500 bg-blue-50/30 dark:bg-blue-950/10">
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                     <CardTitle className="text-sm font-medium">
                                         Today's Sales
                                     </CardTitle>
-                                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                                    <div className="rounded-full bg-blue-100 p-1.5 dark:bg-blue-900/50">
+                                        <TrendingUp className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                    </div>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="text-2xl font-bold">
+                                    <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
                                         {stats.today_sales}
                                     </div>
-                                    <p className="text-xs text-muted-foreground">
+                                    <p className="text-xs font-medium text-muted-foreground">
                                         Transactions
                                     </p>
                                 </CardContent>
                             </Card>
 
-                            <Card>
+                            <Card className="overflow-hidden border-l-4 border-l-emerald-500 bg-emerald-50/30 dark:bg-emerald-950/10">
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                     <CardTitle className="text-sm font-medium">
                                         Today's Revenue
                                     </CardTitle>
-                                    <Wallet className="h-4 w-4 text-muted-foreground" />
+                                    <div className="rounded-full bg-emerald-100 p-1.5 dark:bg-emerald-900/50">
+                                        <Wallet className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                                    </div>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="text-2xl font-bold">
+                                    <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
                                         {formatCurrency(stats.today_revenue)}
                                     </div>
-                                    <p className="text-xs text-muted-foreground">
+                                    <p className="text-xs font-medium text-muted-foreground">
                                         Total income today
                                     </p>
                                 </CardContent>
                             </Card>
 
-                            <Card>
+                            <Card className="overflow-hidden border-l-4 border-l-indigo-500 bg-indigo-50/30 dark:bg-indigo-950/10">
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                     <CardTitle className="text-sm font-medium">
                                         Monthly Revenue
                                     </CardTitle>
-                                    <CreditCard className="h-4 w-4 text-muted-foreground" />
+                                    <div className="rounded-full bg-indigo-100 p-1.5 dark:bg-indigo-900/50">
+                                        <CreditCard className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                                    </div>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="text-2xl font-bold">
+                                    <div className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">
                                         {formatCurrency(
                                             stats.month_revenue || 0,
                                         )}
                                     </div>
-                                    <p className="text-xs text-muted-foreground">
+                                    <p className="text-xs font-medium text-muted-foreground">
                                         This month
                                     </p>
                                 </CardContent>
                             </Card>
 
-                            <Card>
+                            <Card className="overflow-hidden border-l-4 border-l-rose-500 bg-rose-50/30 dark:bg-rose-950/10">
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                     <CardTitle className="text-sm font-medium">
                                         Monthly Profit
                                     </CardTitle>
-                                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                                    <div className="rounded-full bg-rose-100 p-1.5 dark:bg-rose-900/50">
+                                        <TrendingUp className="h-4 w-4 text-rose-600 dark:text-rose-400" />
+                                    </div>
                                 </CardHeader>
                                 <CardContent>
                                     <div
@@ -427,7 +443,7 @@ export default function Dashboard() {
                                             stats.month_profit || 0,
                                         )}
                                     </div>
-                                    <p className="text-xs text-muted-foreground">
+                                    <p className="text-xs font-medium text-muted-foreground">
                                         Revenue - Expenses
                                     </p>
                                 </CardContent>
@@ -436,12 +452,14 @@ export default function Dashboard() {
 
                         {/* Secondary KPI Row */}
                         <div className="grid auto-rows-min gap-4 md:grid-cols-4">
-                            <Card>
+                            <Card className="overflow-hidden border-l-4 border-l-red-400 bg-red-50/20 dark:bg-red-950/5">
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                     <CardTitle className="text-sm font-medium">
                                         Today's Expenses
                                     </CardTitle>
-                                    <CreditCard className="h-4 w-4 text-muted-foreground" />
+                                    <div className="rounded-full bg-red-100 p-1.5 dark:bg-red-900/50">
+                                        <CreditCard className="h-4 w-4 text-red-600 dark:text-red-400" />
+                                    </div>
                                 </CardHeader>
                                 <CardContent>
                                     <div className="text-2xl font-bold text-red-600">
@@ -449,18 +467,20 @@ export default function Dashboard() {
                                             stats.today_expenses || 0,
                                         )}
                                     </div>
-                                    <p className="text-xs text-muted-foreground">
+                                    <p className="text-xs font-medium text-muted-foreground">
                                         Total expenses
                                     </p>
                                 </CardContent>
                             </Card>
 
-                            <Card>
+                            <Card className="overflow-hidden border-l-4 border-l-red-500 bg-red-50/30 dark:bg-red-950/10">
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                     <CardTitle className="text-sm font-medium">
                                         Monthly Expenses
                                     </CardTitle>
-                                    <CreditCard className="h-4 w-4 text-muted-foreground" />
+                                    <div className="rounded-full bg-red-100 p-1.5 dark:bg-red-900/50">
+                                        <CreditCard className="h-4 w-4 text-red-600 dark:text-red-400" />
+                                    </div>
                                 </CardHeader>
                                 <CardContent>
                                     <div className="text-2xl font-bold text-red-600">
@@ -468,51 +488,57 @@ export default function Dashboard() {
                                             stats.month_expenses || 0,
                                         )}
                                     </div>
-                                    <p className="text-xs text-muted-foreground">
+                                    <p className="text-xs font-medium text-muted-foreground">
                                         This month
                                     </p>
                                 </CardContent>
                             </Card>
 
                             <Card
-                                className={
+                                className={`overflow-hidden border-l-4 ${
                                     (stats.low_stock_products || 0) > 0
-                                        ? 'border-red-500'
-                                        : ''
-                                }
+                                        ? 'border-l-orange-500 bg-orange-50/30 dark:bg-orange-950/10'
+                                        : 'border-l-zinc-300 bg-zinc-50/30 dark:bg-zinc-950/10'
+                                }`}
                             >
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                     <CardTitle className="text-sm font-medium">
                                         Low Stock
                                     </CardTitle>
-                                    <AlertTriangle
-                                        className={`h-4 w-4 ${(stats.low_stock_products || 0) > 0 ? 'text-red-500' : 'text-muted-foreground'}`}
-                                    />
+                                    <div
+                                        className={`rounded-full p-1.5 ${(stats.low_stock_products || 0) > 0 ? 'bg-orange-100 dark:bg-orange-900/50' : 'bg-zinc-100 dark:bg-zinc-900/50'}`}
+                                    >
+                                        <AlertTriangle
+                                            className={`h-4 w-4 ${(stats.low_stock_products || 0) > 0 ? 'text-orange-600 dark:text-orange-400' : 'text-muted-foreground'}`}
+                                        />
+                                    </div>
                                 </CardHeader>
                                 <CardContent>
                                     <div
-                                        className={`text-2xl font-bold ${(stats.low_stock_products || 0) > 0 ? 'text-red-500' : ''}`}
+                                        className={`text-2xl font-bold ${(stats.low_stock_products || 0) > 0 ? 'text-orange-600 dark:text-orange-400' : ''}`}
                                     >
                                         {stats.low_stock_products || 0}
                                     </div>
-                                    <p className="text-xs text-muted-foreground">
+                                    <p className="text-xs font-medium text-muted-foreground">
                                         Below min stock
                                     </p>
                                 </CardContent>
                             </Card>
 
-                            <Card>
+                            <Card className="overflow-hidden border-l-4 border-l-teal-500 bg-teal-50/30 dark:bg-teal-950/10">
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                     <CardTitle className="text-sm font-medium">
                                         Total Products
                                     </CardTitle>
-                                    <Package className="h-4 w-4 text-muted-foreground" />
+                                    <div className="rounded-full bg-teal-100 p-1.5 dark:bg-teal-900/50">
+                                        <Package className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+                                    </div>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="text-2xl font-bold">
+                                    <div className="text-2xl font-bold text-teal-700 dark:text-teal-300">
                                         {stats.total_products || 0}
                                     </div>
-                                    <p className="text-xs text-muted-foreground">
+                                    <p className="text-xs font-medium text-muted-foreground">
                                         {stats.active_products || 0} active
                                     </p>
                                 </CardContent>
@@ -521,7 +547,7 @@ export default function Dashboard() {
 
                         {/* Charts Row 1 */}
                         <div className="grid gap-4 md:grid-cols-2">
-                            <Card className="p-4">
+                            <Card className="bg-slate-50/50 p-4 shadow-sm dark:bg-slate-900/20">
                                 <CardHeader className="pb-2">
                                     <CardTitle className="text-base font-semibold">
                                         Revenue Trend (30 Days)
@@ -540,7 +566,7 @@ export default function Dashboard() {
                                 </CardContent>
                             </Card>
 
-                            <Card className="p-4">
+                            <Card className="bg-slate-50/50 p-4 shadow-sm dark:bg-slate-900/20">
                                 <CardHeader className="pb-2">
                                     <CardTitle className="text-base font-semibold">
                                         Payment Methods (30 Days)
@@ -562,7 +588,7 @@ export default function Dashboard() {
 
                         {/* Charts Row 2 */}
                         <div className="grid gap-4 md:grid-cols-2">
-                            <Card className="p-4">
+                            <Card className="bg-slate-50/50 p-4 shadow-sm dark:bg-slate-900/20">
                                 <CardHeader className="pb-2">
                                     <CardTitle className="text-base font-semibold">
                                         Top Selling Products (30 Days)
@@ -581,7 +607,7 @@ export default function Dashboard() {
                                 </CardContent>
                             </Card>
 
-                            <Card className="p-4">
+                            <Card className="bg-slate-50/50 p-4 shadow-sm dark:bg-slate-900/20">
                                 <CardHeader className="pb-2">
                                     <CardTitle className="text-base font-semibold">
                                         Revenue by Category (30 Days)
@@ -602,7 +628,7 @@ export default function Dashboard() {
                         </div>
 
                         {/* Monthly Comparison */}
-                        <Card className="p-4">
+                        <Card className="bg-slate-50/50 p-4 shadow-sm dark:bg-slate-900/20">
                             <CardHeader className="pb-2">
                                 <CardTitle className="text-base font-semibold">
                                     Monthly Comparison (6 Months)

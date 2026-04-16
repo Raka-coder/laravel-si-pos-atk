@@ -104,7 +104,7 @@ export function AppSidebar() {
     const isCollapsed = state === 'collapsed';
 
     return (
-        <Sidebar collapsible="icon" variant="inset">
+        <Sidebar collapsible="icon" variant="floating">
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>

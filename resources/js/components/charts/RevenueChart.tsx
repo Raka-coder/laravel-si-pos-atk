@@ -104,12 +104,12 @@ export default function RevenueChart({ data }: Props) {
                     >
                         <stop
                             offset="5%"
-                            stopColor="#6366F1"
+                            stopColor="#1E9DF1"
                             stopOpacity={0.5}
                         />
                         <stop
                             offset="95%"
-                            stopColor="#6366F1"
+                            stopColor="#1E9DF1"
                             stopOpacity={0.05}
                         />
                     </linearGradient>
@@ -133,7 +133,7 @@ export default function RevenueChart({ data }: Props) {
                 <Area
                     type="monotone"
                     dataKey="revenue"
-                    stroke="#6366F1"
+                    stroke="#1E9DF1"
                     strokeWidth={2}
                     fill="url(#revenueGradient)"
                 />

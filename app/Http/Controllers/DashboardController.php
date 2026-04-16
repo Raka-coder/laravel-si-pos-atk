@@ -8,61 +8,109 @@ use App\Models\Product;
 use App\Models\Transaction;
 use App\Models\TransactionItem;
 use App\Models\Unit;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class DashboardController extends Controller
 {
+    private const CACHE_TTL = 10; // 10 seconds cache
+
     public function __invoke(): Response
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $isOwner = $user && $user->hasRole('owner');
-        $driver = \DB::getDriverName();
 
-        $todayTransactions = Transaction::whereDate('created_at', today())
-            ->where('payment_status', 'paid')
-            ->get();
-
-        $stats = [
-            'today_sales' => $todayTransactions->count(),
-            'today_revenue' => $todayTransactions->sum('total_price'),
-        ];
+        // Minimal stats untuk initial load (fast)
+        $stats = $this->getQuickStats($isOwner);
 
         if ($isOwner) {
-            $todayExpenses = Expense::whereDate('date', today())->get();
-            $monthExpenses = Expense::whereMonth('date', now()->month)
+            return Inertia::render('dashboard', [
+                'stats' => $stats['stats'],
+                'lowStockProducts' => $stats['lowStockProducts'],
+                'isCashier' => false,
+                'chartData' => $stats['chartData'],
+            ]);
+        }
+
+        return Inertia::render('dashboard', [
+            'stats' => $stats['stats'],
+            'isCashier' => true,
+            'hourlyRevenue' => $stats['hourlyData'],
+            'todayPaymentMethods' => $stats['todayPaymentMethods'],
+            'todayTopProducts' => $stats['todayTopProducts'],
+            'lowStockProducts' => $stats['lowStockProducts'],
+        ]);
+    }
+
+    private function getQuickStats(bool $isOwner): array
+    {
+        $userId = Auth::id() ?? 'guest';
+        $cacheKey = 'dashboard_quick_'.$userId.'_'.now()->format('Y-m-d-H-i');
+
+        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($isOwner) {
+            $driver = DB::getDriverName();
+            $today = today();
+            $startDate = now()->subDays(30)->startOfDay();
+
+            // OPTIMIZATION 1: Single query untuk today transactions dengan agregasi
+            $todayStats = Transaction::whereDate('created_at', $today)
+                ->where('payment_status', 'paid')
+                ->selectRaw('COUNT(*) as count, COALESCE(SUM(total_price), 0) as revenue')
+                ->first();
+
+            $stats = [
+                'today_sales' => $todayStats?->count ?? 0,
+                'today_revenue' => (int) ($todayStats?->revenue ?? 0),
+            ];
+
+            if (! $isOwner) {
+                return $this->getCashierStats($stats, $driver, $today);
+            }
+
+            // OPTIMIZATION 2: Single query untuk expenses
+            $expenseStats = Expense::whereDate('date', $today)
+                ->selectRaw('COALESCE(SUM(amount), 0) as today_expenses')
+                ->first();
+
+            $monthExpenseStats = Expense::whereMonth('date', now()->month)
                 ->whereYear('date', now()->year)
-                ->get();
+                ->selectRaw('COALESCE(SUM(amount), 0) as month_expenses')
+                ->first();
+
+            // OPTIMIZATION 3: Batch counts menggunakan whereRaw
+            $counts = [
+                'total_products' => Product::count(),
+                'total_categories' => Category::count(),
+                'total_units' => Unit::count(),
+                'low_stock_products' => Product::whereRaw('stock < min_stock')->count(),
+                'active_products' => Product::where('is_active', true)->count(),
+            ];
 
             $monthRevenue = Transaction::whereMonth('created_at', now()->month)
                 ->whereYear('created_at', now()->year)
                 ->where('payment_status', 'paid')
-                ->sum('total_price');
+                ->selectRaw('COALESCE(SUM(total_price), 0) as revenue')
+                ->first();
 
-            $stats = array_merge($stats, [
-                'total_products' => Product::count(),
-                'total_categories' => Category::count(),
-                'total_units' => Unit::count(),
-                'low_stock_products' => Product::whereColumn('stock', '<', 'min_stock')->count(),
-                'active_products' => Product::where('is_active', true)->count(),
-                'today_expenses' => $todayExpenses->sum('amount'),
-                'month_expenses' => $monthExpenses->sum('amount'),
-                'month_revenue' => $monthRevenue,
-                'month_profit' => $monthRevenue - $monthExpenses->sum('amount'),
+            $monthRevenueVal = (int) ($monthRevenue?->revenue ?? 0);
+            $monthExpenseVal = (int) ($monthExpenseStats?->month_expenses ?? 0);
+
+            $stats = array_merge($stats, $counts, [
+                'today_expenses' => (int) ($expenseStats?->today_expenses ?? 0),
+                'month_expenses' => $monthExpenseVal,
+                'month_revenue' => $monthRevenueVal,
+                'month_profit' => $monthRevenueVal - $monthExpenseVal,
             ]);
 
-            $lowStockProducts = Product::with(['category', 'unit'])
-                ->whereColumn('stock', '<', 'min_stock')
-                ->orderBy('stock', 'asc')
-                ->limit(10)
-                ->get();
-
-            // Chart data
-            $daysBack = 30;
-            $startDate = now()->subDays($daysBack)->startOfDay();
+            // OPTIMIZATION 4: Chart data with caching
+            $startDate = now()->subDays(30)->startOfDay();
+            $driver = DB::getDriverName();
 
             // Daily revenue last 30 days
-            $dailyRevenue = Transaction::selectRaw('DATE(created_at) as date, SUM(total_price) as revenue, COUNT(*) as transactions')
+            $dailyRevenue = Transaction::selectRaw('DATE(created_at) as date, COALESCE(SUM(total_price), 0) as revenue, COUNT(*) as transactions')
                 ->where('payment_status', 'paid')
                 ->where('created_at', '>=', $startDate)
                 ->groupBy('date')
@@ -70,7 +118,7 @@ class DashboardController extends Controller
                 ->get();
 
             // Payment method distribution
-            $paymentMethods = Transaction::selectRaw('payment_method, COUNT(*) as count, SUM(total_price) as total')
+            $paymentMethods = Transaction::selectRaw('payment_method, COUNT(*) as count, COALESCE(SUM(total_price), 0) as total')
                 ->where('payment_status', 'paid')
                 ->where('created_at', '>=', $startDate)
                 ->groupBy('payment_method')
@@ -88,7 +136,7 @@ class DashboardController extends Controller
                 ->get();
 
             // Revenue by category
-            $categoryRevenue = TransactionItem::selectRaw('c.name as category_name, SUM(ti.subtotal) as revenue')
+            $categoryRevenue = TransactionItem::selectRaw('c.name as category_name, COALESCE(SUM(ti.subtotal), 0) as revenue')
                 ->from('transaction_items as ti')
                 ->join('transactions as t', 'ti.transaction_id', '=', 't.id')
                 ->join('products as p', 'ti.product_id', '=', 'p.id')
@@ -100,11 +148,11 @@ class DashboardController extends Controller
                 ->get();
 
             // Monthly comparison (last 6 months)
-            $monthlySelect = $driver === 'sqlite'
+            $monthSelect = $driver === 'sqlite'
                 ? 'strftime("%Y", created_at) as year, strftime("%m", created_at) as month'
                 : 'YEAR(created_at) as year, MONTH(created_at) as month';
 
-            $monthlyRevenue = Transaction::selectRaw($monthlySelect.', SUM(total_price) as revenue, COUNT(*) as transactions')
+            $monthlyRevenue = Transaction::selectRaw($monthSelect.', COALESCE(SUM(total_price), 0) as revenue, COUNT(*) as transactions')
                 ->where('payment_status', 'paid')
                 ->where('created_at', '>=', now()->subMonths(6)->startOfMonth())
                 ->groupBy('year', 'month')
@@ -112,10 +160,13 @@ class DashboardController extends Controller
                 ->orderBy('month')
                 ->get();
 
-            return Inertia::render('dashboard', [
+            return [
                 'stats' => $stats,
-                'lowStockProducts' => $lowStockProducts,
-                'isCashier' => false,
+                'lowStockProducts' => Product::with(['category', 'unit'])
+                    ->whereRaw('stock < min_stock')
+                    ->orderBy('stock', 'asc')
+                    ->limit(5)
+                    ->get(),
                 'chartData' => [
                     'daily_revenue' => $dailyRevenue,
                     'payment_methods' => $paymentMethods,
@@ -123,68 +174,69 @@ class DashboardController extends Controller
                     'category_revenue' => $categoryRevenue,
                     'monthly_revenue' => $monthlyRevenue,
                 ],
-            ]);
-        } else {
-            // Kasir - bukan owner, tampilkan cashier dashboard dengan data hari ini
-            $hourSelect = $driver === 'sqlite'
-                ? 'strftime("%H", created_at) as hour'
-                : 'HOUR(created_at) as hour';
+            ];
+        });
+    }
 
-            $hourlyRevenue = Transaction::selectRaw($hourSelect.', SUM(total_price) as revenue')
-                ->where('payment_status', 'paid')
-                ->whereDate('created_at', today())
-                ->groupBy('hour')
-                ->orderBy('hour')
-                ->get();
+    private function getCashierStats(array $stats, string $driver, $today): array
+    {
+        $hourSelect = $driver === 'sqlite'
+            ? 'strftime("%H", created_at) as hour'
+            : 'HOUR(created_at) as hour';
 
-            $hourlyData = [];
-            for ($h = 0; $h < 24; $h++) {
-                $hourDataRow = $hourlyRevenue->firstWhere('hour', (string) $h) ?? $hourlyRevenue->firstWhere('hour', (int) $h);
-                $hourlyData[] = [
-                    'hour' => str_pad($h, 2, '0', STR_PAD_LEFT).':00',
-                    'revenue' => $hourDataRow ? (float) $hourDataRow->revenue : 0,
-                ];
-            }
+        $hourlyRevenue = Transaction::selectRaw($hourSelect.', COALESCE(SUM(total_price), 0) as revenue')
+            ->where('payment_status', 'paid')
+            ->whereDate('created_at', $today)
+            ->groupBy('hour')
+            ->orderBy('hour')
+            ->pluck('revenue', 'hour')
+            ->toArray();
 
-            $todayPaymentMethods = Transaction::selectRaw('payment_method, COUNT(*) as count, SUM(total_price) as total')
-                ->where('payment_status', 'paid')
-                ->whereDate('created_at', today())
-                ->groupBy('payment_method')
-                ->get();
-
-            $todayTopProducts = TransactionItem::selectRaw('product_id, product_name, SUM(quantity) as total_qty, SUM(subtotal) as total_revenue')
-                ->whereHas('transaction', function ($q) {
-                    $q->where('payment_status', 'paid')
-                        ->whereDate('created_at', today());
-                })
-                ->groupBy('product_id', 'product_name')
-                ->orderByDesc('total_qty')
-                ->limit(5)
-                ->get();
-
-            $peakHour = $hourlyRevenue->sortByDesc('revenue')->first()?->hour ?? null;
-
-            $avgTransaction = $todayTransactions->count() > 0
-                ? $todayTransactions->sum('total_price') / $todayTransactions->count()
-                : 0;
-
-            $stats = array_merge($stats, [
-                'avg_transaction' => $avgTransaction,
-                'peak_hour' => $peakHour,
-            ]);
-
-            return Inertia::render('dashboard', [
-                'stats' => $stats,
-                'isCashier' => true,
-                'hourlyRevenue' => $hourlyData,
-                'todayPaymentMethods' => $todayPaymentMethods,
-                'todayTopProducts' => $todayTopProducts,
-                'lowStockProducts' => Product::with(['category', 'unit'])
-                    ->whereColumn('stock', '<', 'min_stock')
-                    ->orderBy('stock', 'asc')
-                    ->limit(5)
-                    ->get(),
-            ]);
+        $hourlyData = [];
+        for ($h = 0; $h < 24; $h++) {
+            $hourKey = (string) $h;
+            $hourlyData[] = [
+                'hour' => str_pad($h, 2, '0', STR_PAD_LEFT).':00',
+                'revenue' => (float) ($hourlyRevenue[$hourKey] ?? 0),
+            ];
         }
+
+        $paymentStats = Transaction::selectRaw('payment_method, COUNT(*) as count, COALESCE(SUM(total_price), 0) as total')
+            ->where('payment_status', 'paid')
+            ->whereDate('created_at', $today)
+            ->groupBy('payment_method')
+            ->get();
+
+        $todayTopProducts = TransactionItem::selectRaw('product_id, product_name, SUM(quantity) as total_qty, SUM(subtotal) as total_revenue')
+            ->whereHas('transaction', function ($q) use ($today) {
+                $q->where('payment_status', 'paid')
+                    ->whereDate('created_at', $today);
+            })
+            ->groupBy('product_id', 'product_name')
+            ->orderByDesc('total_qty')
+            ->limit(5)
+            ->get();
+
+        $peakHour = ! empty($hourlyRevenue)
+            ? (array_keys($hourlyRevenue, max($hourlyRevenue))[0] ?? null)
+            : null;
+        $avgTransaction = $stats['today_sales'] > 0
+            ? $stats['today_revenue'] / $stats['today_sales']
+            : 0;
+
+        $stats['avg_transaction'] = $avgTransaction;
+        $stats['peak_hour'] = $peakHour;
+
+        return [
+            'stats' => $stats,
+            'hourlyData' => $hourlyData,
+            'todayPaymentMethods' => $paymentStats,
+            'todayTopProducts' => $todayTopProducts,
+            'lowStockProducts' => Product::with(['category', 'unit'])
+                ->whereRaw('stock < min_stock')
+                ->orderBy('stock', 'asc')
+                ->limit(5)
+                ->get(),
+        ];
     }
 }

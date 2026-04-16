@@ -105,7 +105,7 @@ export default function TopProductsChart({ data }: Props) {
                 <Tooltip content={<CustomTooltip />} />
                 <Bar
                     dataKey="quantity"
-                    fill="#6366F1"
+                    fill="oklch(79.2% 0.209 151.711)"
                     radius={[0, 4, 4, 0]}
                     barSize={20}
                 />

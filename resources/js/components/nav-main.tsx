@@ -28,6 +28,7 @@ export function NavMain({ groups = [] }: { groups?: NavGroup[] }) {
                         {group.items.map((item) => (
                             <SidebarMenuItem key={item.title}>
                                 <SidebarMenuButton
+                                    size="default"
                                     asChild
                                     isActive={isCurrentUrl(item.href)}
                                     tooltip={{ children: item.title }}

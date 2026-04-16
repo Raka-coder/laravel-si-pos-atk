@@ -1,43 +1,102 @@
 @startuml
-start
-:Owner login ke sistem;
-:Memilih menu "Produk";
+!pragma theme plain
+skinparam activity {
+  BackgroundColor white
+  BorderColor black
+ FontSize 10
+}
+skinparam Arrow {
+  Color #333333
+  FontSize 9
+}
+skinparam rectangle {
+  BackgroundColor white
+  BorderColor #333333
+}
+skinparam DefaultTextAlignment center
 
-if (Aksi yang dipilih?) then (Tambah Produk)
-  :Klik tombol "Tambah Produk";
-  :Tampilkan form produk;
-  :Input nama produk;
-  :Pilih kategori;
-  :Pilih satuan (unit);
-  :Input harga beli & harga jual;
-  :Input stok awal;
-  :Input batas minimum stok;
-  :Upload gambar produk (opsional);
-  :Sistem generate SKU otomatis;
-  :Simpan produk ke database;
-  :Tampilkan notifikasi sukses;
-  
-elseif (Aksi yang dipilih?) then (Edit Produk)
-  :Pilih produk dari daftar;
-  :Klik tombol "Edit";
-  :Tampilkan form dengan data existing;
-  :Ubah data yang diperlukan;
-  :Simpan perubahan;
-  :Update timestamp updated_at;
-  :Tampilkan notifikasi sukses;
-  
-elseif (Aksi yang dipilih?) then (Hapus Produk)
-  :Pilih produk dari daftar;
-  :Klik tombol "Hapus";
-  :Tampilkan dialog konfirmasi;
-  if (Konfirmasi?) then (Ya)
-    :Hapus produk dari database;
-    :Tampilkan notifikasi sukses;
-  else (Tidak)
-    :Batalkan penghapusan;
+|Owner|
+start
+:Login & buka menu "Produk";
+-[#blue]-> :Akses halaman;
+
+|Sistem|
+:Tampilkan daftar produk;
+-[#green]-> :Data produk;
+
+|Owner|
+if (Aksi?) then (Tambah)
+
+  :Klik "Tambah Produk";
+  -[#blue]-> :Form tambah;
+
+  |Sistem|
+  :Tampilkan form kosong;
+  :Generate SKU otomatis;
+  -[#green]-> :Form & SKU;
+
+  |Owner|
+  :Input data produk;
+  if (Upload gambar?) then (Ya)
+    :Upload file;
+    -[#blue]-> :Kirim file;
+    |Sistem|
+    :Validasi & simpan gambar;
   endif
-else (Lainnya)
+
+  |Sistem|
+  :Validasi & simpan ke DB;
+  -[#green]-> :Notifikasi sukses;
+
+elseif (Aksi?) then (Edit)
+
+  |Owner|
+  :Pilih produk;
+  :Klik "Edit";
+  -[#blue]-> :Form edit;
+
+  |Sistem|
+  :Ambil data produk;
+  :Tampilkan form + data existing;
+  -[#green]-> :Data produk;
+
+  |Owner|
+  :Ubah data;
+  :Upload gambar baru?;
+  -[#blue]-> :Kirim perubahan;
+
+  |Sistem|
+  :Validasi & update DB;
+  :Update timestamp;
+  -[#green]-> :Notifikasi sukses;
+
+elseif (Aksi?) then (Hapus)
+
+  |Owner|
+  :Pilih produk;
+  :Klik "Hapus";
+  -[#blue]-> :Req hapus;
+
+  |Sistem|
+  :Tampilkan konfirmasi;
+  -[#green]-> :Konfirmasi;
+
+  |Owner|
+  if (Konfirmasi?) then (Ya)
+    -[#blue]-> :Proses hapus;
+    |Sistem|
+    if (Pernah terjual?) then (Ya)
+      :Soft delete (arsip);
+    else (Tidak)
+      :Hard delete;
+    endif
+    -[#green]-> :Notifikasi sukses;
+  else (Tidak)
+    |Sistem|
+    -[#green]-> :Batalkan;
+  endif
 endif
 
+|Owner|
 stop
 @enduml

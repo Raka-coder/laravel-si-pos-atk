@@ -123,16 +123,16 @@ export default function TransactionIndex() {
         setPaymentMethod(value);
     };
 
-    // Get current filters for pagination
+    // Get current filters for pagination - use server-side filters for consistency
     const getPaginationLink = (page: number) => {
         const params = new URLSearchParams();
 
-        if (searchTerm) {
-            params.set('search', searchTerm);
+        if (filters.search) {
+            params.set('search', filters.search);
         }
 
-        if (paymentMethod && paymentMethod !== 'all') {
-            params.set('payment_method', paymentMethod);
+        if (filters.payment_method && filters.payment_method !== 'all') {
+            params.set('payment_method', filters.payment_method);
         }
 
         if (page > 1) {

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\DashboardApiController;
 use App\Http\Controllers\Category\CategoryController;
 use App\Http\Controllers\Chat\ChatController;
 use App\Http\Controllers\DashboardController;
@@ -44,6 +45,11 @@ Route::middleware(['auth', 'verified', 'role:owner'])->group(function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
+
+    // Dashboard API for lazy loading
+    Route::get('api/dashboard/charts', [DashboardApiController::class, 'chartData'])->name('api.dashboard.charts');
+    Route::get('api/dashboard/charts/refresh', [DashboardApiController::class, 'refreshStats'])->name('api.dashboard.refresh');
+    Route::get('api/dashboard/hourly', [DashboardApiController::class, 'hourlyData'])->name('api.dashboard.hourly');
 
     Route::get('chat', [ChatController::class, 'index'])->name('chat');
     Route::post('chat/send', [ChatController::class, 'send'])->name('chat.send');

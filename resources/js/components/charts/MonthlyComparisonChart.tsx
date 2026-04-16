@@ -122,7 +122,7 @@ export default function MonthlyComparisonChart({ data }: Props) {
                 <Tooltip content={<CustomTooltip />} />
                 <Bar
                     dataKey="revenue"
-                    fill="#6366F1"
+                    fill="oklch(76.9% 0.188 70.08)"
                     radius={[4, 4, 0, 0]}
                     barSize={40}
                 />

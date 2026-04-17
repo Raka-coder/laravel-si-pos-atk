@@ -41,6 +41,12 @@ Route::middleware(['auth', 'verified', 'role:owner'])->group(function () {
 
     Route::get('shop-settings', [ShopSettingController::class, 'index'])->name('shop-settings');
     Route::put('shop-settings', [ShopSettingController::class, 'update'])->name('shop-settings.update');
+
+    Route::get('reports/sales', [ReportController::class, 'sales'])->name('reports.sales');
+    Route::get('reports/sales/export', [ReportController::class, 'exportSales'])->name('reports.sales.export');
+    Route::get('reports/expenses', [ReportController::class, 'expenses'])->name('reports.expenses');
+    Route::get('reports/expenses/export', [ReportController::class, 'exportExpenses'])->name('reports.expenses.export');
+    Route::get('reports/profit-loss', [ReportController::class, 'profitLoss'])->name('reports.profit-loss');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -64,12 +70,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::resource('transactions', TransactionController::class)->only(['index', 'store', 'show', 'update']);
     Route::get('transactions/receipt/{transaction}', [TransactionController::class, 'receipt'])->name('transactions.receipt');
-
-    Route::get('reports/sales', [ReportController::class, 'sales'])->name('reports.sales');
-    Route::get('reports/sales/export', [ReportController::class, 'exportSales'])->name('reports.sales.export');
-    Route::get('reports/expenses', [ReportController::class, 'expenses'])->name('reports.expenses');
-    Route::get('reports/expenses/export', [ReportController::class, 'exportExpenses'])->name('reports.expenses.export');
-    Route::get('reports/profit-loss', [ReportController::class, 'profitLoss'])->name('reports.profit-loss');
 });
 
 require __DIR__.'/settings.php';

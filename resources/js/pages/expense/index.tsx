@@ -120,12 +120,26 @@ export default function ExpenseIndex() {
     const [createDateOpen, setCreateDateOpen] = useState(false);
     const [editDateOpen, setEditDateOpen] = useState(false);
     const [search, setSearch] = useState(filters.search ?? '');
+    const [categoryId, setCategoryId] = useState(filters.category_id ?? 'all');
+    const [dateFrom, setDateFrom] = useState(filters.date_from ?? '');
+    const [dateTo, setDateTo] = useState(filters.date_to ?? '');
     const isFirstRender = useRef(true);
 
     useEffect(() => {
         if (isFirstRender.current) {
             isFirstRender.current = false;
 
+            return;
+        }
+
+        // Only trigger router.get if search state is actually different from current filters in props
+        // This prevents resetting to page 1 when navigating through pagination
+        if (
+            search === (filters.search || '') &&
+            categoryId === (filters.category_id || 'all') &&
+            dateFrom === (filters.date_from || '') &&
+            dateTo === (filters.date_to || '')
+        ) {
             return;
         }
 
@@ -136,16 +150,16 @@ export default function ExpenseIndex() {
                 params.search = search;
             }
 
-            if (filters.category_id) {
-                params.category_id = filters.category_id;
+            if (categoryId && categoryId !== 'all') {
+                params.category_id = categoryId;
             }
 
-            if (filters.date_from) {
-                params.date_from = filters.date_from;
+            if (dateFrom) {
+                params.date_from = dateFrom;
             }
 
-            if (filters.date_to) {
-                params.date_to = filters.date_to;
+            if (dateTo) {
+                params.date_to = dateTo;
             }
 
             router.get('/expenses', params, {
@@ -156,7 +170,16 @@ export default function ExpenseIndex() {
         }, 500);
 
         return () => clearTimeout(timer);
-    }, [search, filters.category_id, filters.date_from, filters.date_to]);
+    }, [
+        search,
+        categoryId,
+        dateFrom,
+        dateTo,
+        filters.search,
+        filters.category_id,
+        filters.date_from,
+        filters.date_to,
+    ]);
 
     const createForm = useForm({
         name: '',
@@ -512,7 +535,7 @@ export default function ExpenseIndex() {
                                                                 )
                                                             }
                                                         >
-                                                            <Trash2 className="h-4 w-4" />
+                                                            <Trash2 className="h-4 w-4 text-destructive-foreground" />
                                                         </Button>
                                                     </TooltipTrigger>
                                                     <TooltipContent>

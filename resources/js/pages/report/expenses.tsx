@@ -5,12 +5,14 @@ import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { BreadcrumbItem } from '@/types';
+import { CreditCard } from 'lucide-react';
 
 interface ExpenseCategory {
     id: number;
@@ -114,90 +116,104 @@ export default function ExpensesReport() {
                     </Button>
                 </div>
 
-                <div className="rounded-xl border bg-card p-6">
-                    <div className="text-sm text-muted-foreground">
-                        Total Expenses
-                    </div>
-                    <div className="text-3xl font-bold">
-                        {formatCurrency(summary.total_expenses)}
-                    </div>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    <Card className="overflow-hidden border-l-4 border-l-red-500 bg-red-50/30 dark:bg-red-950/10">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">
+                                Total Expenses
+                            </CardTitle>
+                            <div className="rounded-full bg-red-100 p-1.5 dark:bg-red-900/50">
+                                <CreditCard className="h-4 w-4 text-red-600 dark:text-red-400" />
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold text-red-700 dark:text-red-300">
+                                {formatCurrency(summary.total_expenses)}
+                            </div>
+                            <p className="text-xs font-medium text-muted-foreground">
+                                Total expenses in selected period
+                            </p>
+                        </CardContent>
+                    </Card>
                 </div>
 
-                <div className="flex items-center gap-4 rounded-xl border bg-card p-4">
-                    <div className="flex items-center gap-2">
-                        <label className="text-sm">From:</label>
-                        <DropdownMenu
-                            open={startOpen}
-                            onOpenChange={setStartOpen}
-                        >
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    className="w-45 justify-start text-left font-normal"
-                                >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {startDate ? (
-                                        format(startDate, 'PPP')
-                                    ) : (
-                                        <span>Pick a date</span>
-                                    )}
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                                className="w-auto p-0"
-                                align="start"
+                <div className="flex flex-wrap items-center gap-4 rounded-xl border bg-card/50 p-4 shadow-sm backdrop-blur-sm">
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-muted-foreground">From:</span>
+                            <DropdownMenu
+                                open={startOpen}
+                                onOpenChange={setStartOpen}
                             >
-                                <Calendar
-                                    mode="single"
-                                    selected={startDate}
-                                    onSelect={(date) => {
-                                        setStartDate(date);
-                                        setStartOpen(false);
-
-                                        if (date) {
-applyDateFilter(date, endDate);
-}
-                                    }}
-                                    initialFocus
-                                />
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <label className="text-sm">To:</label>
-                        <DropdownMenu open={endOpen} onOpenChange={setEndOpen}>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    className="w-45 justify-start text-left font-normal"
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        className="w-48 justify-start text-left font-normal"
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                                        {startDate ? (
+                                            format(startDate, 'PPP')
+                                        ) : (
+                                            <span>Pick a date</span>
+                                        )}
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    className="w-auto p-0"
+                                    align="start"
                                 >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {endDate ? (
-                                        format(endDate, 'PPP')
-                                    ) : (
-                                        <span>Pick a date</span>
-                                    )}
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                                className="w-auto p-0"
-                                align="start"
-                            >
-                                <Calendar
-                                    mode="single"
-                                    selected={endDate}
-                                    onSelect={(date) => {
-                                        setEndDate(date);
-                                        setEndOpen(false);
+                                    <Calendar
+                                        mode="single"
+                                        selected={startDate}
+                                        onSelect={(date) => {
+                                            setStartDate(date);
+                                            setStartOpen(false);
 
-                                        if (date) {
-                                            applyDateFilter(startDate, date);
-                                        }
-                                    }}
-                                    initialFocus
-                                />
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                                            if (date) {
+                                                applyDateFilter(date, endDate);
+                                            }
+                                        }}
+                                        initialFocus
+                                    />
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-muted-foreground">To:</span>
+                            <DropdownMenu open={endOpen} onOpenChange={setEndOpen}>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        className="w-48 justify-start text-left font-normal"
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                                        {endDate ? (
+                                            format(endDate, 'PPP')
+                                        ) : (
+                                            <span>Pick a date</span>
+                                        )}
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    className="w-auto p-0"
+                                    align="start"
+                                >
+                                    <Calendar
+                                        mode="single"
+                                        selected={endDate}
+                                        onSelect={(date) => {
+                                            setEndDate(date);
+                                            setEndOpen(false);
+
+                                            if (date) {
+                                                applyDateFilter(startDate, date);
+                                            }
+                                        }}
+                                        initialFocus
+                                    />
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
                     </div>
                 </div>
 

@@ -87,9 +87,7 @@ const cashierNavItems = mainNavItems
     .map((group) => ({
         ...group,
         items: group.items.filter((item) =>
-            ['Dashboard', 'POS', 'Transactions', 'Reports'].includes(
-                item.title,
-            ),
+            ['Dashboard', 'POS', 'Transactions'].includes(item.title),
         ),
     }))
     .filter((group) => group.items.length > 0);

@@ -1,5 +1,13 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
-import { Receipt, Store, Trash2, Upload } from 'lucide-react';
+import {
+    CreditCard,
+    Image,
+    Receipt,
+    Settings,
+    Store,
+    Trash2,
+    Upload,
+} from 'lucide-react';
 import { useMemo, useState } from 'react';
 import ShopSettingController from '@/actions/App/Http/Controllers/Settings/ShopSettingController';
 import InputError from '@/components/input-error';
@@ -13,6 +21,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea as TextareaComponent } from '@/components/ui/textarea';
 import type { BreadcrumbItem } from '@/types';
 

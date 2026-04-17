@@ -72,10 +72,17 @@ export default function ExpenseCategoryIndex() {
     const [search, setSearch] = useState(filters.search ?? '');
     const isFirstRender = useRef(true);
 
+    // Debounce search
     useEffect(() => {
         if (isFirstRender.current) {
             isFirstRender.current = false;
 
+            return;
+        }
+
+        // Only trigger router.get if search state is actually different from current filters in props
+        // This prevents resetting to page 1 when navigating through pagination
+        if (search === (filters.search || '')) {
             return;
         }
 
@@ -94,7 +101,7 @@ export default function ExpenseCategoryIndex() {
         }, 500);
 
         return () => clearTimeout(timer);
-    }, [search]);
+    }, [search, filters.search]);
 
     const createForm = useForm({
         name: '',
@@ -286,7 +293,7 @@ export default function ExpenseCategoryIndex() {
                                                                     )
                                                                 }
                                                             >
-                                                                <Trash2 className="h-4 w-4" />
+                                                                <Trash2 className="h-4 w-4 text-destructive-foreground" />
                                                             </Button>
                                                         </TooltipTrigger>
                                                         <TooltipContent>

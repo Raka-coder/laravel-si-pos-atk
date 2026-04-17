@@ -5,12 +5,14 @@ import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { BreadcrumbItem } from '@/types';
+import { ArrowDownCircle, DollarSign, TrendingUp } from 'lucide-react';
 
 interface Props {
     [key: string]: unknown;
@@ -72,119 +74,175 @@ export default function ProfitLossReport() {
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-3">
-                    <div className="rounded-xl border bg-card p-6">
-                        <div className="text-sm text-muted-foreground">
-                            Gross Profit
-                        </div>
-                        <div className="text-2xl font-bold">
-                            {formatCurrency(summary.gross_profit)}
-                        </div>
-                    </div>
-                    <div className="rounded-xl border bg-card p-6">
-                        <div className="text-sm text-muted-foreground">
-                            Total Expenses
-                        </div>
-                        <div className="text-2xl font-bold text-red-500">
-                            {formatCurrency(summary.total_expenses)}
-                        </div>
-                    </div>
-                    <div
-                        className={`rounded-xl border bg-card p-6 ${
+                    <Card className="overflow-hidden border-l-4 border-l-emerald-500 bg-emerald-50/30 dark:bg-emerald-950/10">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">
+                                Gross Profit
+                            </CardTitle>
+                            <div className="rounded-full bg-emerald-100 p-1.5 dark:bg-emerald-900/50">
+                                <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
+                                {formatCurrency(summary.gross_profit)}
+                            </div>
+                            <p className="text-xs font-medium text-muted-foreground">
+                                Total revenue - COGS
+                            </p>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="overflow-hidden border-l-4 border-l-red-500 bg-red-50/30 dark:bg-red-950/10">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">
+                                Total Expenses
+                            </CardTitle>
+                            <div className="rounded-full bg-red-100 p-1.5 dark:bg-red-900/50">
+                                <ArrowDownCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold text-red-700 dark:text-red-300">
+                                {formatCurrency(summary.total_expenses)}
+                            </div>
+                            <p className="text-xs font-medium text-muted-foreground">
+                                Operational costs
+                            </p>
+                        </CardContent>
+                    </Card>
+
+                    <Card
+                        className={`overflow-hidden border-l-4 ${
                             summary.net_profit >= 0
-                                ? 'border-green-500'
-                                : 'border-red-500'
+                                ? 'border-l-green-500 bg-green-50/30 dark:bg-green-950/10'
+                                : 'border-l-red-500 bg-red-50/30 dark:bg-red-950/10'
                         }`}
                     >
-                        <div className="text-sm text-muted-foreground">
-                            Net Profit
-                        </div>
-                        <div
-                            className={`text-2xl font-bold ${
-                                summary.net_profit >= 0
-                                    ? 'text-green-500'
-                                    : 'text-red-500'
-                            }`}
-                        >
-                            {formatCurrency(summary.net_profit)}
-                        </div>
-                    </div>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">
+                                Net Profit
+                            </CardTitle>
+                            <div
+                                className={`rounded-full p-1.5 ${
+                                    summary.net_profit >= 0
+                                        ? 'bg-green-100 dark:bg-green-900/50'
+                                        : 'bg-red-100 dark:bg-red-900/50'
+                                }`}
+                            >
+                                <DollarSign
+                                    className={`h-4 w-4 ${
+                                        summary.net_profit >= 0
+                                            ? 'text-green-600 dark:text-green-400'
+                                            : 'text-red-600 dark:text-red-400'
+                                    }`}
+                                />
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <div
+                                className={`text-2xl font-bold ${
+                                    summary.net_profit >= 0
+                                        ? 'text-green-700 dark:text-green-300'
+                                        : 'text-red-700 dark:text-red-300'
+                                }`}
+                            >
+                                {formatCurrency(summary.net_profit)}
+                            </div>
+                            <p className="text-xs font-medium text-muted-foreground">
+                                Gross Profit - Expenses
+                            </p>
+                        </CardContent>
+                    </Card>
                 </div>
 
-                <div className="flex items-center gap-4 rounded-xl border bg-card p-4">
-                    <div className="flex items-center gap-2">
-                        <label className="text-sm">From:</label>
-                        <DropdownMenu
-                            open={startOpen}
-                            onOpenChange={setStartOpen}
-                        >
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    className="w-45 justify-start text-left font-normal"
-                                >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {startDate ? (
-                                        format(startDate, 'PPP')
-                                    ) : (
-                                        <span>Pick a date</span>
-                                    )}
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                                className="w-auto p-0"
-                                align="start"
+                <div className="flex flex-wrap items-center gap-4 rounded-xl border bg-card/50 p-4 shadow-sm backdrop-blur-sm">
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-muted-foreground">
+                                From:
+                            </span>
+                            <DropdownMenu
+                                open={startOpen}
+                                onOpenChange={setStartOpen}
                             >
-                                <Calendar
-                                    mode="single"
-                                    selected={startDate}
-                                    onSelect={(date) => {
-                                        setStartDate(date);
-                                        setStartOpen(false);
-
-                                        if (date) {
-applyDateFilter(date, endDate);
-}
-                                    }}
-                                    initialFocus
-                                />
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <label className="text-sm">To:</label>
-                        <DropdownMenu open={endOpen} onOpenChange={setEndOpen}>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    className="w-45 justify-start text-left font-normal"
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        className="w-48 justify-start text-left font-normal"
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                                        {startDate ? (
+                                            format(startDate, 'PPP')
+                                        ) : (
+                                            <span>Pick a date</span>
+                                        )}
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    className="w-auto p-0"
+                                    align="start"
                                 >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {endDate ? (
-                                        format(endDate, 'PPP')
-                                    ) : (
-                                        <span>Pick a date</span>
-                                    )}
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                                className="w-auto p-0"
-                                align="start"
-                            >
-                                <Calendar
-                                    mode="single"
-                                    selected={endDate}
-                                    onSelect={(date) => {
-                                        setEndDate(date);
-                                        setEndOpen(false);
+                                    <Calendar
+                                        mode="single"
+                                        selected={startDate}
+                                        onSelect={(date) => {
+                                            setStartDate(date);
+                                            setStartOpen(false);
 
-                                        if (date) {
-                                            applyDateFilter(startDate, date);
-                                        }
-                                    }}
-                                    initialFocus
-                                />
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                                            if (date) {
+                                                applyDateFilter(date, endDate);
+                                            }
+                                        }}
+                                        initialFocus
+                                    />
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-muted-foreground">
+                                To:
+                            </span>
+                            <DropdownMenu
+                                open={endOpen}
+                                onOpenChange={setEndOpen}
+                            >
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        className="w-48 justify-start text-left font-normal"
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                                        {endDate ? (
+                                            format(endDate, 'PPP')
+                                        ) : (
+                                            <span>Pick a date</span>
+                                        )}
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    className="w-auto p-0"
+                                    align="start"
+                                >
+                                    <Calendar
+                                        mode="single"
+                                        selected={endDate}
+                                        onSelect={(date) => {
+                                            setEndDate(date);
+                                            setEndOpen(false);
+
+                                            if (date) {
+                                                applyDateFilter(
+                                                    startDate,
+                                                    date,
+                                                );
+                                            }
+                                        }}
+                                        initialFocus
+                                    />
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
                     </div>
                 </div>
 

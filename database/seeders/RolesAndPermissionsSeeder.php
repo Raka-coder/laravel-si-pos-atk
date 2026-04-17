@@ -58,7 +58,6 @@ class RolesAndPermissionsSeeder extends Seeder
         $cashierRole->givePermissionTo([
             'create_transactions',
             'view_transactions',
-            'view_reports',
         ]);
 
         $user = User::factory()->create([

@@ -2,9 +2,10 @@ import { Head, usePage } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { CalendarIcon, Download } from 'lucide-react';
 import * as React from 'react';
-
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
+
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -19,6 +20,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import type { BreadcrumbItem } from '@/types';
+import { Banknote, ShoppingBag, TrendingUp } from 'lucide-react';
 
 interface TransactionItem {
     id: number;
@@ -129,107 +131,151 @@ export default function SalesReport() {
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-3">
-                    <div className="rounded-xl border bg-card p-6">
-                        <div className="text-sm text-muted-foreground">
-                            Total Revenue
-                        </div>
-                        <div className="text-2xl font-bold">
-                            {formatCurrency(summary.total_revenue)}
-                        </div>
-                    </div>
-                    <div className="rounded-xl border bg-card p-6">
-                        <div className="text-sm text-muted-foreground">
-                            Total Transactions
-                        </div>
-                        <div className="text-2xl font-bold">
-                            {summary.total_transactions}
-                        </div>
-                    </div>
-                    <div className="rounded-xl border bg-card p-6">
-                        <div className="text-sm text-muted-foreground">
-                            Gross Profit
-                        </div>
-                        <div className="text-2xl font-bold">
-                            {formatCurrency(summary.gross_profit)}
-                        </div>
-                    </div>
+                    <Card className="overflow-hidden border-l-4 border-l-emerald-500 bg-emerald-50/30 dark:bg-emerald-950/10">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">
+                                Total Revenue
+                            </CardTitle>
+                            <div className="rounded-full bg-emerald-100 p-1.5 dark:bg-emerald-900/50">
+                                <Banknote className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
+                                {formatCurrency(summary.total_revenue)}
+                            </div>
+                            <p className="text-xs font-medium text-muted-foreground">
+                                Total income from sales
+                            </p>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="overflow-hidden border-l-4 border-l-blue-500 bg-blue-50/30 dark:bg-blue-950/10">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">
+                                Total Transactions
+                            </CardTitle>
+                            <div className="rounded-full bg-blue-100 p-1.5 dark:bg-blue-900/50">
+                                <ShoppingBag className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
+                                {summary.total_transactions}
+                            </div>
+                            <p className="text-xs font-medium text-muted-foreground">
+                                Completed sales
+                            </p>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="overflow-hidden border-l-4 border-l-indigo-500 bg-indigo-50/30 dark:bg-indigo-950/10">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">
+                                Gross Profit
+                            </CardTitle>
+                            <div className="rounded-full bg-indigo-100 p-1.5 dark:bg-indigo-900/50">
+                                <TrendingUp className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">
+                                {formatCurrency(summary.gross_profit)}
+                            </div>
+                            <p className="text-xs font-medium text-muted-foreground">
+                                Revenue - Product costs
+                            </p>
+                        </CardContent>
+                    </Card>
                 </div>
 
-                <div className="flex items-center gap-4 rounded-xl border bg-card p-4">
-                    <div className="flex items-center gap-2">
-                        <label className="text-sm">From:</label>
-                        <DropdownMenu
-                            open={startOpen}
-                            onOpenChange={setStartOpen}
-                        >
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    className="w-45 justify-start text-left font-normal"
-                                >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {startDate ? (
-                                        format(startDate, 'PPP')
-                                    ) : (
-                                        <span>Pick a date</span>
-                                    )}
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                                className="w-auto p-0"
-                                align="start"
+                <div className="flex flex-wrap items-center gap-4 rounded-xl border bg-card/50 p-4 shadow-sm backdrop-blur-sm">
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-muted-foreground">
+                                From:
+                            </span>
+                            <DropdownMenu
+                                open={startOpen}
+                                onOpenChange={setStartOpen}
                             >
-                                <Calendar
-                                    mode="single"
-                                    selected={startDate}
-                                    onSelect={(date) => {
-                                        setStartDate(date);
-                                        setStartOpen(false);
-
-                                        if (date) {
-applyDateFilter(date, endDate);
-}
-                                    }}
-                                    initialFocus
-                                />
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <label className="text-sm">To:</label>
-                        <DropdownMenu open={endOpen} onOpenChange={setEndOpen}>
-                            <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    className="w-45 justify-start text-left font-normal"
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        className="w-48 justify-start text-left font-normal"
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                                        {startDate ? (
+                                            format(startDate, 'PPP')
+                                        ) : (
+                                            <span>Pick a date</span>
+                                        )}
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    className="w-auto p-0"
+                                    align="start"
                                 >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {endDate ? (
-                                        format(endDate, 'PPP')
-                                    ) : (
-                                        <span>Pick a date</span>
-                                    )}
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                                className="w-auto p-0"
-                                align="start"
-                            >
-                                <Calendar
-                                    mode="single"
-                                    selected={endDate}
-                                    onSelect={(date) => {
-                                        setEndDate(date);
-                                        setEndOpen(false);
+                                    <Calendar
+                                        mode="single"
+                                        selected={startDate}
+                                        onSelect={(date) => {
+                                            setStartDate(date);
+                                            setStartOpen(false);
 
-                                        if (date) {
-                                            applyDateFilter(startDate, date);
-                                        }
-                                    }}
-                                    initialFocus
-                                />
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                                            if (date) {
+                                                applyDateFilter(date, endDate);
+                                            }
+                                        }}
+                                        initialFocus
+                                    />
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-muted-foreground">
+                                To:
+                            </span>
+                            <DropdownMenu
+                                open={endOpen}
+                                onOpenChange={setEndOpen}
+                            >
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        className="w-48 justify-start text-left font-normal"
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                                        {endDate ? (
+                                            format(endDate, 'PPP')
+                                        ) : (
+                                            <span>Pick a date</span>
+                                        )}
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    className="w-auto p-0"
+                                    align="start"
+                                >
+                                    <Calendar
+                                        mode="single"
+                                        selected={endDate}
+                                        onSelect={(date) => {
+                                            setEndDate(date);
+                                            setEndOpen(false);
+
+                                            if (date) {
+                                                applyDateFilter(
+                                                    startDate,
+                                                    date,
+                                                );
+                                            }
+                                        }}
+                                        initialFocus
+                                    />
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
                     </div>
                 </div>
 

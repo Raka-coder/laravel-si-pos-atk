@@ -347,13 +347,6 @@ export default function Dashboard() {
                                                 Transactions
                                             </a>
                                         </Button>
-                                        <Button
-                                            asChild
-                                            variant="outline"
-                                            size="lg"
-                                        >
-                                            <a href="/reports/sales">Reports</a>
-                                        </Button>
                                     </div>
                                 </CardContent>
                             </Card>

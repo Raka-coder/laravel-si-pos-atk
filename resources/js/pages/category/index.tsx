@@ -79,6 +79,12 @@ export default function CategoryIndex() {
             return;
         }
 
+        // Only trigger router.get if search state is actually different from current filters in props
+        // This prevents resetting to page 1 when navigating through pagination
+        if (searchTerm === (filters.search || '')) {
+            return;
+        }
+
         const timer = setTimeout(() => {
             router.get(
                 '/product-categories',
@@ -92,7 +98,7 @@ export default function CategoryIndex() {
         }, 500);
 
         return () => clearTimeout(timer);
-    }, [searchTerm]);
+    }, [searchTerm, filters.search]);
 
     const createForm = useForm({
         name: '',
@@ -296,7 +302,7 @@ export default function CategoryIndex() {
                                                                     )
                                                                 }
                                                             >
-                                                                <Trash2 className="h-4 w-4" />
+                                                                <Trash2 className="h-4 w-4 text-destructive-foreground" />
                                                             </Button>
                                                         </TooltipTrigger>
                                                         <TooltipContent>

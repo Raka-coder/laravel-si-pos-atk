@@ -105,6 +105,15 @@ export default function TransactionIndex() {
             return;
         }
 
+        // Only trigger router.get if search state is actually different from current filters in props
+        // This prevents resetting to page 1 when navigating through pagination
+        if (
+            searchTerm === (filters.search || '') &&
+            paymentMethod === (filters.payment_method || 'all')
+        ) {
+            return;
+        }
+
         const params: Record<string, string> = {};
 
         if (searchTerm) {
@@ -124,7 +133,7 @@ export default function TransactionIndex() {
         }, 500);
 
         return () => clearTimeout(timer);
-    }, [searchTerm, paymentMethod]);
+    }, [searchTerm, paymentMethod, filters.search, filters.payment_method]);
 
     const handlePaymentMethodChange = (value: string) => {
         setPaymentMethod(value);

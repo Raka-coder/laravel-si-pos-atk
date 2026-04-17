@@ -1,6 +1,6 @@
-import { Head, useForm, usePage, router } from '@inertiajs/react';
+import { Head, useForm, usePage, router, Link } from '@inertiajs/react';
 import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
@@ -105,9 +105,16 @@ export default function ProductIndex() {
     );
     const [searchQuery, setSearchQuery] = useState(filters.search || '');
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
+    const isFirstRender = useRef(true);
 
     // Debounce search
     useEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            
+            return;
+        }
+
         const timer = setTimeout(() => {
             router.get(
                 '/products',
@@ -248,6 +255,21 @@ export default function ProductIndex() {
             style: 'currency',
             currency: 'IDR',
         }).format(value);
+    };
+
+    // Get current filters for pagination
+    const getPaginationLink = (page: number) => {
+        const params = new URLSearchParams();
+
+        if (filters.search) {
+            params.set('search', filters.search);
+        }
+
+        if (page > 1) {
+            params.set('page', page.toString());
+        }
+
+        return params.toString() ? `?${params.toString()}` : '/products';
     };
 
     return (
@@ -698,9 +720,13 @@ export default function ProductIndex() {
                                 <PaginationContent>
                                     <PaginationItem>
                                         <PaginationPrevious
+                                            asChild
                                             href={
                                                 products.current_page > 1
-                                                    ? `?page=${products.current_page - 1}${filters.search ? `&search=${filters.search}` : ''}`
+                                                    ? getPaginationLink(
+                                                          products.current_page -
+                                                              1,
+                                                      )
                                                     : undefined
                                             }
                                             className={
@@ -708,7 +734,20 @@ export default function ProductIndex() {
                                                     ? 'pointer-events-none opacity-50'
                                                     : ''
                                             }
-                                        />
+                                        >
+                                            {products.current_page > 1 ? (
+                                                <Link
+                                                    href={getPaginationLink(
+                                                        products.current_page -
+                                                            1,
+                                                    )}
+                                                >
+                                                    Previous
+                                                </Link>
+                                            ) : (
+                                                <span>Previous</span>
+                                            )}
+                                        </PaginationPrevious>
                                     </PaginationItem>
 
                                     {Array.from(
@@ -731,13 +770,22 @@ export default function ProductIndex() {
                                                     <PaginationEllipsis />
                                                 ) : (
                                                     <PaginationLink
-                                                        href={`?page=${page}${filters.search ? `&search=${filters.search}` : ''}`}
+                                                        asChild
+                                                        href={getPaginationLink(
+                                                            page,
+                                                        )}
                                                         isActive={
                                                             page ===
                                                             products.current_page
                                                         }
                                                     >
-                                                        {page}
+                                                        <Link
+                                                            href={getPaginationLink(
+                                                                page,
+                                                            )}
+                                                        >
+                                                            {page}
+                                                        </Link>
                                                     </PaginationLink>
                                                 )}
                                             </PaginationItem>
@@ -745,10 +793,14 @@ export default function ProductIndex() {
 
                                     <PaginationItem>
                                         <PaginationNext
+                                            asChild
                                             href={
                                                 products.current_page <
                                                 products.last_page
-                                                    ? `?page=${products.current_page + 1}${filters.search ? `&search=${filters.search}` : ''}`
+                                                    ? getPaginationLink(
+                                                          products.current_page +
+                                                              1,
+                                                      )
                                                     : undefined
                                             }
                                             className={
@@ -757,7 +809,21 @@ export default function ProductIndex() {
                                                     ? 'pointer-events-none opacity-50'
                                                     : ''
                                             }
-                                        />
+                                        >
+                                            {products.current_page <
+                                            products.last_page ? (
+                                                <Link
+                                                    href={getPaginationLink(
+                                                        products.current_page +
+                                                            1,
+                                                    )}
+                                                >
+                                                    Next
+                                                </Link>
+                                            ) : (
+                                                <span>Next</span>
+                                            )}
+                                        </PaginationNext>
                                     </PaginationItem>
                                 </PaginationContent>
                             </Pagination>
@@ -1033,8 +1099,8 @@ export default function ProductIndex() {
                     <DialogHeader>
                         <DialogTitle>Delete Product</DialogTitle>
                         <DialogDescription>
-                            Are you sure you want to delete "
-                            {deleteProduct?.name}"? This action cannot be
+                            Are you sure you want to delete \"
+                            {deleteProduct?.name}\"? This action cannot be
                             undone.
                         </DialogDescription>
                     </DialogHeader>

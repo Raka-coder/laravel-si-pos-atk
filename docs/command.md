@@ -1,21 +1,18 @@
-Saya menggunakan React + Inertia.js dengan fitur search (debounce) dan pagination.
+Kamu sebagai developer, Terdapat bug pada fitur pagination yang ketika pindah ke page dst, selalu kmebali ke page 1, perbaiki pada halaman transaksi, perbaiki dan atasi
 
-Masalah:
-- Saat berpindah halaman (page 2, 3, dst), selalu kembali ke page 1
-- Terdapat debounce pada input search
+Penyebab Umum
+Debounce search memanggil ulang fungsi fetch data → defaultnya mengatur page ke 1.
+State page tidak dipisahkan dari state pencarian, sehingga setiap kali query berubah, page ikut di-reset.
+Handler pagination tidak mempertahankan nilai page saat search aktif.
 
-Tolong bantu:
-1. Identifikasi penyebab konflik antara debounce search dan pagination
-2. Berikan solusi agar pagination tidak reset saat search berubah berlaku ke halaman yang memiliki fitur pagination
-3. Pisahkan logic search dan pagination dengan benar
-4. Gunakan query params (search & page) secara konsisten
-5. Berikan contoh implementasi React (useEffect debounce + router.get)
+Pisahkan state search dan pagination
+Gunakan useEffect untuk fetch data
+Bedakan trigger
+Input search → reset page ke 1.
+Pagination → hanya ubah page, jangan sentuh search.
 
 
-Hindari:
-❌ debounce ikut dependency page
-❌ tidak kirim page saat search
-❌ tidak pakai preserveState
-❌ reset state setiap render
-
-Jawaban harus fokus pada best practice dan contoh kode yang clean.
+Intinya
+Debounce hanya untuk search, bukan untuk pagination.
+Page state harus independen, jangan di-reset kecuali query search berubah.
+Gunakan kombinasi search + page sebagai parameter fetch agar hasil konsisten.

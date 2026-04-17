@@ -1,4 +1,5 @@
 import * as React from "react"
+import { Slot } from "@radix-ui/react-slot"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -35,6 +36,7 @@ function PaginationItem({ ...props }: React.ComponentProps<"li">) {
 
 type PaginationLinkProps = {
   isActive?: boolean
+  asChild?: boolean
 } & Pick<React.ComponentProps<typeof Button>, "size"> &
   React.ComponentProps<"a">
 
@@ -42,8 +44,11 @@ function PaginationLink({
   className,
   isActive,
   size = "icon",
+  asChild = false,
   ...props
 }: PaginationLinkProps) {
+  const Comp = asChild ? Slot : "a"
+
   return (
     <Button
       asChild
@@ -51,7 +56,7 @@ function PaginationLink({
       size={size}
       className={cn(className)}
     >
-      <a
+      <Comp
         aria-current={isActive ? "page" : undefined}
         data-slot="pagination-link"
         data-active={isActive}

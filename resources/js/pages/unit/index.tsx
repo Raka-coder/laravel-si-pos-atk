@@ -1,6 +1,6 @@
-import { Head, useForm, usePage, router } from '@inertiajs/react';
+import { Head, useForm, usePage, router, Link } from '@inertiajs/react';
 import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
@@ -70,9 +70,16 @@ export default function UnitIndex() {
     const [deleteUnit, setDeleteUnit] = useState<Unit | null>(null);
     const [searchQuery, setSearchQuery] = useState(filters.search || '');
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
+    const isFirstRender = useRef(true);
 
     // Debounce search
     useEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            
+            return;
+        }
+
         const timer = setTimeout(() => {
             router.get(
                 '/units',
@@ -139,6 +146,21 @@ export default function UnitIndex() {
                 deleteForm.reset();
             },
         });
+    };
+
+    // Get current filters for pagination
+    const getPaginationLink = (page: number) => {
+        const params = new URLSearchParams();
+
+        if (filters.search) {
+            params.set('search', filters.search);
+        }
+
+        if (page > 1) {
+            params.set('page', page.toString());
+        }
+
+        return params.toString() ? `?${params.toString()}` : '/units';
     };
 
     return (
@@ -336,9 +358,13 @@ export default function UnitIndex() {
                                 <PaginationContent>
                                     <PaginationItem>
                                         <PaginationPrevious
+                                            asChild
                                             href={
                                                 units.current_page > 1
-                                                    ? `?page=${units.current_page - 1}${filters.search ? `&search=${filters.search}` : ''}`
+                                                    ? getPaginationLink(
+                                                          units.current_page -
+                                                              1,
+                                                      )
                                                     : undefined
                                             }
                                             className={
@@ -346,7 +372,19 @@ export default function UnitIndex() {
                                                     ? 'pointer-events-none opacity-50'
                                                     : ''
                                             }
-                                        />
+                                        >
+                                            {units.current_page > 1 ? (
+                                                <Link
+                                                    href={getPaginationLink(
+                                                        units.current_page - 1,
+                                                    )}
+                                                >
+                                                    Previous
+                                                </Link>
+                                            ) : (
+                                                <span>Previous</span>
+                                            )}
+                                        </PaginationPrevious>
                                     </PaginationItem>
 
                                     {Array.from(
@@ -368,13 +406,22 @@ export default function UnitIndex() {
                                                     <PaginationEllipsis />
                                                 ) : (
                                                     <PaginationLink
-                                                        href={`?page=${page}${filters.search ? `&search=${filters.search}` : ''}`}
+                                                        asChild
+                                                        href={getPaginationLink(
+                                                            page,
+                                                        )}
                                                         isActive={
                                                             page ===
                                                             units.current_page
                                                         }
                                                     >
-                                                        {page}
+                                                        <Link
+                                                            href={getPaginationLink(
+                                                                page,
+                                                            )}
+                                                        >
+                                                            {page}
+                                                        </Link>
                                                     </PaginationLink>
                                                 )}
                                             </PaginationItem>
@@ -382,10 +429,14 @@ export default function UnitIndex() {
 
                                     <PaginationItem>
                                         <PaginationNext
+                                            asChild
                                             href={
                                                 units.current_page <
                                                 units.last_page
-                                                    ? `?page=${units.current_page + 1}${filters.search ? `&search=${filters.search}` : ''}`
+                                                    ? getPaginationLink(
+                                                          units.current_page +
+                                                              1,
+                                                      )
                                                     : undefined
                                             }
                                             className={
@@ -394,7 +445,20 @@ export default function UnitIndex() {
                                                     ? 'pointer-events-none opacity-50'
                                                     : ''
                                             }
-                                        />
+                                        >
+                                            {units.current_page <
+                                            units.last_page ? (
+                                                <Link
+                                                    href={getPaginationLink(
+                                                        units.current_page + 1,
+                                                    )}
+                                                >
+                                                    Next
+                                                </Link>
+                                            ) : (
+                                                <span>Next</span>
+                                            )}
+                                        </PaginationNext>
                                     </PaginationItem>
                                 </PaginationContent>
                             </Pagination>

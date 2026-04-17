@@ -1,6 +1,6 @@
-import { Head, usePage, router } from '@inertiajs/react';
+import { Head, usePage, router, Link } from '@inertiajs/react';
 import { FileText, Printer, Search } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -95,9 +95,16 @@ export default function TransactionIndex() {
     const [paymentMethod, setPaymentMethod] = useState(
         filters.payment_method || 'all',
     );
+    const isFirstRender = useRef(true);
 
     // Debounce search
     useEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            
+            return;
+        }
+
         const params: Record<string, string> = {};
 
         if (searchTerm) {
@@ -139,7 +146,7 @@ export default function TransactionIndex() {
             params.set('page', page.toString());
         }
 
-        return params.toString() ? `?${params.toString()}` : '';
+        return params.toString() ? `?${params.toString()}` : '/transactions';
     };
 
     return (
@@ -260,11 +267,11 @@ export default function TransactionIndex() {
                                                                 size="lg"
                                                                 asChild
                                                             >
-                                                                <a
+                                                                <Link
                                                                     href={`/transactions/${transaction.id}`}
                                                                 >
                                                                     <FileText className="h-4 w-4" />
-                                                                </a>
+                                                                </Link>
                                                             </Button>
                                                         </TooltipTrigger>
                                                         <TooltipContent>
@@ -320,6 +327,7 @@ export default function TransactionIndex() {
                                 <PaginationContent>
                                     <PaginationItem>
                                         <PaginationPrevious
+                                            asChild
                                             href={
                                                 transactions.current_page > 1
                                                     ? getPaginationLink(
@@ -333,7 +341,20 @@ export default function TransactionIndex() {
                                                     ? 'pointer-events-none opacity-50'
                                                     : ''
                                             }
-                                        />
+                                        >
+                                            {transactions.current_page > 1 ? (
+                                                <Link
+                                                    href={getPaginationLink(
+                                                        transactions.current_page -
+                                                            1,
+                                                    )}
+                                                >
+                                                    Previous
+                                                </Link>
+                                            ) : (
+                                                <span>Previous</span>
+                                            )}
+                                        </PaginationPrevious>
                                     </PaginationItem>
 
                                     {Array.from(
@@ -357,6 +378,7 @@ export default function TransactionIndex() {
                                                     <PaginationEllipsis />
                                                 ) : (
                                                     <PaginationLink
+                                                        asChild
                                                         href={getPaginationLink(
                                                             page,
                                                         )}
@@ -365,7 +387,13 @@ export default function TransactionIndex() {
                                                             transactions.current_page
                                                         }
                                                     >
-                                                        {page}
+                                                        <Link
+                                                            href={getPaginationLink(
+                                                                page,
+                                                            )}
+                                                        >
+                                                            {page}
+                                                        </Link>
                                                     </PaginationLink>
                                                 )}
                                             </PaginationItem>
@@ -373,6 +401,7 @@ export default function TransactionIndex() {
 
                                     <PaginationItem>
                                         <PaginationNext
+                                            asChild
                                             href={
                                                 transactions.current_page <
                                                 transactions.last_page
@@ -388,7 +417,21 @@ export default function TransactionIndex() {
                                                     ? 'pointer-events-none opacity-50'
                                                     : ''
                                             }
-                                        />
+                                        >
+                                            {transactions.current_page <
+                                            transactions.last_page ? (
+                                                <Link
+                                                    href={getPaginationLink(
+                                                        transactions.current_page +
+                                                            1,
+                                                    )}
+                                                >
+                                                    Next
+                                                </Link>
+                                            ) : (
+                                                <span>Next</span>
+                                            )}
+                                        </PaginationNext>
                                     </PaginationItem>
                                 </PaginationContent>
                             </Pagination>

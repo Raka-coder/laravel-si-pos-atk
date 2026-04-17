@@ -1,4 +1,4 @@
-import { Head, useForm, usePage, router } from '@inertiajs/react';
+import { Head, useForm, usePage, router, Link } from '@inertiajs/react';
 import {
     Pencil,
     Plus,
@@ -8,7 +8,7 @@ import {
     ToggleLeft,
     ToggleRight,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -91,9 +91,16 @@ export default function UserIndex() {
     );
     const [searchQuery, setSearchQuery] = useState(filters.search || '');
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
+    const isFirstRender = useRef(true);
 
     // Debounce search
     useEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            
+            return;
+        }
+
         const timer = setTimeout(() => {
             router.get(
                 '/users',
@@ -204,6 +211,21 @@ export default function UserIndex() {
                 },
             },
         );
+    };
+
+    // Get current filters for pagination
+    const getPaginationLink = (page: number) => {
+        const params = new URLSearchParams();
+
+        if (filters.search) {
+            params.set('search', filters.search);
+        }
+
+        if (page > 1) {
+            params.set('page', page.toString());
+        }
+
+        return params.toString() ? `?${params.toString()}` : '/users';
     };
 
     return (
@@ -559,9 +581,13 @@ export default function UserIndex() {
                                 <PaginationContent>
                                     <PaginationItem>
                                         <PaginationPrevious
+                                            asChild
                                             href={
                                                 users.current_page > 1
-                                                    ? `?page=${users.current_page - 1}${filters.search ? `&search=${filters.search}` : ''}`
+                                                    ? getPaginationLink(
+                                                          users.current_page -
+                                                              1,
+                                                      )
                                                     : undefined
                                             }
                                             className={
@@ -569,7 +595,19 @@ export default function UserIndex() {
                                                     ? 'pointer-events-none opacity-50'
                                                     : ''
                                             }
-                                        />
+                                        >
+                                            {users.current_page > 1 ? (
+                                                <Link
+                                                    href={getPaginationLink(
+                                                        users.current_page - 1,
+                                                    )}
+                                                >
+                                                    Previous
+                                                </Link>
+                                            ) : (
+                                                <span>Previous</span>
+                                            )}
+                                        </PaginationPrevious>
                                     </PaginationItem>
 
                                     {Array.from(
@@ -591,13 +629,22 @@ export default function UserIndex() {
                                                     <PaginationEllipsis />
                                                 ) : (
                                                     <PaginationLink
-                                                        href={`?page=${page}${filters.search ? `&search=${filters.search}` : ''}`}
+                                                        asChild
+                                                        href={getPaginationLink(
+                                                            page,
+                                                        )}
                                                         isActive={
                                                             page ===
                                                             users.current_page
                                                         }
                                                     >
-                                                        {page}
+                                                        <Link
+                                                            href={getPaginationLink(
+                                                                page,
+                                                            )}
+                                                        >
+                                                            {page}
+                                                        </Link>
                                                     </PaginationLink>
                                                 )}
                                             </PaginationItem>
@@ -605,10 +652,14 @@ export default function UserIndex() {
 
                                     <PaginationItem>
                                         <PaginationNext
+                                            asChild
                                             href={
                                                 users.current_page <
                                                 users.last_page
-                                                    ? `?page=${users.current_page + 1}${filters.search ? `&search=${filters.search}` : ''}`
+                                                    ? getPaginationLink(
+                                                          users.current_page +
+                                                              1,
+                                                      )
                                                     : undefined
                                             }
                                             className={
@@ -617,7 +668,20 @@ export default function UserIndex() {
                                                     ? 'pointer-events-none opacity-50'
                                                     : ''
                                             }
-                                        />
+                                        >
+                                            {users.current_page <
+                                            users.last_page ? (
+                                                <Link
+                                                    href={getPaginationLink(
+                                                        users.current_page + 1,
+                                                    )}
+                                                >
+                                                    Next
+                                                </Link>
+                                            ) : (
+                                                <span>Next</span>
+                                            )}
+                                        </PaginationNext>
                                     </PaginationItem>
                                 </PaginationContent>
                             </Pagination>
@@ -830,8 +894,8 @@ export default function UserIndex() {
                     <DialogHeader>
                         <DialogTitle>Delete Kasir</DialogTitle>
                         <DialogDescription>
-                            Are you sure you want to delete "{deleteUser?.name}
-                            "? This action cannot be undone.
+                            Are you sure you want to delete \"{deleteUser?.name}
+                            \"? This action cannot be undone.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>

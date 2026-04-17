@@ -1,6 +1,6 @@
-import { Head, useForm, usePage, router } from '@inertiajs/react';
+import { Head, useForm, usePage, router, Link } from '@inertiajs/react';
 import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
@@ -69,9 +69,16 @@ export default function CategoryIndex() {
     const [deleteCategory, setDeleteCategory] = useState<Category | null>(null);
     const [searchQuery, setSearchQuery] = useState(filters.search || '');
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
+    const isFirstRender = useRef(true);
 
     // Debounce search
     useEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            
+            return;
+        }
+
         const timer = setTimeout(() => {
             router.get(
                 '/product-categories',
@@ -134,6 +141,23 @@ export default function CategoryIndex() {
                 setDeleteCategory(null);
             },
         });
+    };
+
+    // Get current filters for pagination
+    const getPaginationLink = (page: number) => {
+        const params = new URLSearchParams();
+
+        if (filters.search) {
+            params.set('search', filters.search);
+        }
+
+        if (page > 1) {
+            params.set('page', page.toString());
+        }
+
+        return params.toString()
+            ? `?${params.toString()}`
+            : '/product-categories';
     };
 
     return (
@@ -308,9 +332,13 @@ export default function CategoryIndex() {
                                 <PaginationContent>
                                     <PaginationItem>
                                         <PaginationPrevious
+                                            asChild
                                             href={
                                                 categories.current_page > 1
-                                                    ? `?page=${categories.current_page - 1}${filters.search ? `&search=${filters.search}` : ''}`
+                                                    ? getPaginationLink(
+                                                          categories.current_page -
+                                                              1,
+                                                      )
                                                     : undefined
                                             }
                                             className={
@@ -318,7 +346,20 @@ export default function CategoryIndex() {
                                                     ? 'pointer-events-none opacity-50'
                                                     : ''
                                             }
-                                        />
+                                        >
+                                            {categories.current_page > 1 ? (
+                                                <Link
+                                                    href={getPaginationLink(
+                                                        categories.current_page -
+                                                            1,
+                                                    )}
+                                                >
+                                                    Previous
+                                                </Link>
+                                            ) : (
+                                                <span>Previous</span>
+                                            )}
+                                        </PaginationPrevious>
                                     </PaginationItem>
 
                                     {Array.from(
@@ -341,13 +382,22 @@ export default function CategoryIndex() {
                                                     <PaginationEllipsis />
                                                 ) : (
                                                     <PaginationLink
-                                                        href={`?page=${page}${filters.search ? `&search=${filters.search}` : ''}`}
+                                                        asChild
+                                                        href={getPaginationLink(
+                                                            page,
+                                                        )}
                                                         isActive={
                                                             page ===
                                                             categories.current_page
                                                         }
                                                     >
-                                                        {page}
+                                                        <Link
+                                                            href={getPaginationLink(
+                                                                page,
+                                                            )}
+                                                        >
+                                                            {page}
+                                                        </Link>
                                                     </PaginationLink>
                                                 )}
                                             </PaginationItem>
@@ -355,10 +405,14 @@ export default function CategoryIndex() {
 
                                     <PaginationItem>
                                         <PaginationNext
+                                            asChild
                                             href={
                                                 categories.current_page <
                                                 categories.last_page
-                                                    ? `?page=${categories.current_page + 1}${filters.search ? `&search=${filters.search}` : ''}`
+                                                    ? getPaginationLink(
+                                                          categories.current_page +
+                                                              1,
+                                                      )
                                                     : undefined
                                             }
                                             className={
@@ -367,7 +421,21 @@ export default function CategoryIndex() {
                                                     ? 'pointer-events-none opacity-50'
                                                     : ''
                                             }
-                                        />
+                                        >
+                                            {categories.current_page <
+                                            categories.last_page ? (
+                                                <Link
+                                                    href={getPaginationLink(
+                                                        categories.current_page +
+                                                            1,
+                                                    )}
+                                                >
+                                                    Next
+                                                </Link>
+                                            ) : (
+                                                <span>Next</span>
+                                            )}
+                                        </PaginationNext>
                                     </PaginationItem>
                                 </PaginationContent>
                             </Pagination>

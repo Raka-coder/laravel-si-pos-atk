@@ -1,6 +1,6 @@
-import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { Head, router, useForm, usePage, Link } from '@inertiajs/react';
 import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
@@ -70,28 +70,28 @@ export default function ExpenseCategoryIndex() {
     const [deleteCategory, setDeleteCategory] =
         useState<ExpenseCategory | null>(null);
     const [search, setSearch] = useState(filters.search ?? '');
+    const isFirstRender = useRef(true);
 
     useEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            
+            return;
+        }
+
         const timer = setTimeout(() => {
-            const params = new URLSearchParams(window.location.search);
+            const params: Record<string, string> = {};
 
             if (search) {
-                params.set('search', search);
-            } else {
-                params.delete('search');
+                params.search = search;
             }
 
-            params.delete('page');
-            router.get(
-                `${window.location.pathname}?${params.toString()}`,
-                {},
-                {
-                    preserveState: true,
-                    preserveScroll: true,
-                    replace: true,
-                },
-            );
-        }, 300);
+            router.get('/expense-categories', params, {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true,
+            });
+        }, 500);
 
         return () => clearTimeout(timer);
     }, [search]);
@@ -145,15 +145,20 @@ export default function ExpenseCategoryIndex() {
         });
     };
 
-    const buildPageUrl = (page: number) => {
+    const getPaginationLink = (page: number) => {
         const params = new URLSearchParams();
-        params.set('page', String(page));
 
         if (filters.search) {
-params.set('search', filters.search);
-}
+            params.set('search', filters.search);
+        }
 
-        return `?${params.toString()}`;
+        if (page > 1) {
+            params.set('page', page.toString());
+        }
+
+        return params.toString()
+            ? `?${params.toString()}`
+            : '/expense-categories';
     };
 
     return (
@@ -316,9 +321,10 @@ params.set('search', filters.search);
                                 <PaginationContent>
                                     <PaginationItem>
                                         <PaginationPrevious
+                                            asChild
                                             href={
                                                 categories.current_page > 1
-                                                    ? buildPageUrl(
+                                                    ? getPaginationLink(
                                                           categories.current_page -
                                                               1,
                                                       )
@@ -329,7 +335,20 @@ params.set('search', filters.search);
                                                     ? 'pointer-events-none opacity-50'
                                                     : ''
                                             }
-                                        />
+                                        >
+                                            {categories.current_page > 1 ? (
+                                                <Link
+                                                    href={getPaginationLink(
+                                                        categories.current_page -
+                                                            1,
+                                                    )}
+                                                >
+                                                    Previous
+                                                </Link>
+                                            ) : (
+                                                <span>Previous</span>
+                                            )}
+                                        </PaginationPrevious>
                                     </PaginationItem>
 
                                     {Array.from(
@@ -352,7 +371,8 @@ params.set('search', filters.search);
                                                     <PaginationEllipsis />
                                                 ) : (
                                                     <PaginationLink
-                                                        href={buildPageUrl(
+                                                        asChild
+                                                        href={getPaginationLink(
                                                             page,
                                                         )}
                                                         isActive={
@@ -360,7 +380,13 @@ params.set('search', filters.search);
                                                             categories.current_page
                                                         }
                                                     >
-                                                        {page}
+                                                        <Link
+                                                            href={getPaginationLink(
+                                                                page,
+                                                            )}
+                                                        >
+                                                            {page}
+                                                        </Link>
                                                     </PaginationLink>
                                                 )}
                                             </PaginationItem>
@@ -368,10 +394,11 @@ params.set('search', filters.search);
 
                                     <PaginationItem>
                                         <PaginationNext
+                                            asChild
                                             href={
                                                 categories.current_page <
                                                 categories.last_page
-                                                    ? buildPageUrl(
+                                                    ? getPaginationLink(
                                                           categories.current_page +
                                                               1,
                                                       )
@@ -383,7 +410,21 @@ params.set('search', filters.search);
                                                     ? 'pointer-events-none opacity-50'
                                                     : ''
                                             }
-                                        />
+                                        >
+                                            {categories.current_page <
+                                            categories.last_page ? (
+                                                <Link
+                                                    href={getPaginationLink(
+                                                        categories.current_page +
+                                                            1,
+                                                    )}
+                                                >
+                                                    Next
+                                                </Link>
+                                            ) : (
+                                                <span>Next</span>
+                                            )}
+                                        </PaginationNext>
                                     </PaginationItem>
                                 </PaginationContent>
                             </Pagination>

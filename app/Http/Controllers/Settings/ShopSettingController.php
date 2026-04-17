@@ -30,7 +30,7 @@ class ShopSettingController extends Controller
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:50',
             'npwp' => 'nullable|string|max:50',
-            'logo' => 'nullable|image|max:2048',
+            'logo' => 'nullable|mimes:jpg,jpeg,png,gif,webp,svg+xml|max:2048',
             'qris_image' => 'nullable|image|max:2048',
             'remove_logo' => 'nullable|string',
             'remove_qris' => 'nullable|string',

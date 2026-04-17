@@ -1,4 +1,4 @@
-import { Head, useForm, usePage, router, Link } from '@inertiajs/react';
+import { Head, useForm, usePage, router } from '@inertiajs/react';
 import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import InputError from '@/components/input-error';
@@ -75,7 +75,7 @@ export default function CategoryIndex() {
     useEffect(() => {
         if (isFirstRender.current) {
             isFirstRender.current = false;
-            
+
             return;
         }
 
@@ -332,7 +332,6 @@ export default function CategoryIndex() {
                                 <PaginationContent>
                                     <PaginationItem>
                                         <PaginationPrevious
-                                            asChild
                                             href={
                                                 categories.current_page > 1
                                                     ? getPaginationLink(
@@ -346,20 +345,7 @@ export default function CategoryIndex() {
                                                     ? 'pointer-events-none opacity-50'
                                                     : ''
                                             }
-                                        >
-                                            {categories.current_page > 1 ? (
-                                                <Link
-                                                    href={getPaginationLink(
-                                                        categories.current_page -
-                                                            1,
-                                                    )}
-                                                >
-                                                    Previous
-                                                </Link>
-                                            ) : (
-                                                <span>Previous</span>
-                                            )}
-                                        </PaginationPrevious>
+                                        />
                                     </PaginationItem>
 
                                     {Array.from(
@@ -382,7 +368,6 @@ export default function CategoryIndex() {
                                                     <PaginationEllipsis />
                                                 ) : (
                                                     <PaginationLink
-                                                        asChild
                                                         href={getPaginationLink(
                                                             page,
                                                         )}
@@ -391,13 +376,7 @@ export default function CategoryIndex() {
                                                             categories.current_page
                                                         }
                                                     >
-                                                        <Link
-                                                            href={getPaginationLink(
-                                                                page,
-                                                            )}
-                                                        >
-                                                            {page}
-                                                        </Link>
+                                                        {page}
                                                     </PaginationLink>
                                                 )}
                                             </PaginationItem>
@@ -405,7 +384,6 @@ export default function CategoryIndex() {
 
                                     <PaginationItem>
                                         <PaginationNext
-                                            asChild
                                             href={
                                                 categories.current_page <
                                                 categories.last_page
@@ -421,21 +399,7 @@ export default function CategoryIndex() {
                                                     ? 'pointer-events-none opacity-50'
                                                     : ''
                                             }
-                                        >
-                                            {categories.current_page <
-                                            categories.last_page ? (
-                                                <Link
-                                                    href={getPaginationLink(
-                                                        categories.current_page +
-                                                            1,
-                                                    )}
-                                                >
-                                                    Next
-                                                </Link>
-                                            ) : (
-                                                <span>Next</span>
-                                            )}
-                                        </PaginationNext>
+                                        />
                                     </PaginationItem>
                                 </PaginationContent>
                             </Pagination>

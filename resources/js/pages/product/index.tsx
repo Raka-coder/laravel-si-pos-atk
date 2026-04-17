@@ -1,4 +1,4 @@
-import { Head, useForm, usePage, router, Link } from '@inertiajs/react';
+import { Head, useForm, usePage, router } from '@inertiajs/react';
 import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import InputError from '@/components/input-error';
@@ -111,7 +111,7 @@ export default function ProductIndex() {
     useEffect(() => {
         if (isFirstRender.current) {
             isFirstRender.current = false;
-            
+
             return;
         }
 
@@ -720,7 +720,6 @@ export default function ProductIndex() {
                                 <PaginationContent>
                                     <PaginationItem>
                                         <PaginationPrevious
-                                            asChild
                                             href={
                                                 products.current_page > 1
                                                     ? getPaginationLink(
@@ -734,20 +733,7 @@ export default function ProductIndex() {
                                                     ? 'pointer-events-none opacity-50'
                                                     : ''
                                             }
-                                        >
-                                            {products.current_page > 1 ? (
-                                                <Link
-                                                    href={getPaginationLink(
-                                                        products.current_page -
-                                                            1,
-                                                    )}
-                                                >
-                                                    Previous
-                                                </Link>
-                                            ) : (
-                                                <span>Previous</span>
-                                            )}
-                                        </PaginationPrevious>
+                                        />
                                     </PaginationItem>
 
                                     {Array.from(
@@ -770,7 +756,6 @@ export default function ProductIndex() {
                                                     <PaginationEllipsis />
                                                 ) : (
                                                     <PaginationLink
-                                                        asChild
                                                         href={getPaginationLink(
                                                             page,
                                                         )}
@@ -779,13 +764,7 @@ export default function ProductIndex() {
                                                             products.current_page
                                                         }
                                                     >
-                                                        <Link
-                                                            href={getPaginationLink(
-                                                                page,
-                                                            )}
-                                                        >
-                                                            {page}
-                                                        </Link>
+                                                        {page}
                                                     </PaginationLink>
                                                 )}
                                             </PaginationItem>
@@ -793,7 +772,6 @@ export default function ProductIndex() {
 
                                     <PaginationItem>
                                         <PaginationNext
-                                            asChild
                                             href={
                                                 products.current_page <
                                                 products.last_page
@@ -809,21 +787,7 @@ export default function ProductIndex() {
                                                     ? 'pointer-events-none opacity-50'
                                                     : ''
                                             }
-                                        >
-                                            {products.current_page <
-                                            products.last_page ? (
-                                                <Link
-                                                    href={getPaginationLink(
-                                                        products.current_page +
-                                                            1,
-                                                    )}
-                                                >
-                                                    Next
-                                                </Link>
-                                            ) : (
-                                                <span>Next</span>
-                                            )}
-                                        </PaginationNext>
+                                        />
                                     </PaginationItem>
                                 </PaginationContent>
                             </Pagination>

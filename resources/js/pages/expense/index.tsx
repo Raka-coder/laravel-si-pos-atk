@@ -1,4 +1,4 @@
-import { Head, router, useForm, usePage, Link } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { CalendarIcon, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
@@ -543,7 +543,6 @@ export default function ExpenseIndex() {
                                 <PaginationContent>
                                     <PaginationItem>
                                         <PaginationPrevious
-                                            asChild
                                             href={
                                                 expenses.current_page > 1
                                                     ? getPaginationLink(
@@ -557,20 +556,7 @@ export default function ExpenseIndex() {
                                                     ? 'pointer-events-none opacity-50'
                                                     : ''
                                             }
-                                        >
-                                            {expenses.current_page > 1 ? (
-                                                <Link
-                                                    href={getPaginationLink(
-                                                        expenses.current_page -
-                                                            1,
-                                                    )}
-                                                >
-                                                    Previous
-                                                </Link>
-                                            ) : (
-                                                <span>Previous</span>
-                                            )}
-                                        </PaginationPrevious>
+                                        />
                                     </PaginationItem>
 
                                     {Array.from(
@@ -593,7 +579,6 @@ export default function ExpenseIndex() {
                                                     <PaginationEllipsis />
                                                 ) : (
                                                     <PaginationLink
-                                                        asChild
                                                         href={getPaginationLink(
                                                             page,
                                                         )}
@@ -602,13 +587,7 @@ export default function ExpenseIndex() {
                                                             expenses.current_page
                                                         }
                                                     >
-                                                        <Link
-                                                            href={getPaginationLink(
-                                                                page,
-                                                            )}
-                                                        >
-                                                            {page}
-                                                        </Link>
+                                                        {page}
                                                     </PaginationLink>
                                                 )}
                                             </PaginationItem>
@@ -616,7 +595,6 @@ export default function ExpenseIndex() {
 
                                     <PaginationItem>
                                         <PaginationNext
-                                            asChild
                                             href={
                                                 expenses.current_page <
                                                 expenses.last_page
@@ -632,21 +610,7 @@ export default function ExpenseIndex() {
                                                     ? 'pointer-events-none opacity-50'
                                                     : ''
                                             }
-                                        >
-                                            {expenses.current_page <
-                                            expenses.last_page ? (
-                                                <Link
-                                                    href={getPaginationLink(
-                                                        expenses.current_page +
-                                                            1,
-                                                    )}
-                                                >
-                                                    Next
-                                                </Link>
-                                            ) : (
-                                                <span>Next</span>
-                                            )}
-                                        </PaginationNext>
+                                        />
                                     </PaginationItem>
                                 </PaginationContent>
                             </Pagination>

@@ -1,4 +1,4 @@
-import { Head, useForm, usePage, router, Link } from '@inertiajs/react';
+import { Head, useForm, usePage, router } from '@inertiajs/react';
 import {
     Pencil,
     Plus,
@@ -97,7 +97,7 @@ export default function UserIndex() {
     useEffect(() => {
         if (isFirstRender.current) {
             isFirstRender.current = false;
-            
+
             return;
         }
 
@@ -581,7 +581,6 @@ export default function UserIndex() {
                                 <PaginationContent>
                                     <PaginationItem>
                                         <PaginationPrevious
-                                            asChild
                                             href={
                                                 users.current_page > 1
                                                     ? getPaginationLink(
@@ -595,19 +594,7 @@ export default function UserIndex() {
                                                     ? 'pointer-events-none opacity-50'
                                                     : ''
                                             }
-                                        >
-                                            {users.current_page > 1 ? (
-                                                <Link
-                                                    href={getPaginationLink(
-                                                        users.current_page - 1,
-                                                    )}
-                                                >
-                                                    Previous
-                                                </Link>
-                                            ) : (
-                                                <span>Previous</span>
-                                            )}
-                                        </PaginationPrevious>
+                                        />
                                     </PaginationItem>
 
                                     {Array.from(
@@ -629,7 +616,6 @@ export default function UserIndex() {
                                                     <PaginationEllipsis />
                                                 ) : (
                                                     <PaginationLink
-                                                        asChild
                                                         href={getPaginationLink(
                                                             page,
                                                         )}
@@ -638,13 +624,7 @@ export default function UserIndex() {
                                                             users.current_page
                                                         }
                                                     >
-                                                        <Link
-                                                            href={getPaginationLink(
-                                                                page,
-                                                            )}
-                                                        >
-                                                            {page}
-                                                        </Link>
+                                                        {page}
                                                     </PaginationLink>
                                                 )}
                                             </PaginationItem>
@@ -652,7 +632,6 @@ export default function UserIndex() {
 
                                     <PaginationItem>
                                         <PaginationNext
-                                            asChild
                                             href={
                                                 users.current_page <
                                                 users.last_page
@@ -668,20 +647,7 @@ export default function UserIndex() {
                                                     ? 'pointer-events-none opacity-50'
                                                     : ''
                                             }
-                                        >
-                                            {users.current_page <
-                                            users.last_page ? (
-                                                <Link
-                                                    href={getPaginationLink(
-                                                        users.current_page + 1,
-                                                    )}
-                                                >
-                                                    Next
-                                                </Link>
-                                            ) : (
-                                                <span>Next</span>
-                                            )}
-                                        </PaginationNext>
+                                        />
                                     </PaginationItem>
                                 </PaginationContent>
                             </Pagination>

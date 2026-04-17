@@ -1,6 +1,10 @@
-import { Head, useForm, usePage, router } from '@inertiajs/react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Head, usePage, router } from '@inertiajs/react';
 import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
@@ -40,6 +44,13 @@ import {
 } from '@/components/ui/tooltip';
 import type { BreadcrumbItem } from '@/types';
 
+const unitSchema = z.object({
+    name: z.string().min(1, 'Name is required'),
+    short_name: z.string().min(1, 'Short name is required'),
+});
+
+type UnitForm = z.infer<typeof unitSchema>;
+
 interface Unit {
     id: number;
     name: string;
@@ -72,6 +83,10 @@ export default function UnitIndex() {
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
     const isFirstRender = useRef(true);
 
+    const [isCreateProcessing, setIsCreateProcessing] = useState(false);
+    const [isEditProcessing, setIsEditProcessing] = useState(false);
+    const [isDeleteProcessing, setIsDeleteProcessing] = useState(false);
+
     // Debounce search
     useEffect(() => {
         if (isFirstRender.current) {
@@ -80,9 +95,8 @@ export default function UnitIndex() {
             return;
         }
 
-        // Only trigger router.get if search state is actually different from current filters in props
-        // This prevents resetting to page 1 when navigating through pagination
         if (searchTerm === (filters.search || '')) {
+            
             return;
         }
 
@@ -101,43 +115,59 @@ export default function UnitIndex() {
         return () => clearTimeout(timer);
     }, [searchTerm, filters.search]);
 
-    const createForm = useForm({
-        name: '',
-        short_name: '',
+    const {
+        register: createRegister,
+        handleSubmit: createHandleSubmit,
+        reset: createReset,
+        formState: { errors: createErrors },
+    } = useForm<UnitForm>({
+        resolver: zodResolver(unitSchema),
+        defaultValues: {
+            name: '',
+            short_name: '',
+        },
     });
 
-    const editForm = useForm({
-        name: '',
-        short_name: '',
+    const {
+        register: editRegister,
+        handleSubmit: editHandleSubmit,
+        reset: editReset,
+        formState: { errors: editErrors },
+    } = useForm<UnitForm>({
+        resolver: zodResolver(unitSchema),
     });
 
-    const deleteForm = useForm({});
-
-    const handleCreate = () => {
-        createForm.post('/units', {
+    const onCreateSubmit = (data: UnitForm) => {
+        setIsCreateProcessing(true);
+        router.post('/units', data, {
             onSuccess: () => {
-                createForm.reset();
+                createReset();
                 setIsOpen(false);
             },
+            onFinish: () => setIsCreateProcessing(false),
         });
     };
 
     const handleEdit = (unit: Unit) => {
         setEditUnit(unit);
-        editForm.setData('name', unit.name);
-        editForm.setData('short_name', unit.short_name);
+        editReset({
+            name: unit.name,
+            short_name: unit.short_name,
+        });
     };
 
-    const handleUpdate = () => {
+    const onEditSubmit = (data: UnitForm) => {
         if (!editUnit) {
             return;
         }
 
-        editForm.patch(`/units/${editUnit.id}`, {
+        setIsEditProcessing(true);
+        router.patch(`/units/${editUnit.id}`, data, {
             onSuccess: () => {
-                editForm.reset();
+                editReset();
                 setEditUnit(null);
             },
+            onFinish: () => setIsEditProcessing(false),
         });
     };
 
@@ -146,11 +176,12 @@ export default function UnitIndex() {
             return;
         }
 
-        deleteForm.delete(`/units/${deleteUnit.id}`, {
+        setIsDeleteProcessing(true);
+        router.delete(`/units/${deleteUnit.id}`, {
             onSuccess: () => {
                 setDeleteUnit(null);
-                deleteForm.reset();
             },
+            onFinish: () => setIsDeleteProcessing(false),
         });
     };
 
@@ -195,18 +226,11 @@ export default function UnitIndex() {
                                     <Label htmlFor="name">Name</Label>
                                     <Input
                                         id="name"
-                                        name="name"
-                                        value={createForm.data.name}
-                                        onChange={(e) =>
-                                            createForm.setData(
-                                                'name',
-                                                e.target.value,
-                                            )
-                                        }
+                                        {...createRegister('name')}
                                         placeholder="Unit name (e.g., Pieces)"
                                     />
                                     <InputError
-                                        message={createForm.errors.name}
+                                        message={createErrors.name?.message}
                                     />
                                 </div>
                                 <div className="grid gap-2">
@@ -215,18 +239,13 @@ export default function UnitIndex() {
                                     </Label>
                                     <Input
                                         id="short_name"
-                                        name="short_name"
-                                        value={createForm.data.short_name}
-                                        onChange={(e) =>
-                                            createForm.setData(
-                                                'short_name',
-                                                e.target.value,
-                                            )
-                                        }
+                                        {...createRegister('short_name')}
                                         placeholder="Short name (e.g., pcs)"
                                     />
                                     <InputError
-                                        message={createForm.errors.short_name}
+                                        message={
+                                            createErrors.short_name?.message
+                                        }
                                     />
                                 </div>
                             </div>
@@ -238,10 +257,10 @@ export default function UnitIndex() {
                                 </DialogClose>
                                 <Button
                                     size="lg"
-                                    onClick={handleCreate}
-                                    disabled={createForm.processing}
+                                    onClick={createHandleSubmit(onCreateSubmit)}
+                                    disabled={isCreateProcessing}
                                 >
-                                    {createForm.processing
+                                    {isCreateProcessing
                                         ? 'Creating...'
                                         : 'Create'}
                                 </Button>
@@ -454,30 +473,18 @@ export default function UnitIndex() {
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
                             <Label htmlFor="edit-name">Name</Label>
-                            <Input
-                                id="edit-name"
-                                name="name"
-                                value={editForm.data.name}
-                                onChange={(e) =>
-                                    editForm.setData('name', e.target.value)
-                                }
-                            />
-                            <InputError message={editForm.errors.name} />
+                            <Input id="edit-name" {...editRegister('name')} />
+                            <InputError message={editErrors.name?.message} />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="edit-short_name">Short Name</Label>
                             <Input
                                 id="edit-short_name"
-                                name="short_name"
-                                value={editForm.data.short_name}
-                                onChange={(e) =>
-                                    editForm.setData(
-                                        'short_name',
-                                        e.target.value,
-                                    )
-                                }
+                                {...editRegister('short_name')}
                             />
-                            <InputError message={editForm.errors.short_name} />
+                            <InputError
+                                message={editErrors.short_name?.message}
+                            />
                         </div>
                     </div>
                     <DialogFooter>
@@ -488,10 +495,10 @@ export default function UnitIndex() {
                         </DialogClose>
                         <Button
                             size="lg"
-                            onClick={handleUpdate}
-                            disabled={editForm.processing}
+                            onClick={editHandleSubmit(onEditSubmit)}
+                            disabled={isEditProcessing}
                         >
-                            {editForm.processing ? 'Saving...' : 'Save Changes'}
+                            {isEditProcessing ? 'Saving...' : 'Save Changes'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -520,9 +527,9 @@ export default function UnitIndex() {
                             variant="destructive"
                             size="lg"
                             onClick={handleDelete}
-                            disabled={deleteForm.processing}
+                            disabled={isDeleteProcessing}
                         >
-                            {deleteForm.processing ? 'Deleting...' : 'Delete'}
+                            {isDeleteProcessing ? 'Deleting...' : 'Delete'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

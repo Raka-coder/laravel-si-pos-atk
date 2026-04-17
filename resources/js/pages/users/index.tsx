@@ -1,4 +1,5 @@
-import { Head, useForm, usePage, router } from '@inertiajs/react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Head, usePage, router } from '@inertiajs/react';
 import {
     Pencil,
     Plus,
@@ -9,6 +10,8 @@ import {
     ToggleRight,
 } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
+import { z } from 'zod';
 
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -56,6 +59,47 @@ import {
 } from '@/components/ui/tooltip';
 import type { BreadcrumbItem } from '@/types';
 
+const userSchema = z
+    .object({
+        name: z.string().min(1, 'Name is required'),
+        email: z.string().email('Invalid email address'),
+        password: z
+            .string()
+            .min(8, 'Password must be at least 8 characters')
+            .or(z.literal('')),
+        password_confirmation: z.string().or(z.literal('')),
+        is_active: z.boolean(),
+        role: z.string().min(1, 'Role is required'),
+    })
+    .refine(
+        (data) => {
+            if (data.password && data.password !== data.password_confirmation) {
+                return false;
+            }
+
+            return true;
+        },
+        {
+            message: "Passwords don't match",
+            path: ['password_confirmation'],
+        },
+    );
+
+const resetPasswordSchema = z
+    .object({
+        password: z.string().min(8, 'Password must be at least 8 characters'),
+        password_confirmation: z
+            .string()
+            .min(1, 'Password confirmation is required'),
+    })
+    .refine((data) => data.password === data.password_confirmation, {
+        message: "Passwords don't match",
+        path: ['password_confirmation'],
+    });
+
+type UserForm = z.infer<typeof userSchema>;
+type ResetPasswordForm = z.infer<typeof resetPasswordSchema>;
+
 interface User {
     id: number;
     name: string;
@@ -93,6 +137,11 @@ export default function UserIndex() {
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
     const isFirstRender = useRef(true);
 
+    const [isCreateProcessing, setIsCreateProcessing] = useState(false);
+    const [isEditProcessing, setIsEditProcessing] = useState(false);
+    const [isDeleteProcessing, setIsDeleteProcessing] = useState(false);
+    const [isResetProcessing, setIsResetProcessing] = useState(false);
+
     // Debounce search
     useEffect(() => {
         if (isFirstRender.current) {
@@ -101,8 +150,6 @@ export default function UserIndex() {
             return;
         }
 
-        // Only trigger router.get if search state is actually different from current filters in props
-        // This prevents resetting to page 1 when navigating through pagination
         if (searchTerm === (filters.search || '')) {
             return;
         }
@@ -122,45 +169,66 @@ export default function UserIndex() {
         return () => clearTimeout(timer);
     }, [searchTerm, filters.search]);
 
-    const createForm = useForm({
-        name: '',
-        email: '',
-        password: '',
-        password_confirmation: '',
-        is_active: true,
-        role: 'cashier',
+    const {
+        register: createRegister,
+        handleSubmit: createHandleSubmit,
+        setValue: createSetValue,
+        control: createControl,
+        reset: createReset,
+        formState: { errors: createErrors },
+    } = useForm<UserForm>({
+        resolver: zodResolver(userSchema),
+        defaultValues: {
+            name: '',
+            email: '',
+            password: '',
+            password_confirmation: '',
+            is_active: true,
+            role: 'cashier',
+        },
     });
 
-    const editForm = useForm({
-        name: '',
-        email: '',
-        password: '',
-        password_confirmation: '',
-        is_active: true,
-        role: 'cashier',
+    const {
+        register: editRegister,
+        handleSubmit: editHandleSubmit,
+        setValue: editSetValue,
+        control: editControl,
+        reset: editReset,
+        formState: { errors: editErrors },
+    } = useForm<UserForm>({
+        resolver: zodResolver(userSchema),
     });
 
-    const deleteForm = useForm({});
-
-    const toggleActiveForm = useForm({});
-
-    const resetPasswordForm = useForm({
-        password: '',
-        password_confirmation: '',
+    const {
+        register: resetRegister,
+        handleSubmit: resetHandleSubmit,
+        reset: resetReset,
+        formState: { errors: resetErrors },
+    } = useForm<ResetPasswordForm>({
+        resolver: zodResolver(resetPasswordSchema),
+        defaultValues: {
+            password: '',
+            password_confirmation: '',
+        },
     });
 
-    const handleCreate = () => {
-        createForm.post('/users', {
+    const createFormData = useWatch({ control: createControl });
+    const editFormData = useWatch({ control: editControl });
+
+    const onCreateSubmit = (data: UserForm) => {
+        setIsCreateProcessing(true);
+        router.post('/users', data, {
             onSuccess: () => {
-                createForm.reset();
+                createReset();
                 setIsOpen(false);
             },
+            onFinish: () => setIsCreateProcessing(false),
         });
     };
 
     const handleEdit = (user: User) => {
         setEditUser(user);
-        editForm.setData({
+        editReset({
             name: user.name,
             email: user.email,
             password: '',
@@ -170,16 +238,18 @@ export default function UserIndex() {
         });
     };
 
-    const handleUpdate = () => {
+    const onEditSubmit = (data: UserForm) => {
         if (!editUser) {
             return;
         }
 
-        editForm.patch(`/users/${editUser.id}`, {
+        setIsEditProcessing(true);
+        router.patch(`/users/${editUser.id}`, data, {
             onSuccess: () => {
-                editForm.reset('password', 'password_confirmation');
+                editReset();
                 setEditUser(null);
             },
+            onFinish: () => setIsEditProcessing(false),
         });
     };
 
@@ -188,35 +258,38 @@ export default function UserIndex() {
             return;
         }
 
-        deleteForm.delete(`/users/${deleteUser.id}`, {
+        setIsDeleteProcessing(true);
+        router.delete(`/users/${deleteUser.id}`, {
             onSuccess: () => {
                 setDeleteUser(null);
             },
+            onFinish: () => setIsDeleteProcessing(false),
         });
     };
 
     const handleToggleActive = (user: User) => {
-        toggleActiveForm.patch(`/users/${user.id}/toggle-active`, {
-            onSuccess: () => {
-                toggleActiveForm.reset();
+        router.patch(
+            `/users/${user.id}/toggle-active`,
+            {},
+            {
+                preserveScroll: true,
             },
-        });
+        );
     };
 
-    const handleResetPassword = () => {
+    const onResetPasswordSubmit = (data: ResetPasswordForm) => {
         if (!resetPasswordUser) {
             return;
         }
 
-        resetPasswordForm.patch(
-            `/users/${resetPasswordUser.id}/reset-password`,
-            {
-                onSuccess: () => {
-                    resetPasswordForm.reset();
-                    setResetPasswordUser(null);
-                },
+        setIsResetProcessing(true);
+        router.patch(`/users/${resetPasswordUser.id}/reset-password`, data, {
+            onSuccess: () => {
+                resetReset();
+                setResetPasswordUser(null);
             },
-        );
+            onFinish: () => setIsResetProcessing(false),
+        });
     };
 
     // Get current filters for pagination
@@ -260,56 +333,35 @@ export default function UserIndex() {
                                     <Label htmlFor="name">Name</Label>
                                     <Input
                                         id="name"
-                                        name="name"
-                                        value={createForm.data.name}
-                                        onChange={(e) =>
-                                            createForm.setData(
-                                                'name',
-                                                e.target.value,
-                                            )
-                                        }
+                                        {...createRegister('name')}
                                         placeholder="Kasir name"
                                     />
                                     <InputError
-                                        message={createForm.errors.name}
+                                        message={createErrors.name?.message}
                                     />
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="email">Email</Label>
                                     <Input
                                         id="email"
-                                        name="email"
                                         type="email"
-                                        value={createForm.data.email}
-                                        onChange={(e) =>
-                                            createForm.setData(
-                                                'email',
-                                                e.target.value,
-                                            )
-                                        }
+                                        {...createRegister('email')}
                                         placeholder="email@example.com"
                                     />
                                     <InputError
-                                        message={createForm.errors.email}
+                                        message={createErrors.email?.message}
                                     />
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="password">Password</Label>
                                     <Input
                                         id="password"
-                                        name="password"
                                         type="password"
-                                        value={createForm.data.password}
-                                        onChange={(e) =>
-                                            createForm.setData(
-                                                'password',
-                                                e.target.value,
-                                            )
-                                        }
+                                        {...createRegister('password')}
                                         placeholder="Password"
                                     />
                                     <InputError
-                                        message={createForm.errors.password}
+                                        message={createErrors.password?.message}
                                     />
                                 </div>
                                 <div className="grid gap-2">
@@ -318,33 +370,25 @@ export default function UserIndex() {
                                     </Label>
                                     <Input
                                         id="password_confirmation"
-                                        name="password_confirmation"
                                         type="password"
-                                        value={
-                                            createForm.data
-                                                .password_confirmation
-                                        }
-                                        onChange={(e) =>
-                                            createForm.setData(
-                                                'password_confirmation',
-                                                e.target.value,
-                                            )
-                                        }
+                                        {...createRegister(
+                                            'password_confirmation',
+                                        )}
                                         placeholder="Confirm password"
                                     />
                                     <InputError
                                         message={
-                                            createForm.errors
-                                                .password_confirmation
+                                            createErrors.password_confirmation
+                                                ?.message
                                         }
                                     />
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="role">Role</Label>
                                     <Select
-                                        value={createForm.data.role}
+                                        value={createFormData.role}
                                         onValueChange={(value) =>
-                                            createForm.setData('role', value)
+                                            createSetValue('role', value)
                                         }
                                     >
                                         <SelectTrigger>
@@ -359,14 +403,17 @@ export default function UserIndex() {
                                             </SelectItem>
                                         </SelectContent>
                                     </Select>
+                                    <InputError
+                                        message={createErrors.role?.message}
+                                    />
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <input
                                         id="create-is_active"
                                         type="checkbox"
-                                        checked={createForm.data.is_active}
+                                        checked={createFormData.is_active}
                                         onChange={(e) =>
-                                            createForm.setData(
+                                            createSetValue(
                                                 'is_active',
                                                 e.target.checked,
                                             )
@@ -386,10 +433,10 @@ export default function UserIndex() {
                                 </DialogClose>
                                 <Button
                                     size={'lg'}
-                                    onClick={handleCreate}
-                                    disabled={createForm.processing}
+                                    onClick={createHandleSubmit(onCreateSubmit)}
+                                    disabled={isCreateProcessing}
                                 >
-                                    {createForm.processing
+                                    {isCreateProcessing
                                         ? 'Creating...'
                                         : 'Create'}
                                 </Button>
@@ -677,28 +724,17 @@ export default function UserIndex() {
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
                             <Label htmlFor="edit-name">Name</Label>
-                            <Input
-                                id="edit-name"
-                                name="name"
-                                value={editForm.data.name}
-                                onChange={(e) =>
-                                    editForm.setData('name', e.target.value)
-                                }
-                            />
-                            <InputError message={editForm.errors.name} />
+                            <Input id="edit-name" {...editRegister('name')} />
+                            <InputError message={editErrors.name?.message} />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="edit-email">Email</Label>
                             <Input
                                 id="edit-email"
-                                name="email"
                                 type="email"
-                                value={editForm.data.email}
-                                onChange={(e) =>
-                                    editForm.setData('email', e.target.value)
-                                }
+                                {...editRegister('email')}
                             />
-                            <InputError message={editForm.errors.email} />
+                            <InputError message={editErrors.email?.message} />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="edit-password">
@@ -706,14 +742,12 @@ export default function UserIndex() {
                             </Label>
                             <Input
                                 id="edit-password"
-                                name="password"
                                 type="password"
-                                value={editForm.data.password}
-                                onChange={(e) =>
-                                    editForm.setData('password', e.target.value)
-                                }
+                                {...editRegister('password')}
                             />
-                            <InputError message={editForm.errors.password} />
+                            <InputError
+                                message={editErrors.password?.message}
+                            />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="edit-password_confirmation">
@@ -721,26 +755,21 @@ export default function UserIndex() {
                             </Label>
                             <Input
                                 id="edit-password_confirmation"
-                                name="password_confirmation"
                                 type="password"
-                                value={editForm.data.password_confirmation}
-                                onChange={(e) =>
-                                    editForm.setData(
-                                        'password_confirmation',
-                                        e.target.value,
-                                    )
-                                }
+                                {...editRegister('password_confirmation')}
                             />
                             <InputError
-                                message={editForm.errors.password_confirmation}
+                                message={
+                                    editErrors.password_confirmation?.message
+                                }
                             />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="edit-role">Role</Label>
                             <Select
-                                value={editForm.data.role}
+                                value={editFormData.role}
                                 onValueChange={(value) =>
-                                    editForm.setData('role', value)
+                                    editSetValue('role', value)
                                 }
                             >
                                 <SelectTrigger>
@@ -753,17 +782,15 @@ export default function UserIndex() {
                                     <SelectItem value="owner">Owner</SelectItem>
                                 </SelectContent>
                             </Select>
+                            <InputError message={editErrors.role?.message} />
                         </div>
                         <div className="flex items-center gap-2">
                             <input
                                 id="edit-is_active"
                                 type="checkbox"
-                                checked={editForm.data.is_active}
+                                checked={editFormData.is_active}
                                 onChange={(e) =>
-                                    editForm.setData(
-                                        'is_active',
-                                        e.target.checked,
-                                    )
+                                    editSetValue('is_active', e.target.checked)
                                 }
                                 className="h-4 w-4"
                             />
@@ -775,10 +802,10 @@ export default function UserIndex() {
                             <Button variant="outline">Cancel</Button>
                         </DialogClose>
                         <Button
-                            onClick={handleUpdate}
-                            disabled={editForm.processing}
+                            onClick={editHandleSubmit(onEditSubmit)}
+                            disabled={isEditProcessing}
                         >
-                            {editForm.processing ? 'Saving...' : 'Save Changes'}
+                            {isEditProcessing ? 'Saving...' : 'Save Changes'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -801,18 +828,11 @@ export default function UserIndex() {
                             <Label htmlFor="reset-password">New Password</Label>
                             <Input
                                 id="reset-password"
-                                name="password"
                                 type="password"
-                                value={resetPasswordForm.data.password}
-                                onChange={(e) =>
-                                    resetPasswordForm.setData(
-                                        'password',
-                                        e.target.value,
-                                    )
-                                }
+                                {...resetRegister('password')}
                             />
                             <InputError
-                                message={resetPasswordForm.errors.password}
+                                message={resetErrors.password?.message}
                             />
                         </div>
                         <div className="grid gap-2">
@@ -821,22 +841,12 @@ export default function UserIndex() {
                             </Label>
                             <Input
                                 id="reset-password_confirmation"
-                                name="password_confirmation"
                                 type="password"
-                                value={
-                                    resetPasswordForm.data.password_confirmation
-                                }
-                                onChange={(e) =>
-                                    resetPasswordForm.setData(
-                                        'password_confirmation',
-                                        e.target.value,
-                                    )
-                                }
+                                {...resetRegister('password_confirmation')}
                             />
                             <InputError
                                 message={
-                                    resetPasswordForm.errors
-                                        .password_confirmation
+                                    resetErrors.password_confirmation?.message
                                 }
                             />
                         </div>
@@ -846,10 +856,10 @@ export default function UserIndex() {
                             <Button variant="outline">Cancel</Button>
                         </DialogClose>
                         <Button
-                            onClick={handleResetPassword}
-                            disabled={resetPasswordForm.processing}
+                            onClick={resetHandleSubmit(onResetPasswordSubmit)}
+                            disabled={isResetProcessing}
                         >
-                            {resetPasswordForm.processing
+                            {isResetProcessing
                                 ? 'Resetting...'
                                 : 'Reset Password'}
                         </Button>
@@ -877,9 +887,9 @@ export default function UserIndex() {
                         <Button
                             variant="destructive"
                             onClick={handleDelete}
-                            disabled={deleteForm.processing}
+                            disabled={isDeleteProcessing}
                         >
-                            {deleteForm.processing ? 'Deleting...' : 'Delete'}
+                            {isDeleteProcessing ? 'Deleting...' : 'Delete'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

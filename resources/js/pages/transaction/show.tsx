@@ -1,6 +1,10 @@
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Head, router, usePage } from '@inertiajs/react';
 import { Pencil, Printer } from 'lucide-react';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useFieldArray, useForm, useWatch } from 'react-hook-form';
+import { z } from 'zod';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -30,6 +34,28 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import type { BreadcrumbItem } from '@/types';
+
+const transactionItemSchema = z.object({
+    product_id: z.number().min(1, 'Product is required'),
+    product_name: z.string(),
+    price_sell: z.number().min(0),
+    quantity: z.number().min(1),
+    discount_amount: z.number().min(0),
+    subtotal: z.number().min(0),
+});
+
+const transactionEditSchema = z.object({
+    items: z
+        .array(transactionItemSchema)
+        .min(1, 'At least one item is required'),
+    note: z.string().optional(),
+    subtotal: z.number(),
+    discount_amount: z.number().min(0),
+    tax_amount: z.number(),
+    total_price: z.number(),
+});
+
+type TransactionEditForm = z.infer<typeof transactionEditSchema>;
 
 interface Product {
     id: number;
@@ -104,134 +130,146 @@ const formatDate = (date: string) => {
 export default function TransactionShow() {
     const { transaction, products, taxRate } = usePage<Props>().props;
     const [isEditOpen, setIsEditOpen] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
 
-    const editForm = useForm({
-        items: transaction.items.map((item) => ({
-            product_id: item.product_id,
-            product_name: item.product_name,
-            price_sell: item.price_sell,
-            quantity: item.quantity,
-            discount_amount: item.discount_amount,
-            subtotal: item.subtotal,
-        })),
-        note: transaction.note || '',
-        subtotal: transaction.subtotal,
-        discount_amount: transaction.discount_amount,
-        tax_amount: transaction.tax_amount,
-        total_price: transaction.total_price,
+    const {
+        register,
+        control,
+        handleSubmit,
+        setValue,
+    } = useForm<TransactionEditForm>({
+        resolver: zodResolver(transactionEditSchema),
+        defaultValues: {
+            items: transaction.items.map((item) => ({
+                product_id: item.product_id,
+                product_name: item.product_name,
+                price_sell: item.price_sell,
+                quantity: item.quantity,
+                discount_amount: item.discount_amount,
+                subtotal: item.subtotal,
+            })),
+            note: transaction.note || '',
+            subtotal: transaction.subtotal,
+            discount_amount: transaction.discount_amount,
+            tax_amount: transaction.tax_amount,
+            total_price: transaction.total_price,
+        },
     });
 
-    const calculateTotals = (items: typeof editForm.data.items) => {
-        const subtotal = items.reduce((sum, item) => {
-            const itemTotal =
-                item.price_sell * item.quantity - (item.discount_amount || 0);
+    const { fields, append, remove } = useFieldArray({
+        control,
+        name: 'items',
+    });
 
-            return sum + itemTotal;
-        }, 0);
-        const discountAmount = editForm.data.discount_amount || 0;
-        const afterDiscount = subtotal - discountAmount;
-        const taxAmount = afterDiscount * (taxRate / 100);
-        const totalPrice = afterDiscount + taxAmount;
+    const formData = useWatch({ control }) as TransactionEditForm;
 
-        return { subtotal, taxAmount, totalPrice };
-    };
+    const calculateTotals = useCallback(
+        (items: TransactionEditForm['items'], discountAmount: number) => {
+            const subtotal = (items || []).reduce((sum, item) => {
+                const itemTotal =
+                    (item?.price_sell || 0) * (item?.quantity || 0) -
+                    (item?.discount_amount || 0);
+
+                return sum + itemTotal;
+            }, 0);
+
+            const afterDiscount = subtotal - (discountAmount || 0);
+            const taxAmount = afterDiscount * (taxRate / 100);
+            const totalPrice = afterDiscount + taxAmount;
+
+            return { subtotal, taxAmount, totalPrice };
+        },
+        [taxRate],
+    );
+
+    // Update totals when items or main discount changes
+    useEffect(() => {
+        const totals = calculateTotals(
+            formData?.items || [],
+            formData?.discount_amount || 0,
+        );
+
+        // Use a conditional update to prevent infinite loops if values are the same
+        if (totals.subtotal !== formData?.subtotal) {
+            setValue('subtotal', totals.subtotal);
+        }
+
+        if (totals.taxAmount !== formData?.tax_amount) {
+            setValue('tax_amount', totals.taxAmount);
+        }
+
+        if (totals.totalPrice !== formData?.total_price) {
+            setValue('total_price', totals.totalPrice);
+        }
+    }, [
+        formData?.items,
+        formData?.discount_amount,
+        formData?.subtotal,
+        formData?.tax_amount,
+        formData?.total_price,
+        setValue,
+        calculateTotals,
+    ]);
 
     const handleItemChange = (
         index: number,
-        field: string,
+        field: keyof TransactionEditForm['items'][0],
         value: string | number,
     ) => {
-        const newItems = [...editForm.data.items];
-
         if (field === 'product_id') {
             const product = products.find((p) => p.id === Number(value));
 
             if (product) {
-                newItems[index] = {
-                    ...newItems[index],
-                    product_id: Number(value),
-                    product_name: product.name,
-                    price_sell: product.sell_price,
-                    quantity: 1,
-                    discount_amount: 0,
-                    subtotal: product.sell_price,
-                };
+                setValue(`items.${index}.product_id`, Number(value));
+                setValue(`items.${index}.product_name`, product.name);
+                setValue(`items.${index}.price_sell`, product.sell_price);
+                setValue(`items.${index}.quantity`, 1);
+                setValue(`items.${index}.discount_amount`, 0);
+                setValue(`items.${index}.subtotal`, product.sell_price);
             }
         } else if (field === 'quantity') {
             const qty = Math.max(1, Number(value));
-            newItems[index].quantity = qty;
-            newItems[index].subtotal =
-                newItems[index].price_sell * qty -
-                (newItems[index].discount_amount || 0);
+            setValue(`items.${index}.quantity`, qty);
+            const item = formData?.items?.[index];
+
+            if (item) {
+                setValue(
+                    `items.${index}.subtotal`,
+                    (item.price_sell || 0) * qty - (item.discount_amount || 0),
+                );
+            }
         } else if (field === 'price_sell') {
-            newItems[index].price_sell = Number(value);
-            newItems[index].subtotal =
-                Number(value) * newItems[index].quantity -
-                (newItems[index].discount_amount || 0);
+            const price = Number(value);
+            setValue(`items.${index}.price_sell`, price);
+            const item = formData?.items?.[index];
+
+            if (item) {
+                setValue(
+                    `items.${index}.subtotal`,
+                    price * (item.quantity || 1) - (item.discount_amount || 0),
+                );
+            }
         } else if (field === 'discount_amount') {
             const disc = Number(value) || 0;
-            newItems[index].discount_amount = disc;
-            newItems[index].subtotal =
-                newItems[index].price_sell * newItems[index].quantity - disc;
+            setValue(`items.${index}.discount_amount`, disc);
+            const item = formData?.items?.[index];
+
+            if (item) {
+                setValue(
+                    `items.${index}.subtotal`,
+                    (item.price_sell || 0) * (item.quantity || 1) - disc,
+                );
+            }
         }
-
-        const totals = calculateTotals(newItems);
-        editForm.setData({
-            ...editForm.data,
-            items: newItems,
-            subtotal: totals.subtotal,
-            tax_amount: totals.taxAmount,
-            total_price: totals.totalPrice,
-        });
     };
 
-    const handleDiscountChange = (value: string) => {
-        const disc = Number(value) || 0;
-        const totals = calculateTotals(editForm.data.items);
-        const afterDiscount = totals.subtotal - disc;
-        const taxAmount = afterDiscount * (taxRate / 100);
-
-        editForm.setData({
-            ...editForm.data,
-            discount_amount: disc,
-            tax_amount: taxAmount,
-            total_price: afterDiscount + taxAmount,
-        });
-    };
-
-    const handleAddItem = () => {
-        const newItem = {
-            product_id: 0,
-            product_name: '',
-            price_sell: 0,
-            quantity: 1,
-            discount_amount: 0,
-            subtotal: 0,
-        };
-        editForm.setData('items', [...editForm.data.items, newItem]);
-    };
-
-    const handleRemoveItem = (index: number) => {
-        if (editForm.data.items.length <= 1) {
-            return;
-        }
-
-        const newItems = editForm.data.items.filter((_, i) => i !== index);
-        const totals = calculateTotals(newItems);
-        editForm.setData({
-            ...editForm.data,
-            items: newItems,
-            subtotal: totals.subtotal,
-            tax_amount: totals.taxAmount,
-            total_price: totals.totalPrice,
-        });
-    };
-
-    const handleSubmit = () => {
-        editForm.patch(`/transactions/${transaction.id}`, {
+    const onSubmit = (data: TransactionEditForm) => {
+        setIsProcessing(true);
+        router.patch(`/transactions/${transaction.id}`, data, {
             onSuccess: () => {
                 setIsEditOpen(false);
             },
+            onFinish: () => setIsProcessing(false),
         });
     };
 
@@ -298,17 +336,25 @@ export default function TransactionShow() {
                                                     </TableRow>
                                                 </TableHeader>
                                                 <TableBody>
-                                                    {editForm.data.items.map(
+                                                    {fields.map(
                                                         (item, index) => (
                                                             <TableRow
-                                                                key={index}
+                                                                key={item.id}
                                                             >
                                                                 <TableCell>
                                                                     <Select
                                                                         value={
-                                                                            item.product_id
+                                                                            formData
+                                                                                .items[
+                                                                                index
+                                                                            ]
+                                                                                ?.product_id
                                                                                 ? String(
-                                                                                      item.product_id,
+                                                                                      formData
+                                                                                          .items[
+                                                                                          index
+                                                                                      ]
+                                                                                          .product_id,
                                                                                   )
                                                                                 : ''
                                                                         }
@@ -351,9 +397,12 @@ export default function TransactionShow() {
                                                                     <Input
                                                                         type="number"
                                                                         className="w-24 text-right"
-                                                                        value={
-                                                                            item.price_sell
-                                                                        }
+                                                                        {...register(
+                                                                            `items.${index}.price_sell`,
+                                                                            {
+                                                                                valueAsNumber: true,
+                                                                            },
+                                                                        )}
                                                                         onChange={(
                                                                             e,
                                                                         ) =>
@@ -372,9 +421,12 @@ export default function TransactionShow() {
                                                                         type="number"
                                                                         className="w-20 text-center"
                                                                         min="1"
-                                                                        value={
-                                                                            item.quantity
-                                                                        }
+                                                                        {...register(
+                                                                            `items.${index}.quantity`,
+                                                                            {
+                                                                                valueAsNumber: true,
+                                                                            },
+                                                                        )}
                                                                         onChange={(
                                                                             e,
                                                                         ) =>
@@ -392,9 +444,12 @@ export default function TransactionShow() {
                                                                     <Input
                                                                         type="number"
                                                                         className="w-24 text-right"
-                                                                        value={
-                                                                            item.discount_amount
-                                                                        }
+                                                                        {...register(
+                                                                            `items.${index}.discount_amount`,
+                                                                            {
+                                                                                valueAsNumber: true,
+                                                                            },
+                                                                        )}
                                                                         onChange={(
                                                                             e,
                                                                         ) =>
@@ -410,7 +465,12 @@ export default function TransactionShow() {
                                                                 </TableCell>
                                                                 <TableCell className="text-right font-medium">
                                                                     {formatCurrency(
-                                                                        item.subtotal,
+                                                                        formData
+                                                                            .items[
+                                                                            index
+                                                                        ]
+                                                                            ?.subtotal ||
+                                                                            0,
                                                                     )}
                                                                 </TableCell>
                                                                 <TableCell>
@@ -418,11 +478,16 @@ export default function TransactionShow() {
                                                                         variant="ghost"
                                                                         size="icon"
                                                                         className="h-8 w-8 text-red-500"
-                                                                        onClick={() =>
-                                                                            handleRemoveItem(
-                                                                                index,
-                                                                            )
-                                                                        }
+                                                                        onClick={() => {
+                                                                            if (
+                                                                                fields.length >
+                                                                                1
+                                                                            ) {
+                                                                                remove(
+                                                                                    index,
+                                                                                );
+                                                                            }
+                                                                        }}
                                                                     >
                                                                         ×
                                                                     </Button>
@@ -437,7 +502,16 @@ export default function TransactionShow() {
                                         <Button
                                             variant="outline"
                                             size="lg"
-                                            onClick={handleAddItem}
+                                            onClick={() =>
+                                                append({
+                                                    product_id: 0,
+                                                    product_name: '',
+                                                    price_sell: 0,
+                                                    quantity: 1,
+                                                    discount_amount: 0,
+                                                    subtotal: 0,
+                                                })
+                                            }
                                         >
                                             + Add Item
                                         </Button>
@@ -449,13 +523,7 @@ export default function TransactionShow() {
                                                 </Label>
                                                 <Input
                                                     id="note"
-                                                    value={editForm.data.note}
-                                                    onChange={(e) =>
-                                                        editForm.setData(
-                                                            'note',
-                                                            e.target.value,
-                                                        )
-                                                    }
+                                                    {...register('note')}
                                                     placeholder="Catatan opsional..."
                                                 />
                                             </div>
@@ -464,8 +532,7 @@ export default function TransactionShow() {
                                                     <span>Subtotal:</span>
                                                     <span>
                                                         {formatCurrency(
-                                                            editForm.data
-                                                                .subtotal,
+                                                            formData.subtotal,
                                                         )}
                                                     </span>
                                                 </div>
@@ -476,15 +543,12 @@ export default function TransactionShow() {
                                                     <Input
                                                         type="number"
                                                         className="w-24 text-right"
-                                                        value={
-                                                            editForm.data
-                                                                .discount_amount
-                                                        }
-                                                        onChange={(e) =>
-                                                            handleDiscountChange(
-                                                                e.target.value,
-                                                            )
-                                                        }
+                                                        {...register(
+                                                            'discount_amount',
+                                                            {
+                                                                valueAsNumber: true,
+                                                            },
+                                                        )}
                                                     />
                                                 </div>
                                                 <div className="flex justify-between text-sm">
@@ -493,8 +557,7 @@ export default function TransactionShow() {
                                                     </span>
                                                     <span>
                                                         {formatCurrency(
-                                                            editForm.data
-                                                                .tax_amount,
+                                                            formData.tax_amount,
                                                         )}
                                                     </span>
                                                 </div>
@@ -502,8 +565,7 @@ export default function TransactionShow() {
                                                     <span>Total:</span>
                                                     <span>
                                                         {formatCurrency(
-                                                            editForm.data
-                                                                .total_price,
+                                                            formData.total_price,
                                                         )}
                                                     </span>
                                                 </div>
@@ -519,10 +581,10 @@ export default function TransactionShow() {
                                             Cancel
                                         </Button>
                                         <Button
-                                            onClick={handleSubmit}
-                                            disabled={editForm.processing}
+                                            onClick={handleSubmit(onSubmit)}
+                                            disabled={isProcessing}
                                         >
-                                            {editForm.processing
+                                            {isProcessing
                                                 ? 'Saving...'
                                                 : 'Save Changes'}
                                         </Button>

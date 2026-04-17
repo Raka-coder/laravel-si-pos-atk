@@ -1,6 +1,6 @@
 import { Head, usePage } from '@inertiajs/react';
 import { format } from 'date-fns';
-import { CalendarIcon, Download } from 'lucide-react';
+import { CalendarIcon, Download, CreditCard } from 'lucide-react';
 import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,6 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { BreadcrumbItem } from '@/types';
-import { CreditCard } from 'lucide-react';
 
 interface ExpenseCategory {
     id: number;

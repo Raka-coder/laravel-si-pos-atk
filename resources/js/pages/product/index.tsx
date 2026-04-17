@@ -1,6 +1,10 @@
-import { Head, useForm, usePage, router } from '@inertiajs/react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Head, usePage, router } from '@inertiajs/react';
 import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
+import { z } from 'zod';
+
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
@@ -46,6 +50,35 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 import type { BreadcrumbItem } from '@/types';
+
+const productSchema = z.object({
+    name: z.string().min(1, 'Name is required'),
+    buy_price: z
+        .string()
+        .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+            message: 'Buy price must be a non-negative number',
+        }),
+    sell_price: z
+        .string()
+        .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+            message: 'Sell price must be a non-negative number',
+        }),
+    stock: z.string().refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+        message: 'Stock must be a non-negative number',
+    }),
+    min_stock: z
+        .string()
+        .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+            message: 'Min stock must be a non-negative number',
+        }),
+    category_id: z.string().min(1, 'Category is required'),
+    unit_id: z.string().min(1, 'Unit is required'),
+    is_active: z.boolean(),
+    image: z.any().optional(),
+    remove_image: z.boolean().optional(),
+});
+
+type ProductForm = z.infer<typeof productSchema>;
 
 interface Category {
     id: number;
@@ -107,6 +140,10 @@ export default function ProductIndex() {
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
     const isFirstRender = useRef(true);
 
+    const [isCreateProcessing, setIsCreateProcessing] = useState(false);
+    const [isEditProcessing, setIsEditProcessing] = useState(false);
+    const [isDeleteProcessing, setIsDeleteProcessing] = useState(false);
+
     // Debounce search
     useEffect(() => {
         if (isFirstRender.current) {
@@ -115,8 +152,6 @@ export default function ProductIndex() {
             return;
         }
 
-        // Only trigger router.get if search state is actually different from current filters in props
-        // This prevents resetting to page 1 when navigating through pagination
         if (searchTerm === (filters.search || '')) {
             return;
         }
@@ -136,112 +171,93 @@ export default function ProductIndex() {
         return () => clearTimeout(timer);
     }, [searchTerm, filters.search]);
 
-    const createForm = useForm({
-        name: '',
-        buy_price: '',
-        sell_price: '',
-        stock: '0',
-        min_stock: '0',
-        category_id: '',
-        unit_id: '',
-        is_active: true,
-        image: null as File | null,
+    const {
+        register: createRegister,
+        handleSubmit: createHandleSubmit,
+        setValue: createSetValue,
+        control: createControl,
+        reset: createReset,
+        formState: { errors: createErrors },
+    } = useForm<ProductForm>({
+        resolver: zodResolver(productSchema),
+        defaultValues: {
+            name: '',
+            buy_price: '',
+            sell_price: '',
+            stock: '0',
+            min_stock: '0',
+            category_id: '',
+            unit_id: '',
+            is_active: true,
+        },
     });
 
-    const editForm = useForm({
-        product_code: '',
-        name: '',
-        buy_price: '',
-        sell_price: '',
-        stock: 0,
-        min_stock: 0,
-        category_id: '',
-        unit_id: '',
-        is_active: true,
-        image: null as File | null,
-        remove_image: false,
+    const {
+        register: editRegister,
+        handleSubmit: editHandleSubmit,
+        setValue: editSetValue,
+        control: editControl,
+        reset: editReset,
+        formState: { errors: editErrors },
+    } = useForm<ProductForm>({
+        resolver: zodResolver(productSchema),
     });
 
-    const deleteForm = useForm({});
+    const createFormData = useWatch({ control: createControl });
+    const editFormData = useWatch({ control: editControl });
 
-    const handleCreate = () => {
-        const formData = new FormData();
-        formData.append('name', createForm.data.name);
-        formData.append('buy_price', createForm.data.buy_price);
-        formData.append('sell_price', createForm.data.sell_price);
-        formData.append('stock', createForm.data.stock);
-        formData.append('min_stock', createForm.data.min_stock);
-        formData.append('category_id', createForm.data.category_id);
-        formData.append('unit_id', createForm.data.unit_id);
-        formData.append('is_active', createForm.data.is_active ? '1' : '0');
-
-        if (createForm.data.image) {
-            formData.append('image', createForm.data.image);
-        }
-
-        createForm.post('/products', {
+    const onCreateSubmit = (data: ProductForm) => {
+        setIsCreateProcessing(true);
+        router.post('/products', data, {
             forceFormData: true,
             onSuccess: () => {
-                createForm.reset();
+                createReset();
                 setImagePreview(null);
                 setIsOpen(false);
             },
+            onFinish: () => setIsCreateProcessing(false),
         });
     };
 
     const handleEdit = (product: Product) => {
         setEditProduct(product);
-        editForm.setData({
-            product_code: product.product_code,
+        editReset({
             name: product.name,
             buy_price: String(product.buy_price),
             sell_price: String(product.sell_price),
-            stock: product.stock,
-            min_stock: product.min_stock,
+            stock: String(product.stock),
+            min_stock: String(product.min_stock),
             category_id: product.category_id ? String(product.category_id) : '',
             unit_id: product.unit_id ? String(product.unit_id) : '',
             is_active: product.is_active,
-            image: null,
             remove_image: false,
         });
         setEditImagePreview(product.image ? `/storage/${product.image}` : null);
     };
 
-    const handleUpdate = () => {
+    const onEditSubmit = (data: ProductForm) => {
         if (!editProduct) {
             return;
         }
 
-        const formData = new FormData();
-        formData.append('name', editForm.data.name);
-        formData.append('buy_price', editForm.data.buy_price);
-        formData.append('sell_price', editForm.data.sell_price);
-        formData.append('stock', String(editForm.data.stock));
-        formData.append('min_stock', String(editForm.data.min_stock));
-        formData.append('category_id', editForm.data.category_id);
-        formData.append('unit_id', editForm.data.unit_id);
-        formData.append('is_active', editForm.data.is_active ? '1' : '0');
-
-        if (editForm.data.image) {
-            formData.append('image', editForm.data.image);
-        }
-
-        if (editForm.data.remove_image) {
-            formData.append('remove_image', '1');
-        }
-
-        // Add _method for PUT request (Laravel method spoofing)
-        formData.append('_method', 'PUT');
-
-        // Use router directly for PUT request with FormData
-        router.post(`/products/${editProduct.id}`, formData, {
-            preserveScroll: true,
-            onSuccess: () => {
-                editForm.setData('remove_image', false);
-                setEditImagePreview(null);
-                setEditProduct(null);
+        setIsEditProcessing(true);
+        router.post(
+            `/products/${editProduct.id}`,
+            {
+                _method: 'PUT',
+                ...data,
             },
-        });
+            {
+                forceFormData: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    editReset();
+                    setEditImagePreview(null);
+                    setEditProduct(null);
+                },
+                onFinish: () => setIsEditProcessing(false),
+            },
+        );
     };
 
     const handleDelete = () => {
@@ -249,10 +265,12 @@ export default function ProductIndex() {
             return;
         }
 
-        deleteForm.delete(`/products/${deleteProduct.id}`, {
+        setIsDeleteProcessing(true);
+        router.delete(`/products/${deleteProduct.id}`, {
             onSuccess: () => {
                 setDeleteProduct(null);
             },
+            onFinish: () => setIsDeleteProcessing(false),
         });
     };
 
@@ -304,18 +322,11 @@ export default function ProductIndex() {
                                     <Label htmlFor="name">Name</Label>
                                     <Input
                                         id="name"
-                                        name="name"
-                                        value={createForm.data.name}
-                                        onChange={(e) =>
-                                            createForm.setData(
-                                                'name',
-                                                e.target.value,
-                                            )
-                                        }
+                                        {...createRegister('name')}
                                         placeholder="Product name"
                                     />
                                     <InputError
-                                        message={createForm.errors.name}
+                                        message={createErrors.name?.message}
                                     />
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
@@ -325,20 +336,13 @@ export default function ProductIndex() {
                                         </Label>
                                         <Input
                                             id="buy_price"
-                                            name="buy_price"
                                             type="number"
-                                            value={createForm.data.buy_price}
-                                            onChange={(e) =>
-                                                createForm.setData(
-                                                    'buy_price',
-                                                    e.target.value,
-                                                )
-                                            }
+                                            {...createRegister('buy_price')}
                                             placeholder="0"
                                         />
                                         <InputError
                                             message={
-                                                createForm.errors.buy_price
+                                                createErrors.buy_price?.message
                                             }
                                         />
                                     </div>
@@ -348,20 +352,13 @@ export default function ProductIndex() {
                                         </Label>
                                         <Input
                                             id="sell_price"
-                                            name="sell_price"
                                             type="number"
-                                            value={createForm.data.sell_price}
-                                            onChange={(e) =>
-                                                createForm.setData(
-                                                    'sell_price',
-                                                    e.target.value,
-                                                )
-                                            }
+                                            {...createRegister('sell_price')}
                                             placeholder="0"
                                         />
                                         <InputError
                                             message={
-                                                createForm.errors.sell_price
+                                                createErrors.sell_price?.message
                                             }
                                         />
                                     </div>
@@ -371,19 +368,14 @@ export default function ProductIndex() {
                                         <Label htmlFor="stock">Stock</Label>
                                         <Input
                                             id="stock"
-                                            name="stock"
                                             type="number"
-                                            value={createForm.data.stock}
-                                            onChange={(e) =>
-                                                createForm.setData(
-                                                    'stock',
-                                                    e.target.value,
-                                                )
-                                            }
+                                            {...createRegister('stock')}
                                             placeholder="0"
                                         />
                                         <InputError
-                                            message={createForm.errors.stock}
+                                            message={
+                                                createErrors.stock?.message
+                                            }
                                         />
                                     </div>
                                     <div className="grid gap-2">
@@ -392,20 +384,13 @@ export default function ProductIndex() {
                                         </Label>
                                         <Input
                                             id="min_stock"
-                                            name="min_stock"
                                             type="number"
-                                            value={createForm.data.min_stock}
-                                            onChange={(e) =>
-                                                createForm.setData(
-                                                    'min_stock',
-                                                    e.target.value,
-                                                )
-                                            }
+                                            {...createRegister('min_stock')}
                                             placeholder="0"
                                         />
                                         <InputError
                                             message={
-                                                createForm.errors.min_stock
+                                                createErrors.min_stock?.message
                                             }
                                         />
                                     </div>
@@ -416,9 +401,9 @@ export default function ProductIndex() {
                                             Category
                                         </Label>
                                         <Select
-                                            value={createForm.data.category_id}
+                                            value={createFormData.category_id}
                                             onValueChange={(value) =>
-                                                createForm.setData(
+                                                createSetValue(
                                                     'category_id',
                                                     value,
                                                 )
@@ -442,19 +427,17 @@ export default function ProductIndex() {
                                         </Select>
                                         <InputError
                                             message={
-                                                createForm.errors.category_id
+                                                createErrors.category_id
+                                                    ?.message
                                             }
                                         />
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="unit_id">Unit</Label>
                                         <Select
-                                            value={createForm.data.unit_id}
+                                            value={createFormData.unit_id}
                                             onValueChange={(value) =>
-                                                createForm.setData(
-                                                    'unit_id',
-                                                    value,
-                                                )
+                                                createSetValue('unit_id', value)
                                             }
                                         >
                                             <SelectTrigger>
@@ -473,7 +456,9 @@ export default function ProductIndex() {
                                             </SelectContent>
                                         </Select>
                                         <InputError
-                                            message={createForm.errors.unit_id}
+                                            message={
+                                                createErrors.unit_id?.message
+                                            }
                                         />
                                     </div>
                                 </div>
@@ -481,7 +466,6 @@ export default function ProductIndex() {
                                     <Label htmlFor="image">Product Image</Label>
                                     <Input
                                         id="image"
-                                        name="image"
                                         type="file"
                                         accept="image/*"
                                         onChange={(e) => {
@@ -502,10 +486,7 @@ export default function ProductIndex() {
                                                     return;
                                                 }
 
-                                                createForm.setData(
-                                                    'image',
-                                                    file,
-                                                );
+                                                createSetValue('image', file);
 
                                                 const reader = new FileReader();
                                                 reader.onload = (event) => {
@@ -533,7 +514,10 @@ export default function ProductIndex() {
                                     )}
 
                                     <InputError
-                                        message={createForm.errors.image}
+                                        message={
+                                            createErrors.image
+                                                ?.message as string
+                                        }
                                     />
                                 </div>
                             </div>
@@ -545,10 +529,10 @@ export default function ProductIndex() {
                                 </DialogClose>
                                 <Button
                                     size="lg"
-                                    onClick={handleCreate}
-                                    disabled={createForm.processing}
+                                    onClick={createHandleSubmit(onCreateSubmit)}
+                                    disabled={isCreateProcessing}
                                 >
-                                    {createForm.processing
+                                    {isCreateProcessing
                                         ? 'Creating...'
                                         : 'Create'}
                                 </Button>
@@ -821,23 +805,15 @@ export default function ProductIndex() {
                             </Label>
                             <Input
                                 id="edit-product_code"
-                                name="product_code"
-                                value={editForm.data.product_code}
+                                value={editProduct?.product_code || ''}
                                 disabled
                                 className="bg-muted"
                             />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="edit-name">Name</Label>
-                            <Input
-                                id="edit-name"
-                                name="name"
-                                value={editForm.data.name}
-                                onChange={(e) =>
-                                    editForm.setData('name', e.target.value)
-                                }
-                            />
-                            <InputError message={editForm.errors.name} />
+                            <Input id="edit-name" {...editRegister('name')} />
+                            <InputError message={editErrors.name?.message} />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="grid gap-2">
@@ -846,18 +822,11 @@ export default function ProductIndex() {
                                 </Label>
                                 <Input
                                     id="edit-buy_price"
-                                    name="buy_price"
                                     type="number"
-                                    value={editForm.data.buy_price}
-                                    onChange={(e) =>
-                                        editForm.setData(
-                                            'buy_price',
-                                            e.target.value,
-                                        )
-                                    }
+                                    {...editRegister('buy_price')}
                                 />
                                 <InputError
-                                    message={editForm.errors.buy_price}
+                                    message={editErrors.buy_price?.message}
                                 />
                             </div>
                             <div className="grid gap-2">
@@ -866,18 +835,11 @@ export default function ProductIndex() {
                                 </Label>
                                 <Input
                                     id="edit-sell_price"
-                                    name="sell_price"
                                     type="number"
-                                    value={editForm.data.sell_price}
-                                    onChange={(e) =>
-                                        editForm.setData(
-                                            'sell_price',
-                                            e.target.value,
-                                        )
-                                    }
+                                    {...editRegister('sell_price')}
                                 />
                                 <InputError
-                                    message={editForm.errors.sell_price}
+                                    message={editErrors.sell_price?.message}
                                 />
                             </div>
                         </div>
@@ -886,17 +848,12 @@ export default function ProductIndex() {
                                 <Label htmlFor="edit-stock">Stock</Label>
                                 <Input
                                     id="edit-stock"
-                                    name="stock"
                                     type="number"
-                                    value={editForm.data.stock}
-                                    onChange={(e) =>
-                                        editForm.setData(
-                                            'stock',
-                                            parseInt(e.target.value) || 0,
-                                        )
-                                    }
+                                    {...editRegister('stock')}
                                 />
-                                <InputError message={editForm.errors.stock} />
+                                <InputError
+                                    message={editErrors.stock?.message}
+                                />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="edit-min_stock">
@@ -904,18 +861,11 @@ export default function ProductIndex() {
                                 </Label>
                                 <Input
                                     id="edit-min_stock"
-                                    name="min_stock"
                                     type="number"
-                                    value={editForm.data.min_stock}
-                                    onChange={(e) =>
-                                        editForm.setData(
-                                            'min_stock',
-                                            parseInt(e.target.value) || 0,
-                                        )
-                                    }
+                                    {...editRegister('min_stock')}
                                 />
                                 <InputError
-                                    message={editForm.errors.min_stock}
+                                    message={editErrors.min_stock?.message}
                                 />
                             </div>
                         </div>
@@ -925,9 +875,9 @@ export default function ProductIndex() {
                                     Category
                                 </Label>
                                 <Select
-                                    value={editForm.data.category_id}
+                                    value={editFormData.category_id}
                                     onValueChange={(value) =>
-                                        editForm.setData('category_id', value)
+                                        editSetValue('category_id', value)
                                     }
                                 >
                                     <SelectTrigger>
@@ -944,13 +894,16 @@ export default function ProductIndex() {
                                         ))}
                                     </SelectContent>
                                 </Select>
+                                <InputError
+                                    message={editErrors.category_id?.message}
+                                />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="edit-unit_id">Unit</Label>
                                 <Select
-                                    value={editForm.data.unit_id}
+                                    value={editFormData.unit_id}
                                     onValueChange={(value) =>
-                                        editForm.setData('unit_id', value)
+                                        editSetValue('unit_id', value)
                                     }
                                 >
                                     <SelectTrigger>
@@ -967,6 +920,9 @@ export default function ProductIndex() {
                                         ))}
                                     </SelectContent>
                                 </Select>
+                                <InputError
+                                    message={editErrors.unit_id?.message}
+                                />
                             </div>
                         </div>
                         <div className="grid gap-2">
@@ -983,10 +939,7 @@ export default function ProductIndex() {
                                         variant="destructive"
                                         size="sm"
                                         onClick={() => {
-                                            editForm.setData(
-                                                'remove_image',
-                                                true,
-                                            );
+                                            editSetValue('remove_image', true);
                                             setEditImagePreview(null);
                                         }}
                                     >
@@ -998,7 +951,6 @@ export default function ProductIndex() {
                                 <>
                                     <Input
                                         id="edit-image"
-                                        name="image"
                                         type="file"
                                         accept="image/*"
                                         onChange={(e) => {
@@ -1019,7 +971,7 @@ export default function ProductIndex() {
                                                     return;
                                                 }
 
-                                                editForm.setData('image', file);
+                                                editSetValue('image', file);
 
                                                 const reader = new FileReader();
                                                 reader.onload = (event) => {
@@ -1037,7 +989,9 @@ export default function ProductIndex() {
                                         WEBP. Image akan di-optimasi otomatis.
                                     </p>
                                     <InputError
-                                        message={editForm.errors.image}
+                                        message={
+                                            editErrors.image?.message as string
+                                        }
                                     />
                                 </>
                             )}
@@ -1051,10 +1005,10 @@ export default function ProductIndex() {
                         </DialogClose>
                         <Button
                             size="lg"
-                            onClick={handleUpdate}
-                            disabled={editForm.processing}
+                            onClick={editHandleSubmit(onEditSubmit)}
+                            disabled={isEditProcessing}
                         >
-                            {editForm.processing ? 'Saving...' : 'Save Changes'}
+                            {isEditProcessing ? 'Saving...' : 'Save Changes'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -1084,9 +1038,9 @@ export default function ProductIndex() {
                             variant="destructive"
                             size="lg"
                             onClick={handleDelete}
-                            disabled={deleteForm.processing}
+                            disabled={isDeleteProcessing}
                         >
-                            {deleteForm.processing ? 'Deleting...' : 'Delete'}
+                            {isDeleteProcessing ? 'Deleting...' : 'Delete'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

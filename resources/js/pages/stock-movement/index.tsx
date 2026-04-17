@@ -1,6 +1,10 @@
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Head, router, usePage } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
+import { z } from 'zod';
+
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
@@ -31,6 +35,17 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import type { BreadcrumbItem } from '@/types';
+
+const stockMovementSchema = z.object({
+    product_id: z.string().min(1, 'Product is required'),
+    movement_type: z.enum(['in', 'out', 'adjustment']),
+    qty: z.string().refine((val) => !isNaN(Number(val)) && Number(val) >= 1, {
+        message: 'Quantity must be at least 1',
+    }),
+    reason: z.string().min(1, 'Reason is required'),
+});
+
+type StockMovementForm = z.infer<typeof stockMovementSchema>;
 
 interface Product {
     id: number;
@@ -126,20 +141,35 @@ export default function StockMovementIndex() {
     const { movements, products } = usePage<Props>().props;
 
     const [isOpen, setIsOpen] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
 
-    const createForm = useForm({
-        product_id: '',
-        movement_type: 'in',
-        qty: 1,
-        reason: '',
+    const {
+        register,
+        handleSubmit,
+        setValue,
+        control,
+        reset,
+        formState: { errors },
+    } = useForm<StockMovementForm>({
+        resolver: zodResolver(stockMovementSchema),
+        defaultValues: {
+            product_id: '',
+            movement_type: 'in',
+            qty: '1',
+            reason: '',
+        },
     });
 
-    const handleCreate = () => {
-        createForm.post('/stock-movements', {
+    const formData = useWatch({ control });
+
+    const onSubmit = (data: StockMovementForm) => {
+        setIsProcessing(true);
+        router.post('/stock-movements', data, {
             onSuccess: () => {
-                createForm.reset();
+                reset();
                 setIsOpen(false);
             },
+            onFinish: () => setIsProcessing(false),
         });
     };
 
@@ -168,12 +198,9 @@ export default function StockMovementIndex() {
                                 <div className="grid gap-2">
                                     <Label htmlFor="product_id">Product</Label>
                                     <Select
-                                        value={createForm.data.product_id}
+                                        value={formData.product_id}
                                         onValueChange={(value) =>
-                                            createForm.setData(
-                                                'product_id',
-                                                value,
-                                            )
+                                            setValue('product_id', value)
                                         }
                                     >
                                         <SelectTrigger>
@@ -192,7 +219,7 @@ export default function StockMovementIndex() {
                                         </SelectContent>
                                     </Select>
                                     <InputError
-                                        message={createForm.errors.product_id}
+                                        message={errors.product_id?.message}
                                     />
                                 </div>
                                 <div className="grid gap-2">
@@ -200,11 +227,11 @@ export default function StockMovementIndex() {
                                         Movement Type
                                     </Label>
                                     <Select
-                                        value={createForm.data.movement_type}
+                                        value={formData.movement_type}
                                         onValueChange={(value) =>
-                                            createForm.setData(
+                                            setValue(
                                                 'movement_type',
-                                                value,
+                                                value as any,
                                             )
                                         }
                                     >
@@ -224,9 +251,7 @@ export default function StockMovementIndex() {
                                         </SelectContent>
                                     </Select>
                                     <InputError
-                                        message={
-                                            createForm.errors.movement_type
-                                        }
+                                        message={errors.movement_type?.message}
                                     />
                                 </div>
                                 <div className="grid gap-2">
@@ -235,33 +260,19 @@ export default function StockMovementIndex() {
                                         id="qty"
                                         type="number"
                                         min="1"
-                                        value={createForm.data.qty}
-                                        onChange={(e) =>
-                                            createForm.setData(
-                                                'qty',
-                                                parseInt(e.target.value) || 1,
-                                            )
-                                        }
+                                        {...register('qty')}
                                     />
-                                    <InputError
-                                        message={createForm.errors.qty}
-                                    />
+                                    <InputError message={errors.qty?.message} />
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="reason">Reason</Label>
                                     <Input
                                         id="reason"
-                                        value={createForm.data.reason}
-                                        onChange={(e) =>
-                                            createForm.setData(
-                                                'reason',
-                                                e.target.value,
-                                            )
-                                        }
+                                        {...register('reason')}
                                         placeholder="Alasan perubahan stok"
                                     />
                                     <InputError
-                                        message={createForm.errors.reason}
+                                        message={errors.reason?.message}
                                     />
                                 </div>
                             </div>
@@ -273,12 +284,10 @@ export default function StockMovementIndex() {
                                 </DialogClose>
                                 <Button
                                     size="lg"
-                                    onClick={handleCreate}
-                                    disabled={createForm.processing}
+                                    onClick={handleSubmit(onSubmit)}
+                                    disabled={isProcessing}
                                 >
-                                    {createForm.processing
-                                        ? 'Saving...'
-                                        : 'Save'}
+                                    {isProcessing ? 'Saving...' : 'Save'}
                                 </Button>
                             </DialogFooter>
                         </DialogContent>

@@ -1,7 +1,11 @@
-import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Head, router, usePage } from '@inertiajs/react';
 import { format } from 'date-fns';
 import { CalendarIcon, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
+import { z } from 'zod';
+
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -53,6 +57,18 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 import type { BreadcrumbItem } from '@/types';
+
+const expenseSchema = z.object({
+    name: z.string().min(1, 'Name is required'),
+    amount: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+        message: 'Amount must be a positive number',
+    }),
+    date: z.string().min(1, 'Date is required'),
+    note: z.string().optional(),
+    expense_category_id: z.string().min(1, 'Category is required'),
+});
+
+type ExpenseForm = z.infer<typeof expenseSchema>;
 
 interface ExpenseCategory {
     id: number;
@@ -120,10 +136,11 @@ export default function ExpenseIndex() {
     const [createDateOpen, setCreateDateOpen] = useState(false);
     const [editDateOpen, setEditDateOpen] = useState(false);
     const [search, setSearch] = useState(filters.search ?? '');
-    const [categoryId, setCategoryId] = useState(filters.category_id ?? 'all');
-    const [dateFrom, setDateFrom] = useState(filters.date_from ?? '');
-    const [dateTo, setDateTo] = useState(filters.date_to ?? '');
     const isFirstRender = useRef(true);
+
+    const [isCreateProcessing, setIsCreateProcessing] = useState(false);
+    const [isEditProcessing, setIsEditProcessing] = useState(false);
+    const [isDeleteProcessing, setIsDeleteProcessing] = useState(false);
 
     useEffect(() => {
         if (isFirstRender.current) {
@@ -132,14 +149,7 @@ export default function ExpenseIndex() {
             return;
         }
 
-        // Only trigger router.get if search state is actually different from current filters in props
-        // This prevents resetting to page 1 when navigating through pagination
-        if (
-            search === (filters.search || '') &&
-            categoryId === (filters.category_id || 'all') &&
-            dateFrom === (filters.date_from || '') &&
-            dateTo === (filters.date_to || '')
-        ) {
+        if (search === (filters.search || '')) {
             return;
         }
 
@@ -150,18 +160,6 @@ export default function ExpenseIndex() {
                 params.search = search;
             }
 
-            if (categoryId && categoryId !== 'all') {
-                params.category_id = categoryId;
-            }
-
-            if (dateFrom) {
-                params.date_from = dateFrom;
-            }
-
-            if (dateTo) {
-                params.date_to = dateTo;
-            }
-
             router.get('/expenses', params, {
                 preserveState: true,
                 preserveScroll: true,
@@ -170,47 +168,54 @@ export default function ExpenseIndex() {
         }, 500);
 
         return () => clearTimeout(timer);
-    }, [
-        search,
-        categoryId,
-        dateFrom,
-        dateTo,
-        filters.search,
-        filters.category_id,
-        filters.date_from,
-        filters.date_to,
-    ]);
+    }, [search, filters.search]);
 
-    const createForm = useForm({
-        name: '',
-        amount: '',
-        date: new Date().toISOString().split('T')[0],
-        note: '',
-        expense_category_id: '',
+    const {
+        register: createRegister,
+        handleSubmit: createHandleSubmit,
+        setValue: createSetValue,
+        control: createControl,
+        reset: createReset,
+        formState: { errors: createErrors },
+    } = useForm<ExpenseForm>({
+        resolver: zodResolver(expenseSchema),
+        defaultValues: {
+            name: '',
+            amount: '',
+            date: new Date().toISOString().split('T')[0],
+            note: '',
+            expense_category_id: '',
+        },
     });
 
-    const editForm = useForm({
-        name: '',
-        amount: '',
-        date: '',
-        note: '',
-        expense_category_id: '',
+    const {
+        register: editRegister,
+        handleSubmit: editHandleSubmit,
+        setValue: editSetValue,
+        control: editControl,
+        reset: editReset,
+        formState: { errors: editErrors },
+    } = useForm<ExpenseForm>({
+        resolver: zodResolver(expenseSchema),
     });
 
-    const deleteForm = useForm({});
+    const createFormData = useWatch({ control: createControl });
+    const editFormData = useWatch({ control: editControl });
 
-    const handleCreate = () => {
-        createForm.post('/expenses', {
+    const onCreateSubmit = (data: ExpenseForm) => {
+        setIsCreateProcessing(true);
+        router.post('/expenses', data, {
             onSuccess: () => {
-                createForm.reset();
+                createReset();
                 setIsOpen(false);
             },
+            onFinish: () => setIsCreateProcessing(false),
         });
     };
 
     const handleEdit = (expense: Expense) => {
         setEditExpense(expense);
-        editForm.setData({
+        editReset({
             name: expense.name,
             amount: String(expense.amount),
             date: expense.date,
@@ -221,16 +226,18 @@ export default function ExpenseIndex() {
         });
     };
 
-    const handleUpdate = () => {
+    const onEditSubmit = (data: ExpenseForm) => {
         if (!editExpense) {
             return;
         }
 
-        editForm.patch(`/expenses/${editExpense.id}`, {
+        setIsEditProcessing(true);
+        router.patch(`/expenses/${editExpense.id}`, data, {
             onSuccess: () => {
-                editForm.reset();
+                editReset();
                 setEditExpense(null);
             },
+            onFinish: () => setIsEditProcessing(false),
         });
     };
 
@@ -239,10 +246,12 @@ export default function ExpenseIndex() {
             return;
         }
 
-        deleteForm.delete(`/expenses/${deleteExpense.id}`, {
+        setIsDeleteProcessing(true);
+        router.delete(`/expenses/${deleteExpense.id}`, {
             onSuccess: () => {
                 setDeleteExpense(null);
             },
+            onFinish: () => setIsDeleteProcessing(false),
         });
     };
 
@@ -298,37 +307,23 @@ export default function ExpenseIndex() {
                                     <Label htmlFor="name">Name</Label>
                                     <Input
                                         id="name"
-                                        name="name"
-                                        value={createForm.data.name}
-                                        onChange={(e) =>
-                                            createForm.setData(
-                                                'name',
-                                                e.target.value,
-                                            )
-                                        }
+                                        {...createRegister('name')}
                                         placeholder="Expense name"
                                     />
                                     <InputError
-                                        message={createForm.errors.name}
+                                        message={createErrors.name?.message}
                                     />
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="amount">Amount</Label>
                                     <Input
                                         id="amount"
-                                        name="amount"
                                         type="number"
-                                        value={createForm.data.amount}
-                                        onChange={(e) =>
-                                            createForm.setData(
-                                                'amount',
-                                                e.target.value,
-                                            )
-                                        }
+                                        {...createRegister('amount')}
                                         placeholder="0"
                                     />
                                     <InputError
-                                        message={createForm.errors.amount}
+                                        message={createErrors.amount?.message}
                                     />
                                 </div>
                                 <div className="grid gap-2">
@@ -343,11 +338,10 @@ export default function ExpenseIndex() {
                                                 className="w-full justify-start text-left font-normal"
                                             >
                                                 <CalendarIcon className="mr-2 h-4 w-4" />
-                                                {createForm.data.date ? (
+                                                {createFormData.date ? (
                                                     format(
                                                         new Date(
-                                                            createForm.data
-                                                                .date,
+                                                            createFormData.date,
                                                         ),
                                                         'PPP',
                                                     )
@@ -363,15 +357,14 @@ export default function ExpenseIndex() {
                                             <Calendar
                                                 mode="single"
                                                 selected={
-                                                    createForm.data.date
+                                                    createFormData.date
                                                         ? new Date(
-                                                              createForm.data
-                                                                  .date,
+                                                              createFormData.date,
                                                           )
                                                         : undefined
                                                 }
                                                 onSelect={(date) => {
-                                                    createForm.setData(
+                                                    createSetValue(
                                                         'date',
                                                         date
                                                             ? format(
@@ -387,17 +380,17 @@ export default function ExpenseIndex() {
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                     <InputError
-                                        message={createForm.errors.date}
+                                        message={createErrors.date?.message}
                                     />
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="category">Category</Label>
                                     <Select
                                         value={
-                                            createForm.data.expense_category_id
+                                            createFormData.expense_category_id
                                         }
                                         onValueChange={(value) =>
-                                            createForm.setData(
+                                            createSetValue(
                                                 'expense_category_id',
                                                 value,
                                             )
@@ -417,6 +410,12 @@ export default function ExpenseIndex() {
                                             ))}
                                         </SelectContent>
                                     </Select>
+                                    <InputError
+                                        message={
+                                            createErrors.expense_category_id
+                                                ?.message
+                                        }
+                                    />
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="note">
@@ -424,14 +423,7 @@ export default function ExpenseIndex() {
                                     </Label>
                                     <Input
                                         id="note"
-                                        name="note"
-                                        value={createForm.data.note}
-                                        onChange={(e) =>
-                                            createForm.setData(
-                                                'note',
-                                                e.target.value,
-                                            )
-                                        }
+                                        {...createRegister('note')}
                                         placeholder="Optional note"
                                     />
                                 </div>
@@ -444,12 +436,10 @@ export default function ExpenseIndex() {
                                 </DialogClose>
                                 <Button
                                     size={'lg'}
-                                    onClick={handleCreate}
-                                    disabled={createForm.processing}
+                                    onClick={createHandleSubmit(onCreateSubmit)}
+                                    disabled={isCreateProcessing}
                                 >
-                                    {createForm.processing
-                                        ? 'Saving...'
-                                        : 'Save'}
+                                    {isCreateProcessing ? 'Saving...' : 'Save'}
                                 </Button>
                             </DialogFooter>
                         </DialogContent>
@@ -657,28 +647,17 @@ export default function ExpenseIndex() {
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
                             <Label htmlFor="edit-name">Name</Label>
-                            <Input
-                                id="edit-name"
-                                name="name"
-                                value={editForm.data.name}
-                                onChange={(e) =>
-                                    editForm.setData('name', e.target.value)
-                                }
-                            />
-                            <InputError message={editForm.errors.name} />
+                            <Input id="edit-name" {...editRegister('name')} />
+                            <InputError message={editErrors.name?.message} />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="edit-amount">Amount</Label>
                             <Input
                                 id="edit-amount"
-                                name="amount"
                                 type="number"
-                                value={editForm.data.amount}
-                                onChange={(e) =>
-                                    editForm.setData('amount', e.target.value)
-                                }
+                                {...editRegister('amount')}
                             />
-                            <InputError message={editForm.errors.amount} />
+                            <InputError message={editErrors.amount?.message} />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="edit-date">Date</Label>
@@ -692,9 +671,9 @@ export default function ExpenseIndex() {
                                         className="w-full justify-start text-left font-normal"
                                     >
                                         <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {editForm.data.date ? (
+                                        {editFormData.date ? (
                                             format(
-                                                new Date(editForm.data.date),
+                                                new Date(editFormData.date),
                                                 'PPP',
                                             )
                                         ) : (
@@ -709,12 +688,12 @@ export default function ExpenseIndex() {
                                     <Calendar
                                         mode="single"
                                         selected={
-                                            editForm.data.date
-                                                ? new Date(editForm.data.date)
+                                            editFormData.date
+                                                ? new Date(editFormData.date)
                                                 : undefined
                                         }
                                         onSelect={(date) => {
-                                            editForm.setData(
+                                            editSetValue(
                                                 'date',
                                                 date
                                                     ? format(date, 'yyyy-MM-dd')
@@ -726,16 +705,14 @@ export default function ExpenseIndex() {
                                     />
                                 </DropdownMenuContent>
                             </DropdownMenu>
+                            <InputError message={editErrors.date?.message} />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="edit-category">Category</Label>
                             <Select
-                                value={editForm.data.expense_category_id}
+                                value={editFormData.expense_category_id}
                                 onValueChange={(value) =>
-                                    editForm.setData(
-                                        'expense_category_id',
-                                        value,
-                                    )
+                                    editSetValue('expense_category_id', value)
                                 }
                             >
                                 <SelectTrigger>
@@ -752,17 +729,15 @@ export default function ExpenseIndex() {
                                     ))}
                                 </SelectContent>
                             </Select>
+                            <InputError
+                                message={
+                                    editErrors.expense_category_id?.message
+                                }
+                            />
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="edit-note">Note</Label>
-                            <Input
-                                id="edit-note"
-                                name="note"
-                                value={editForm.data.note}
-                                onChange={(e) =>
-                                    editForm.setData('note', e.target.value)
-                                }
-                            />
+                            <Input id="edit-note" {...editRegister('note')} />
                         </div>
                     </div>
                     <DialogFooter>
@@ -773,10 +748,10 @@ export default function ExpenseIndex() {
                         </DialogClose>
                         <Button
                             size={'lg'}
-                            onClick={handleUpdate}
-                            disabled={editForm.processing}
+                            onClick={editHandleSubmit(onEditSubmit)}
+                            disabled={isEditProcessing}
                         >
-                            {editForm.processing ? 'Saving...' : 'Save Changes'}
+                            {isEditProcessing ? 'Saving...' : 'Save Changes'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -803,9 +778,9 @@ export default function ExpenseIndex() {
                         <Button
                             variant="destructive"
                             onClick={handleDelete}
-                            disabled={deleteForm.processing}
+                            disabled={isDeleteProcessing}
                         >
-                            {deleteForm.processing ? 'Deleting...' : 'Delete'}
+                            {isDeleteProcessing ? 'Deleting...' : 'Delete'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

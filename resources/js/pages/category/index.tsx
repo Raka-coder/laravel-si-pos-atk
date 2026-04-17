@@ -1,6 +1,10 @@
-import { Head, useForm, usePage, router } from '@inertiajs/react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Head, usePage, router } from '@inertiajs/react';
 import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
@@ -40,6 +44,12 @@ import {
 } from '@/components/ui/tooltip';
 import type { BreadcrumbItem } from '@/types';
 
+const categorySchema = z.object({
+    name: z.string().min(1, 'Name is required'),
+});
+
+type CategoryForm = z.infer<typeof categorySchema>;
+
 interface Category {
     id: number;
     name: string;
@@ -71,6 +81,10 @@ export default function CategoryIndex() {
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
     const isFirstRender = useRef(true);
 
+    const [isCreateProcessing, setIsCreateProcessing] = useState(false);
+    const [isEditProcessing, setIsEditProcessing] = useState(false);
+    const [isDeleteProcessing, setIsDeleteProcessing] = useState(false);
+
     // Debounce search
     useEffect(() => {
         if (isFirstRender.current) {
@@ -79,8 +93,6 @@ export default function CategoryIndex() {
             return;
         }
 
-        // Only trigger router.get if search state is actually different from current filters in props
-        // This prevents resetting to page 1 when navigating through pagination
         if (searchTerm === (filters.search || '')) {
             return;
         }
@@ -100,40 +112,57 @@ export default function CategoryIndex() {
         return () => clearTimeout(timer);
     }, [searchTerm, filters.search]);
 
-    const createForm = useForm({
-        name: '',
+    const {
+        register: createRegister,
+        handleSubmit: createHandleSubmit,
+        reset: createReset,
+        formState: { errors: createErrors },
+    } = useForm<CategoryForm>({
+        resolver: zodResolver(categorySchema),
+        defaultValues: {
+            name: '',
+        },
     });
 
-    const editForm = useForm({
-        name: '',
+    const {
+        register: editRegister,
+        handleSubmit: editHandleSubmit,
+        reset: editReset,
+        formState: { errors: editErrors },
+    } = useForm<CategoryForm>({
+        resolver: zodResolver(categorySchema),
     });
 
-    const deleteForm = useForm({});
-
-    const handleCreate = () => {
-        createForm.post('/product-categories', {
+    const onCreateSubmit = (data: CategoryForm) => {
+        setIsCreateProcessing(true);
+        router.post('/product-categories', data, {
             onSuccess: () => {
-                createForm.reset();
+                createReset();
                 setIsOpen(false);
             },
+            onFinish: () => setIsCreateProcessing(false),
         });
     };
 
     const handleEdit = (category: Category) => {
         setEditCategory(category);
-        editForm.setData('name', category.name);
+        editReset({
+            name: category.name,
+        });
     };
 
-    const handleUpdate = () => {
+    const onEditSubmit = (data: CategoryForm) => {
         if (!editCategory) {
             return;
         }
 
-        editForm.patch(`/product-categories/${editCategory.id}`, {
+        setIsEditProcessing(true);
+        router.patch(`/product-categories/${editCategory.id}`, data, {
             onSuccess: () => {
-                editForm.reset();
+                editReset();
                 setEditCategory(null);
             },
+            onFinish: () => setIsEditProcessing(false),
         });
     };
 
@@ -142,10 +171,12 @@ export default function CategoryIndex() {
             return;
         }
 
-        deleteForm.delete(`/product-categories/${deleteCategory.id}`, {
+        setIsDeleteProcessing(true);
+        router.delete(`/product-categories/${deleteCategory.id}`, {
             onSuccess: () => {
                 setDeleteCategory(null);
             },
+            onFinish: () => setIsDeleteProcessing(false),
         });
     };
 
@@ -194,18 +225,11 @@ export default function CategoryIndex() {
                                     <Label htmlFor="name">Name</Label>
                                     <Input
                                         id="name"
-                                        name="name"
-                                        value={createForm.data.name}
-                                        onChange={(e) =>
-                                            createForm.setData(
-                                                'name',
-                                                e.target.value,
-                                            )
-                                        }
+                                        {...createRegister('name')}
                                         placeholder="Category name"
                                     />
                                     <InputError
-                                        message={createForm.errors.name}
+                                        message={createErrors.name?.message}
                                     />
                                 </div>
                             </div>
@@ -217,10 +241,10 @@ export default function CategoryIndex() {
                                 </DialogClose>
                                 <Button
                                     size="lg"
-                                    onClick={handleCreate}
-                                    disabled={createForm.processing}
+                                    onClick={createHandleSubmit(onCreateSubmit)}
+                                    disabled={isCreateProcessing}
                                 >
-                                    {createForm.processing
+                                    {isCreateProcessing
                                         ? 'Creating...'
                                         : 'Create'}
                                 </Button>
@@ -429,15 +453,8 @@ export default function CategoryIndex() {
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
                             <Label htmlFor="edit-name">Name</Label>
-                            <Input
-                                id="edit-name"
-                                name="name"
-                                value={editForm.data.name}
-                                onChange={(e) =>
-                                    editForm.setData('name', e.target.value)
-                                }
-                            />
-                            <InputError message={editForm.errors.name} />
+                            <Input id="edit-name" {...editRegister('name')} />
+                            <InputError message={editErrors.name?.message} />
                         </div>
                     </div>
                     <DialogFooter>
@@ -448,10 +465,10 @@ export default function CategoryIndex() {
                         </DialogClose>
                         <Button
                             size="lg"
-                            onClick={handleUpdate}
-                            disabled={editForm.processing}
+                            onClick={editHandleSubmit(onEditSubmit)}
+                            disabled={isEditProcessing}
                         >
-                            {editForm.processing ? 'Saving...' : 'Save Changes'}
+                            {isEditProcessing ? 'Saving...' : 'Save Changes'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -481,9 +498,9 @@ export default function CategoryIndex() {
                             variant="destructive"
                             size="lg"
                             onClick={handleDelete}
-                            disabled={deleteForm.processing}
+                            disabled={isDeleteProcessing}
                         >
-                            {deleteForm.processing ? 'Deleting...' : 'Delete'}
+                            {isDeleteProcessing ? 'Deleting...' : 'Delete'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

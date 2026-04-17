@@ -1,6 +1,10 @@
-// Components
-import { Form, Head } from '@inertiajs/react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Head, router } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
@@ -9,7 +13,33 @@ import { Label } from '@/components/ui/label';
 import { login } from '@/routes';
 import { email } from '@/routes/password';
 
+const forgotPasswordSchema = z.object({
+    email: z.string().email('Invalid email address'),
+});
+
+type ForgotPasswordForm = z.infer<typeof forgotPasswordSchema>;
+
 export default function ForgotPassword({ status }: { status?: string }) {
+    const [isProcessing, setIsProcessing] = useState(false);
+
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<ForgotPasswordForm>({
+        resolver: zodResolver(forgotPasswordSchema),
+        defaultValues: {
+            email: '',
+        },
+    });
+
+    const onSubmit = (data: ForgotPasswordForm) => {
+        setIsProcessing(true);
+        router.post(email.url(), data, {
+            onFinish: () => setIsProcessing(false),
+        });
+    };
+
     return (
         <>
             <Head title="Forgot password" />
@@ -21,38 +51,34 @@ export default function ForgotPassword({ status }: { status?: string }) {
             )}
 
             <div className="space-y-6">
-                <Form {...email.form()}>
-                    {({ processing, errors }) => (
-                        <>
-                            <div className="grid gap-2">
-                                <Label htmlFor="email">Email address</Label>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    name="email"
-                                    autoComplete="off"
-                                    autoFocus
-                                    placeholder="email@example.com"
-                                />
+                <form onSubmit={handleSubmit(onSubmit)}>
+                    <div className="grid gap-2">
+                        <Label htmlFor="email">Email address</Label>
+                        <Input
+                            id="email"
+                            type="email"
+                            {...register('email')}
+                            autoComplete="off"
+                            autoFocus
+                            placeholder="email@example.com"
+                        />
 
-                                <InputError message={errors.email} />
-                            </div>
+                        <InputError message={errors.email?.message} />
+                    </div>
 
-                            <div className="my-6 flex items-center justify-start">
-                                <Button
-                                    className="w-full"
-                                    disabled={processing}
-                                    data-test="email-password-reset-link-button"
-                                >
-                                    {processing && (
-                                        <LoaderCircle className="h-4 w-4 animate-spin" />
-                                    )}
-                                    Email password reset link
-                                </Button>
-                            </div>
-                        </>
-                    )}
-                </Form>
+                    <div className="my-6 flex items-center justify-start">
+                        <Button
+                            className="w-full"
+                            disabled={isProcessing}
+                            data-test="email-password-reset-link-button"
+                        >
+                            {isProcessing && (
+                                <LoaderCircle className="h-4 w-4 animate-spin" />
+                            )}
+                            Email password reset link
+                        </Button>
+                    </div>
+                </form>
 
                 <div className="space-x-1 text-center text-sm text-muted-foreground">
                     <span>Or, return to</span>

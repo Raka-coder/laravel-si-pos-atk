@@ -13,9 +13,9 @@ abstract class TestCase extends BaseTestCase
 
         // Ensure proper exception handling for tests
         $this->withExceptionHandling();
-        
+
         // Start session for CSRF token generation
-        if (!$this->app['session']->isStarted()) {
+        if (! $this->app['session']->isStarted()) {
             $this->app['session']->start();
         }
     }

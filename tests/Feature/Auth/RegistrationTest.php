@@ -27,7 +27,7 @@ class RegistrationTest extends TestCase
     public function test_new_users_can_register()
     {
         $this->markTestSkipped('Registration requires automatic role assignment after user creation.');
-        
+
         $response = $this->postWithCsrf(route('register'), [
             'name' => 'Test User',
             'email' => 'test@example.com',

@@ -18,7 +18,7 @@ class MidtransWebhookTest extends TestCase
     public function test_midtrans_webhook_updates_transaction_to_paid_with_valid_signature(): void
     {
         $this->markTestSkipped('Midtrans webhook test requires service singleton refresh mechanism.');
-        
+
         $serverKey = 'SB-Mid-server-test-valid-key';
 
         ShopSetting::query()->create([

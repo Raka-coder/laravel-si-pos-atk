@@ -1,14 +1,10 @@
-import { Head, useForm, usePage } from '@inertiajs/react';
-import {
-    CreditCard,
-    Image,
-    Receipt,
-    Settings,
-    Store,
-    Trash2,
-    Upload,
-} from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Head, router, usePage } from '@inertiajs/react';
+import { Receipt, Store, Trash2, Upload } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
+import { z } from 'zod';
+
 import ShopSettingController from '@/actions/App/Http/Controllers/Settings/ShopSettingController';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -21,10 +17,29 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea as TextareaComponent } from '@/components/ui/textarea';
 import type { BreadcrumbItem } from '@/types';
+
+const shopSettingsSchema = z.object({
+    shop_name: z.string().min(1, 'Shop name is required'),
+    address: z.string().min(1, 'Address is required'),
+    email: z.string().email('Invalid email address').or(z.literal('')),
+    phone: z.string().min(1, 'Phone number is required'),
+    logo: z.any().optional(),
+    qris_image: z.any().optional(),
+    remove_logo: z.string().optional(),
+    remove_qris: z.string().optional(),
+    midtrans_merchant_id: z.string().optional(),
+    tax_rate: z
+        .string()
+        .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+            message: 'Tax rate must be a positive number',
+        }),
+    receipt_footer: z.string().optional(),
+    paper_size: z.enum(['mm_58', 'mm_80']),
+});
+
+type ShopSettingsForm = z.infer<typeof shopSettingsSchema>;
 
 interface ShopSettings {
     id: number;
@@ -66,6 +81,7 @@ function formatRupiah(amount: number): string {
 
 export default function ShopSettingsPage() {
     const { shop } = usePage<Props>().props;
+    const [isProcessing, setIsProcessing] = useState(false);
 
     const [logoPreview, setLogoPreview] = useState<string | null>(
         shop.logo_path ? `/storage/${shop.logo_path}` : null,
@@ -74,40 +90,36 @@ export default function ShopSettingsPage() {
         shop.qris_image_path ? `/storage/${shop.qris_image_path}` : null,
     );
 
-    const form = useForm<{
-        shop_name: string;
-        address: string;
-        email: string;
-        phone: string;
-        logo: File | null;
-        qris_image: File | null;
-        remove_logo?: string;
-        remove_qris?: string;
-        midtrans_merchant_id: string;
-        tax_rate: string;
-        receipt_footer: string;
-        paper_size: string;
-    }>({
-        shop_name: shop.shop_name || '',
-        address: shop.address || '',
-        email: shop.email || '',
-        phone: shop.phone || '',
-        logo: null as File | null,
-        qris_image: null as File | null,
-        midtrans_merchant_id: shop.midtrans_merchant_id || '',
-        tax_rate: String(shop.tax_rate || 11),
-        receipt_footer: shop.receipt_footer || '',
-        paper_size: shop.paper_size || 'mm_80',
+    const {
+        register,
+        handleSubmit,
+        setValue,
+        control,
+        formState: { errors },
+    } = useForm<ShopSettingsForm>({
+        resolver: zodResolver(shopSettingsSchema),
+        defaultValues: {
+            shop_name: shop.shop_name || '',
+            address: shop.address || '',
+            email: shop.email || '',
+            phone: shop.phone || '',
+            midtrans_merchant_id: shop.midtrans_merchant_id || '',
+            tax_rate: String(shop.tax_rate || 11),
+            receipt_footer: shop.receipt_footer || '',
+            paper_size: (shop.paper_size as 'mm_58' | 'mm_80') || 'mm_80',
+        },
     });
+
+    const formData = useWatch({ control }) as ShopSettingsForm;
 
     const [samplePrice, setSamplePrice] = useState('100000');
 
     const profileCompletion = useMemo(() => {
         const profileFields = [
-            form.data.shop_name.trim().length > 0,
-            form.data.address.trim().length > 0,
-            form.data.email.trim().length > 0,
-            form.data.phone.trim().length > 0,
+            (formData?.shop_name?.trim()?.length ?? 0) > 0,
+            (formData?.address?.trim()?.length ?? 0) > 0,
+            (formData?.email?.trim()?.length ?? 0) > 0,
+            (formData?.phone?.trim()?.length ?? 0) > 0,
             Boolean(logoPreview),
         ];
 
@@ -115,10 +127,10 @@ export default function ShopSettingsPage() {
 
         return Math.round((completed / profileFields.length) * 100);
     }, [
-        form.data.address,
-        form.data.email,
-        form.data.phone,
-        form.data.shop_name,
+        formData?.address,
+        formData?.email,
+        formData?.phone,
+        formData?.shop_name,
         logoPreview,
     ]);
 
@@ -129,28 +141,28 @@ export default function ShopSettingsPage() {
             suggestions.push('Tambahkan logo agar profil toko lebih kredibel.');
         }
 
-        if (!form.data.phone.trim()) {
+        if (!formData?.phone?.trim()) {
             suggestions.push(
                 'Tambahkan nomor telepon untuk melengkapi profil Anda.',
             );
         }
 
-        if (!form.data.address.trim()) {
+        if (!formData?.address?.trim()) {
             suggestions.push('Isi alamat toko agar mudah ditemukan pelanggan.');
         }
 
         return suggestions;
-    }, [form.data.address, form.data.phone, logoPreview]);
+    }, [formData?.address, formData?.phone, logoPreview]);
 
     const normalizedTaxRate = useMemo(() => {
-        const parsedTax = Number(form.data.tax_rate);
+        const parsedTax = Number(formData?.tax_rate);
 
         if (!Number.isFinite(parsedTax) || parsedTax < 0) {
             return 0;
         }
 
         return parsedTax;
-    }, [form.data.tax_rate]);
+    }, [formData?.tax_rate]);
 
     const parsedSamplePrice = useMemo(() => {
         const numericValue = Number(samplePrice.replace(/\D/g, ''));
@@ -185,19 +197,19 @@ export default function ShopSettingsPage() {
     }, [receiptSubtotal, receiptTaxAmount]);
 
     const receiptWidthClass =
-        form.data.paper_size === 'mm_58' ? 'w-[236px]' : 'w-[312px]';
+        formData?.paper_size === 'mm_58' ? 'w-[236px]' : 'w-[312px]';
 
-    const receiptFooterPreview = form.data.receipt_footer.trim()
-        ? form.data.receipt_footer
+    const receiptFooterPreview = formData?.receipt_footer?.trim()
+        ? formData.receipt_footer
         : 'Terima kasih atas kunjungan Anda!';
 
-    const shopNamePreview = form.data.shop_name.trim() || 'Nama Toko Anda';
+    const shopNamePreview = formData?.shop_name?.trim() || 'Nama Toko Anda';
 
     const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
 
         if (file) {
-            form.setData('logo', file);
+            setValue('logo', file);
             setLogoPreview(URL.createObjectURL(file));
         }
     };
@@ -206,15 +218,25 @@ export default function ShopSettingsPage() {
         const file = e.target.files?.[0];
 
         if (file) {
-            form.setData('qris_image', file);
+            setValue('qris_image', file);
             setQrisPreview(URL.createObjectURL(file));
         }
     };
 
-    const handleSubmit = () => {
-        form.put(ShopSettingController.update.url(), {
-            preserveScroll: true,
-        });
+    const onSubmit = (data: ShopSettingsForm) => {
+        setIsProcessing(true);
+        router.post(
+            ShopSettingController.update.url(),
+            {
+                _method: 'PUT',
+                ...data,
+            },
+            {
+                forceFormData: true,
+                onFinish: () => setIsProcessing(false),
+                preserveScroll: true,
+            },
+        );
     };
 
     return (
@@ -225,11 +247,11 @@ export default function ShopSettingsPage() {
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold">Shop Settings</h1>
                     <Button
-                        onClick={handleSubmit}
-                        disabled={form.processing}
+                        onClick={handleSubmit(onSubmit)}
+                        disabled={isProcessing}
                         size={'lg'}
                     >
-                        {form.processing ? 'Saving...' : 'Save Changes'}
+                        {isProcessing ? 'Saving...' : 'Save Changes'}
                     </Button>
                 </div>
 
@@ -256,11 +278,11 @@ export default function ShopSettingsPage() {
                                     {shopNamePreview}
                                 </p>
                                 <p className="text-sm text-muted-foreground">
-                                    {form.data.address.trim() ||
+                                    {formData?.address?.trim() ||
                                         'Alamat belum diisi'}
                                 </p>
                                 <p className="text-sm text-muted-foreground">
-                                    {form.data.email.trim() ||
+                                    {formData?.email?.trim() ||
                                         'Email belum diisi'}
                                 </p>
                             </div>
@@ -300,32 +322,23 @@ export default function ShopSettingsPage() {
                                     <Label htmlFor="shop_name">Shop Name</Label>
                                     <Input
                                         id="shop_name"
-                                        value={form.data.shop_name}
-                                        onChange={(e) =>
-                                            form.setData(
-                                                'shop_name',
-                                                e.target.value,
-                                            )
-                                        }
+                                        {...register('shop_name')}
                                         placeholder="Toko ATK Saya"
                                     />
                                     <InputError
-                                        message={form.errors.shop_name}
+                                        message={errors.shop_name?.message}
                                     />
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="address">Address</Label>
                                     <TextareaComponent
                                         id="address"
-                                        value={form.data.address}
-                                        onChange={(e) =>
-                                            form.setData(
-                                                'address',
-                                                e.target.value,
-                                            )
-                                        }
+                                        {...register('address')}
                                         placeholder="Jl. example No. 123"
                                         className="min-h-20"
+                                    />
+                                    <InputError
+                                        message={errors.address?.message}
                                     />
                                 </div>
                                 <div className="grid gap-2">
@@ -333,28 +346,22 @@ export default function ShopSettingsPage() {
                                     <Input
                                         id="email"
                                         type="email"
-                                        value={form.data.email}
-                                        onChange={(e) =>
-                                            form.setData(
-                                                'email',
-                                                e.target.value,
-                                            )
-                                        }
+                                        {...register('email')}
                                         placeholder="shop@example.com"
+                                    />
+                                    <InputError
+                                        message={errors.email?.message}
                                     />
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="phone">Phone</Label>
                                     <Input
                                         id="phone"
-                                        value={form.data.phone}
-                                        onChange={(e) =>
-                                            form.setData(
-                                                'phone',
-                                                e.target.value,
-                                            )
-                                        }
+                                        {...register('phone')}
                                         placeholder="0812 3456 7890"
+                                    />
+                                    <InputError
+                                        message={errors.phone?.message}
                                     />
                                 </div>
                             </div>
@@ -380,7 +387,7 @@ export default function ShopSettingsPage() {
                                                     variant="destructive"
                                                     size="icon-xs"
                                                     onClick={() => {
-                                                        form.setData(
+                                                        setValue(
                                                             'remove_logo',
                                                             '1',
                                                         );
@@ -419,7 +426,7 @@ export default function ShopSettingsPage() {
                                         />
                                     </div>
                                     <InputError
-                                        message={form.errors.logo as string}
+                                        message={errors.logo?.message as string}
                                     />
                                 </div>
 
@@ -438,7 +445,7 @@ export default function ShopSettingsPage() {
                                                     variant="destructive"
                                                     size="icon-xs"
                                                     onClick={() => {
-                                                        form.setData(
+                                                        setValue(
                                                             'remove_qris',
                                                             '1',
                                                         );
@@ -478,7 +485,7 @@ export default function ShopSettingsPage() {
                                     </div>
                                     <InputError
                                         message={
-                                            form.errors.qris_image as string
+                                            errors.qris_image?.message as string
                                         }
                                     />
                                 </div>
@@ -498,17 +505,11 @@ export default function ShopSettingsPage() {
                                         id="tax_rate"
                                         type="number"
                                         step="0.01"
-                                        value={form.data.tax_rate}
-                                        onChange={(e) =>
-                                            form.setData(
-                                                'tax_rate',
-                                                e.target.value,
-                                            )
-                                        }
+                                        {...register('tax_rate')}
                                         placeholder="11"
                                     />
                                     <InputError
-                                        message={form.errors.tax_rate}
+                                        message={errors.tax_rate?.message}
                                     />
                                 </div>
                                 <div className="grid gap-2">
@@ -516,9 +517,12 @@ export default function ShopSettingsPage() {
                                         Paper Size
                                     </Label>
                                     <Select
-                                        value={form.data.paper_size}
+                                        value={formData?.paper_size}
                                         onValueChange={(value) =>
-                                            form.setData('paper_size', value)
+                                            setValue(
+                                                'paper_size',
+                                                value as 'mm_58' | 'mm_80',
+                                            )
                                         }
                                     >
                                         <SelectTrigger>
@@ -533,6 +537,9 @@ export default function ShopSettingsPage() {
                                             </SelectItem>
                                         </SelectContent>
                                     </Select>
+                                    <InputError
+                                        message={errors.paper_size?.message}
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -548,19 +555,12 @@ export default function ShopSettingsPage() {
                                     </Label>
                                     <Input
                                         id="midtrans_merchant_id"
-                                        value={form.data.midtrans_merchant_id}
-                                        onChange={(e) =>
-                                            form.setData(
-                                                'midtrans_merchant_id',
-                                                e.target.value,
-                                            )
-                                        }
+                                        {...register('midtrans_merchant_id')}
                                         placeholder="M123456789"
                                     />
                                     <InputError
                                         message={
-                                            form.errors
-                                                .midtrans_merchant_id as string
+                                            errors.midtrans_merchant_id?.message
                                         }
                                     />
                                 </div>
@@ -571,14 +571,11 @@ export default function ShopSettingsPage() {
                                     <TextareaComponent
                                         id="receipt_footer"
                                         className="min-h-20"
-                                        value={form.data.receipt_footer}
-                                        onChange={(e) =>
-                                            form.setData(
-                                                'receipt_footer',
-                                                e.target.value,
-                                            )
-                                        }
+                                        {...register('receipt_footer')}
                                         placeholder="Terima kasih atas kunjungan Anda!"
+                                    />
+                                    <InputError
+                                        message={errors.receipt_footer?.message}
                                     />
                                 </div>
                             </div>
@@ -675,7 +672,7 @@ export default function ShopSettingsPage() {
                                             {shopNamePreview}
                                         </p>
                                         <p className="text-[10px] text-muted-foreground">
-                                            {form.data.address.trim() ||
+                                            {formData?.address?.trim() ||
                                                 'Alamat toko'}
                                         </p>
                                     </div>
@@ -739,7 +736,7 @@ export default function ShopSettingsPage() {
                                         </p>
                                         <p>
                                             Ukuran kertas:{' '}
-                                            {form.data.paper_size === 'mm_58'
+                                            {formData?.paper_size === 'mm_58'
                                                 ? '58mm'
                                                 : '80mm'}
                                         </p>

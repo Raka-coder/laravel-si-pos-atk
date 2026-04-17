@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Head, usePage, router } from '@inertiajs/react';
 import {
+    Info,
     Minus,
     Plus,
     Search,
@@ -45,6 +46,7 @@ import {
     SheetHeader,
     SheetTitle,
 } from '@/components/ui/sheet';
+import { cn } from '@/lib/utils';
 import { useCartStore } from '@/stores/cartStore';
 import type { BreadcrumbItem } from '@/types';
 
@@ -624,54 +626,60 @@ export default function POSIndex() {
 
                     <div className="space-y-4 py-4">
                         {/* Payment Method Selection */}
-                        <div className="grid grid-cols-3 gap-2">
-                            <button
+                        <div className="grid grid-cols-3 gap-3">
+                            <Button
                                 type="button"
+                                variant="outline"
                                 onClick={() =>
                                     setValue('payment_method', 'cash')
                                 }
-                                className={`flex flex-col items-center justify-center gap-2 rounded-lg border-2 p-3 transition-all ${
+                                className={cn(
+                                    'flex h-auto flex-col items-center justify-center gap-2 rounded-xl border-2 p-4 transition-all hover:bg-accent',
                                     paymentFormData.payment_method === 'cash'
-                                        ? 'border-green-500 bg-green-50 text-green-700 dark:bg-green-900'
-                                        : 'border-border bg-background text-muted-foreground hover:border-green-300'
-                                }`}
+                                        ? 'border-primary bg-primary/5 text-primary ring-1 ring-primary'
+                                        : 'border-border text-muted-foreground',
+                                )}
                             >
-                                <BanknoteIcon />
-                                <span className="text-sm font-medium">
+                                <BanknoteIcon className="h-6 w-6" />
+                                <span className="text-xs font-bold uppercase tracking-wider text-center leading-tight">
                                     Tunai
                                 </span>
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                                 type="button"
+                                variant="outline"
                                 onClick={handleSelectQris}
-                                className={`flex flex-col items-center justify-center gap-2 rounded-lg border-2 p-3 transition-all ${
+                                className={cn(
+                                    'flex h-auto flex-col items-center justify-center gap-2 rounded-xl border-2 p-4 transition-all hover:bg-accent',
                                     paymentFormData.payment_method === 'qris'
-                                        ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-950'
-                                        : 'border-border bg-background text-muted-foreground hover:border-blue-300'
-                                }`}
+                                        ? 'border-primary bg-primary/5 text-primary ring-1 ring-primary'
+                                        : 'border-border text-muted-foreground',
+                                )}
                             >
-                                <QrCodeIcon className="text-2xl" />
-                                <span className="text-sm font-medium">
+                                <QrCodeIcon className="h-6 w-6" />
+                                <span className="text-xs font-bold uppercase tracking-wider text-center leading-tight">
                                     QRIS
                                 </span>
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                                 type="button"
+                                variant="outline"
                                 onClick={() =>
                                     setValue('payment_method', 'midtrans')
                                 }
-                                className={`flex flex-col items-center justify-center gap-2 rounded-lg border-2 p-3 transition-all ${
+                                className={cn(
+                                    'flex h-auto flex-col items-center justify-center gap-2 rounded-xl border-2 p-4 transition-all hover:bg-accent',
                                     paymentFormData.payment_method ===
-                                    'midtrans'
-                                        ? 'border-purple-500 bg-purple-50 text-purple-700 dark:bg-purple-950'
-                                        : 'border-border bg-background text-muted-foreground hover:border-purple-300'
-                                }`}
+                                        'midtrans'
+                                        ? 'border-primary bg-primary/5 text-primary ring-1 ring-primary'
+                                        : 'border-border text-muted-foreground',
+                                )}
                             >
-                                <CreditCardIcon className="text-2xl" />
-                                <span className="text-sm font-medium">
+                                <CreditCardIcon className="h-6 w-6" />
+                                <span className="text-xs font-bold uppercase tracking-wider text-center leading-tight">
                                     Midtrans
                                 </span>
-                            </button>
+                            </Button>
                         </div>
 
                         {/* Total Display */}
@@ -775,139 +783,127 @@ export default function POSIndex() {
 
             {/* QRIS Image Sheet - Compact & Professional */}
             <Sheet open={isQrisPopupOpen} onOpenChange={setIsQrisPopupOpen}>
-                <SheetContent className="w-90 sm:max-w-none" side="right">
-                    <SheetHeader className="pb-3">
-                        <div className="flex items-center">
-                            <SheetTitle>QRIS Payment</SheetTitle>
-                            <Badge variant="secondary" className="ml-2 text-xs">
-                                Static QR
-                            </Badge>
-                        </div>
-                        <SheetDescription>
-                            Scan menggunakan e-wallet atau mobile banking
-                        </SheetDescription>
-                    </SheetHeader>
-
-                    <div
-                        className="flex flex-col gap-4 overflow-y-auto py-2"
-                        style={{ maxHeight: 'calc(100vh - 200px)' }}
-                    >
-                        {/* Amount - Compact */}
-                        <div className="rounded-lg bg-primary/5 p-3 text-center">
-                            <div className="text-xs font-medium text-muted-foreground">
-                                Total
-                            </div>
-                            <div className="mt-0.5 text-2xl font-bold text-primary">
-                                {formatCurrency(total)}
-                            </div>
-                        </div>
-
-                        {/* QR Code - Compact */}
-                        {shop.qris_image_path ? (
-                            <div className="flex justify-center">
-                                <div className="relative rounded-lg border bg-background p-2 shadow-sm">
-                                    <img
-                                        src={`/storage/${shop.qris_image_path}`}
-                                        alt="QRIS Code"
-                                        className="h-48 w-48 object-contain"
-                                    />
-                                    <Badge className="absolute -top-2 -right-2 h-6 px-2">
-                                        QRIS
-                                    </Badge>
+                <SheetContent className="sm:max-w-md p-0" side="right">
+                    <div className="flex flex-col h-full">
+                        <SheetHeader className="p-6 pb-4 border-b">
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-1">
+                                    <SheetTitle className="text-xl font-black tracking-tight">QRIS Payment</SheetTitle>
+                                    <SheetDescription>
+                                        Scan using e-wallet atau mobile banking
+                                    </SheetDescription>
                                 </div>
+                                <Badge variant="outline" className="h-6 rounded-md px-2 text-[10px] font-bold uppercase tracking-widest bg-primary/5 text-primary border-primary/20">
+                                    Static QR
+                                </Badge>
                             </div>
-                        ) : (
-                            <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-destructive/30 bg-destructive/5 py-10">
-                                <QrCodeIcon className="mb-2 h-10 w-10 text-destructive/50" />
-                                <div className="text-center">
-                                    <div className="text-sm font-medium text-destructive">
-                                        QR Code Belum Tersedia
+                        </SheetHeader>
+
+                        <div className="flex-1 overflow-y-auto">
+                            <div className="p-4 space-y-4">
+                                {/* Amount - Enhanced */}
+                                <div className="rounded-2xl text-center">
+                                    <div className="text-[10px] font-semibold text-muted-foreground uppercase mb-1">
+                                        Total Amount Due
                                     </div>
-                                    <a
-                                        href="/shop"
-                                        className="mt-1 inline-block text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground"
-                                    >
-                                        Upload di Pengaturan Toko →
-                                    </a>
+                                    <div className="text-3xl font-black text-foreground tabular-nums">
+                                        {formatCurrency(total)}
+                                    </div>
                                 </div>
-                            </div>
-                        )}
 
-                        {/* Instructions - Compact */}
-                        {shop.qris_image_path && (
-                            <div className="space-y-2 rounded-lg bg-muted/50 p-3">
-                                <div className="text-xs font-semibold text-foreground">
-                                    Cara Pembayaran:
+                                {/* QR Code Area */}
+                                <div className="flex flex-col items-center gap-6">
+                                    {shop.qris_image_path ? (
+                                        <div className="relative group">
+                                            <div className="absolute -inset-4 bg-primary/5 rounded-[2.5rem] blur-2xl opacity-50" />
+                                            <div className="relative rounded-2xl border-4 border-background bg-background p-4 shadow-2xl">
+                                                <img
+                                                    src={`/storage/${shop.qris_image_path}`}
+                                                    alt="QRIS Code"
+                                                    className="h-56 w-56 object-contain"
+                                                />
+                                                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2">
+                                                    <Badge className="h-6 rounded-full px-4 text-[10px] font-bold uppercase tracking-widest shadow-lg">
+                                                        QRIS
+                                                    </Badge>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="w-full flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-border bg-muted/30 py-16 gap-4">
+                                            <div className="p-5 rounded-2xl bg-background shadow-sm border border-border/50">
+                                                <QrCodeIcon className="h-10 w-10 text-muted-foreground/40" />
+                                            </div>
+                                            <div className="text-center space-y-1">
+                                                <p className="text-sm font-bold text-foreground">QR Code Not Available</p>
+                                                <p className="text-xs text-muted-foreground max-w-50 mx-auto">
+                                                    Please upload your QRIS code in the shop settings to enable this method.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
-                                <ol className="space-y-1 text-xs text-muted-foreground">
-                                    <li className="flex items-start gap-2">
-                                        <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary">
-                                            1
-                                        </span>
-                                        <span>
-                                            Buka e-wallet atau mobile banking
-                                        </span>
-                                    </li>
-                                    <li className="flex items-start gap-2">
-                                        <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary">
-                                            2
-                                        </span>
-                                        <span>Pilih scan QR</span>
-                                    </li>
-                                    <li className="flex items-start gap-2">
-                                        <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary">
-                                            3
-                                        </span>
-                                        <span>Scan QR code di atas</span>
-                                    </li>
-                                    <li className="flex items-start gap-2">
-                                        <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary">
-                                            4
-                                        </span>
-                                        <span>
-                                            Pastikan nominal{' '}
-                                            <span className="font-medium text-foreground">
-                                                {formatCurrency(total)}
-                                            </span>
-                                        </span>
-                                    </li>
-                                    <li className="flex items-start gap-2">
-                                        <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary">
-                                            5
-                                        </span>
-                                        <span>Selesaikan pembayaran</span>
-                                    </li>
-                                </ol>
-                            </div>
-                        )}
-                    </div>
 
-                    <div className="mt-auto border-t pt-4">
-                        <div className="flex flex-col gap-3 sm:flex-row">
-                            <Button
-                                variant="outline"
-                                onClick={() => {
-                                    setIsQrisPopupOpen(false);
-                                    setValue('payment_method', 'cash');
-                                }}
-                                className="w-full sm:flex-1"
-                            >
-                                Batal
-                            </Button>
-                            <Button
-                                onClick={handleSubmit(onPaymentSubmit)}
-                                disabled={!shop.qris_image_path || isProcessing}
-                                className="w-full sm:flex-1"
-                            >
-                                {!shop.qris_image_path ? (
-                                    'QR Belum Tersedia'
-                                ) : (
-                                    <>
-                                        <CheckCircle2 className="mr-1.5 h-4 w-4" />
-                                        Sudah Bayar
-                                    </>
+                                {/* Instructions - Refined */}
+                                {shop.qris_image_path && (
+                                    <div className="space-y-2 pt-4">
+                                        <h4 className="text-xs font-bold text-foreground uppercase tracking-widest flex items-center gap-2">
+                                            <Info className="h-4 w-4 text-primary" />
+                                            Payment Steps
+                                        </h4>
+                                        <div className="grid gap-2">
+                                            {[
+                                                'Buka aplikasi e-wallet atau mobile banking',
+                                                'Pilih menu "Scan QR" atau "Bayar"',
+                                                'Scan QR Code yang muncul di atas',
+                                                `Pastikan nominal sesuai: ${formatCurrency(total)}`,
+                                                'Selesaikan transaksi di aplikasi Anda'
+                                            ].map((step, i) => (
+                                                <div key={i} className="flex items-start gap-3 p-2 rounded-xl bg-muted/30 border border-border/30">
+                                                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">
+                                                        {i + 1}
+                                                    </span>
+                                                    <span className="text-xs font-medium text-foreground/80 leading-snug">
+                                                        {step}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
                                 )}
-                            </Button>
+                            </div>
+                        </div>
+
+                        <div className="p-4 border-t">
+                            <div className="flex flex-col gap-3 sm:flex-row">
+                                <Button
+                                    variant="outline"
+                                    size="lg"
+                                    onClick={() => {
+                                        setIsQrisPopupOpen(false);
+                                        setValue('payment_method', 'cash');
+                                    }}
+                                    className="w-full sm:flex-1 font-bold uppercase tracking-wider text-[11px]"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    size="lg"
+                                    variant="default"
+                                    onClick={handleSubmit(onPaymentSubmit)}
+                                    disabled={!shop.qris_image_path || isProcessing}
+                                    className="w-full sm:flex-1 font-bold uppercase tracking-wider text-[11px] shadow-lg shadow-primary/20"
+                                >
+                                    {!shop.qris_image_path ? (
+                                        'QR Not Available'
+                                    ) : (
+                                        <>
+                                            <CheckCircle2 className="mr-2 h-4 w-4" />
+                                            Sudah Bayar
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 </SheetContent>

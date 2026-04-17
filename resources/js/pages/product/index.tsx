@@ -6,6 +6,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 
 import InputError from '@/components/input-error';
+import { ProductDetailDialog } from '@/components/product-detail-dialog';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -132,6 +133,7 @@ export default function ProductIndex() {
     const [isOpen, setIsOpen] = useState(false);
     const [editProduct, setEditProduct] = useState<Product | null>(null);
     const [deleteProduct, setDeleteProduct] = useState<Product | null>(null);
+    const [showProduct, setShowProduct] = useState<Product | null>(null);
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [editImagePreview, setEditImagePreview] = useState<string | null>(
         null,
@@ -584,7 +586,11 @@ export default function ProductIndex() {
                         </TableHeader>
                         <TableBody>
                             {products.data.map((product) => (
-                                <TableRow key={product.id}>
+                                <TableRow
+                                    key={product.id}
+                                    className="cursor-pointer transition-colors hover:bg-muted/50"
+                                    onClick={() => setShowProduct(product)}
+                                >
                                     <TableCell>
                                         {product.image ? (
                                             <img
@@ -644,7 +650,10 @@ export default function ProductIndex() {
                                         </span>
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <div className="flex items-center justify-end gap-2">
+                                        <div
+                                            className="flex items-center justify-end gap-2"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
                                             <TooltipProvider>
                                                 <Tooltip>
                                                     <TooltipTrigger asChild>
@@ -1045,6 +1054,13 @@ export default function ProductIndex() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+            {/* Product Detail Modal */}
+            <ProductDetailDialog
+                product={showProduct}
+                open={!!showProduct}
+                onOpenChange={(open) => !open && setShowProduct(null)}
+            />
+
         </>
     );
 }

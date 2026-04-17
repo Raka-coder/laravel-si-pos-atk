@@ -213,7 +213,7 @@ export default function TransactionIndex() {
                                         Date
                                     </TableHead>
                                     <TableHead className="text-left">
-                                        Kasir
+                                        User
                                     </TableHead>
                                     <TableHead className="text-right">
                                         Total

@@ -15,7 +15,7 @@ class LandingPageTest extends TestCase
         $response = $this->get('/');
 
         $response->assertStatus(200);
-        $response->assertSee('Welcome to SmartPOS');
+        $response->assertSee('Welcome to POS ATK-Sync');
     }
 
     public function test_landing_page_redirects_to_dashboard_if_user_wants_to_login_while_authenticated(): void

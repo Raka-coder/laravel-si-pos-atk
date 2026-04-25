@@ -64,7 +64,7 @@ class PasswordResetTest extends TestCase
         $this->postWithCsrf(route('password.email'), ['email' => $user->email]);
 
         Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
-            $newPassword = 'Test@'.fake()->password(12, 20);
+            $newPassword = 'Test1@'.fake()->password(12, 20);
 
             $response = $this->postWithCsrf(route('password.update'), [
                 'token' => $notification->token,

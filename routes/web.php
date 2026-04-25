@@ -15,9 +15,13 @@ use App\Http\Controllers\Transaction\TransactionController;
 use App\Http\Controllers\Unit\UnitController;
 use App\Http\Controllers\User\UserController;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::get('/', function () {
-    return redirect()->route('login');
+    return Inertia::render('welcome', [
+        'canLogin' => Route::has('login'),
+        'canRegister' => Route::has('register'),
+    ]);
 })->name('home');
 
 // Midtrans webhook (no auth required - verified by signature)

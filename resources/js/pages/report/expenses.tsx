@@ -11,6 +11,23 @@ import {
     DropdownMenuContent,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+    Pagination,
+    PaginationContent,
+    PaginationEllipsis,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from '@/components/ui/pagination';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import type { BreadcrumbItem } from '@/types';
 
 interface ExpenseCategory {
@@ -97,6 +114,26 @@ export default function ExpensesReport() {
         window.location.href = url.toString();
     };
 
+    const getPaginationLink = (page: number) => {
+        const params = new URLSearchParams();
+
+        if (filters.start_date) {
+            params.set('start_date', filters.start_date);
+        }
+
+        if (filters.end_date) {
+            params.set('end_date', filters.end_date);
+        }
+
+        if (page > 1) {
+            params.set('page', page.toString());
+        }
+
+        return params.toString()
+            ? `?${params.toString()}`
+            : '/reports/expenses';
+    };
+
     return (
         <>
             <Head title="Expenses Report" />
@@ -139,7 +176,9 @@ export default function ExpensesReport() {
                 <div className="flex flex-wrap items-center gap-4 rounded-xl border bg-card/50 p-4 shadow-sm backdrop-blur-sm">
                     <div className="flex items-center gap-3">
                         <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-muted-foreground">From:</span>
+                            <span className="text-sm font-medium text-muted-foreground">
+                                From:
+                            </span>
                             <DropdownMenu
                                 open={startOpen}
                                 onOpenChange={setStartOpen}
@@ -178,8 +217,13 @@ export default function ExpensesReport() {
                             </DropdownMenu>
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-muted-foreground">To:</span>
-                            <DropdownMenu open={endOpen} onOpenChange={setEndOpen}>
+                            <span className="text-sm font-medium text-muted-foreground">
+                                To:
+                            </span>
+                            <DropdownMenu
+                                open={endOpen}
+                                onOpenChange={setEndOpen}
+                            >
                                 <DropdownMenuTrigger asChild>
                                     <Button
                                         variant="outline"
@@ -205,7 +249,10 @@ export default function ExpensesReport() {
                                             setEndOpen(false);
 
                                             if (date) {
-                                                applyDateFilter(startDate, date);
+                                                applyDateFilter(
+                                                    startDate,
+                                                    date,
+                                                );
                                             }
                                         }}
                                         initialFocus
@@ -218,79 +265,125 @@ export default function ExpensesReport() {
 
                 <div className="rounded-xl border border-sidebar-border/70 p-6">
                     <div className="rounded-md border">
-                        <table className="w-full">
-                            <thead className="border-b bg-muted/50">
-                                <tr>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
-                                        Date
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
-                                        Name
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
-                                        Category
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-sm font-medium">
-                                        Note
-                                    </th>
-                                    <th className="px-4 py-3 text-right text-sm font-medium">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Date</TableHead>
+                                    <TableHead>Name</TableHead>
+                                    <TableHead>Category</TableHead>
+                                    <TableHead>Note</TableHead>
+                                    <TableHead className="text-right">
                                         Amount
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y">
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
                                 {expenses.data.map((expense) => (
-                                    <tr
-                                        key={expense.id}
-                                        className="hover:bg-muted/50"
-                                    >
-                                        <td className="px-4 py-3 text-sm whitespace-nowrap">
+                                    <TableRow key={expense.id}>
+                                        <TableCell className="whitespace-nowrap">
                                             {formatDate(expense.date)}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm">
-                                            {expense.name}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm">
+                                        </TableCell>
+                                        <TableCell>{expense.name}</TableCell>
+                                        <TableCell>
                                             {expense.category?.name || '-'}
-                                        </td>
-                                        <td className="max-w-xs truncate px-4 py-3 text-sm">
+                                        </TableCell>
+                                        <TableCell className="max-w-xs truncate">
                                             {expense.note || '-'}
-                                        </td>
-                                        <td className="px-4 py-3 text-right text-sm font-medium">
+                                        </TableCell>
+                                        <TableCell className="text-right font-medium">
                                             {formatCurrency(expense.amount)}
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 ))}
                                 {expenses.data.length === 0 && (
-                                    <tr>
-                                        <td
+                                    <TableRow>
+                                        <TableCell
                                             colSpan={5}
-                                            className="px-4 py-8 text-center text-sm text-muted-foreground"
+                                            className="h-24 text-center text-muted-foreground"
                                         >
                                             No expenses found.
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 )}
-                            </tbody>
-                        </table>
+                            </TableBody>
+                        </Table>
                     </div>
                 </div>
 
-                {expenses.last_page > 1 && (
-                    <div className="flex justify-center gap-2">
-                        {Array.from({ length: expenses.last_page }, (_, i) => (
-                            <a
-                                key={i}
-                                href={`?page=${i + 1}&start_date=${filters.start_date}&end_date=${filters.end_date}`}
-                                className={`rounded px-3 py-1 text-sm ${
-                                    expenses.current_page === i + 1
-                                        ? 'bg-primary text-primary-foreground'
-                                        : 'border'
-                                }`}
-                            >
-                                {i + 1}
-                            </a>
-                        ))}
+                {expenses.last_page >= 1 && (
+                    <div className="mt-4">
+                        <Pagination>
+                            <PaginationContent>
+                                <PaginationItem>
+                                    <PaginationPrevious
+                                        href={
+                                            expenses.current_page > 1
+                                                ? getPaginationLink(
+                                                      expenses.current_page - 1,
+                                                  )
+                                                : undefined
+                                        }
+                                        className={
+                                            expenses.current_page <= 1
+                                                ? 'pointer-events-none opacity-50'
+                                                : ''
+                                        }
+                                    />
+                                </PaginationItem>
+
+                                {Array.from(
+                                    { length: expenses.last_page },
+                                    (_, i) => i + 1,
+                                )
+                                    .filter(
+                                        (page) =>
+                                            page === 1 ||
+                                            page === expenses.last_page ||
+                                            Math.abs(
+                                                page - expenses.current_page,
+                                            ) <= 2,
+                                    )
+                                    .map((page, index, array) => (
+                                        <PaginationItem key={page}>
+                                            {index > 0 &&
+                                            page - array[index - 1] > 1 ? (
+                                                <PaginationEllipsis />
+                                            ) : (
+                                                <PaginationLink
+                                                    href={getPaginationLink(
+                                                        page,
+                                                    )}
+                                                    isActive={
+                                                        page ===
+                                                        expenses.current_page
+                                                    }
+                                                >
+                                                    {page}
+                                                </PaginationLink>
+                                            )}
+                                        </PaginationItem>
+                                    ))}
+
+                                <PaginationItem>
+                                    <PaginationNext
+                                        href={
+                                            expenses.current_page <
+                                            expenses.last_page
+                                                ? getPaginationLink(
+                                                      expenses.current_page + 1,
+                                                  )
+                                                : undefined
+                                        }
+                                        className={
+                                            expenses.current_page >=
+                                            expenses.last_page
+                                                ? 'pointer-events-none opacity-50'
+                                                : ''
+                                        }
+                                    />
+                                </PaginationItem>
+                            </PaginationContent>
+                        </Pagination>
                     </div>
                 )}
             </div>

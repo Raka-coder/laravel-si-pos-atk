@@ -5,6 +5,8 @@ namespace App\Providers;
 use App\Actions\Fortify\AttemptAuthentication;
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
+use App\Http\Responses\Auth\LoginResponse;
+use App\Http\Responses\Auth\LogoutResponse;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -39,6 +41,9 @@ class FortifyServiceProvider extends ServiceProvider
      */
     private function configureActions(): void
     {
+        $this->app->singleton(\Laravel\Fortify\Contracts\LoginResponse::class, LoginResponse::class);
+        $this->app->singleton(\Laravel\Fortify\Contracts\LogoutResponse::class, LogoutResponse::class);
+
         Fortify::authenticateUsing(function ($request) {
             $auth = new AttemptAuthentication;
             $closure = $auth();

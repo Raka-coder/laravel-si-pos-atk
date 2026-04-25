@@ -3,9 +3,11 @@ import {
     AlertTriangle,
     Clock,
     CreditCard,
+    RefreshCw,
     Package,
     TrendingUp,
     Wallet,
+    Users,
 } from 'lucide-react';
 import CategoryRevenueChart from '@/components/charts/CategoryRevenueChart';
 import HourlySalesChart from '@/components/charts/HourlySalesChart';
@@ -725,6 +727,7 @@ export default function Dashboard() {
                                             size="lg"
                                         >
                                             <a href="/stock-movements">
+                                                <RefreshCw className="mr-2 h-4 w-4" />
                                                 Stock Movements
                                             </a>
                                         </Button>
@@ -737,7 +740,17 @@ export default function Dashboard() {
                                                 <Wallet className="mr-2 h-4 w-4" />
                                                 Transactions
                                             </a>
-                                        </Button>
+                                            </Button>
+                                            <Button
+                                                asChild
+                                                variant="outline"
+                                                size="lg"
+                                            >
+                                                <a href="/users">
+                                                    <Users className="mr-2 h-4 w-4" />
+                                                    Manage Users
+                                                </a>
+                                            </Button>
                                     </div>
                                 </CardContent>
                             </Card>

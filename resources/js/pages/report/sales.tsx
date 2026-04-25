@@ -1,6 +1,12 @@
 import { Head, usePage } from '@inertiajs/react';
 import { format } from 'date-fns';
-import { CalendarIcon, Download, Banknote, ShoppingBag, TrendingUp } from 'lucide-react';
+import {
+    CalendarIcon,
+    Download,
+    Banknote,
+    ShoppingBag,
+    TrendingUp,
+} from 'lucide-react';
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -11,6 +17,15 @@ import {
     DropdownMenuContent,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+    Pagination,
+    PaginationContent,
+    PaginationEllipsis,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from '@/components/ui/pagination';
 import {
     Table,
     TableBody,
@@ -109,6 +124,24 @@ export default function SalesReport() {
         }
 
         window.location.href = url.toString();
+    };
+
+    const getPaginationLink = (page: number) => {
+        const params = new URLSearchParams();
+
+        if (filters.start_date) {
+            params.set('start_date', filters.start_date);
+        }
+
+        if (filters.end_date) {
+            params.set('end_date', filters.end_date);
+        }
+
+        if (page > 1) {
+            params.set('page', page.toString());
+        }
+
+        return params.toString() ? `?${params.toString()}` : '/reports/sales';
     };
 
     return (
@@ -335,24 +368,83 @@ export default function SalesReport() {
                     </Table>
                 </div>
 
-                {transactions.last_page > 1 && (
-                    <div className="flex justify-center gap-2">
-                        {Array.from(
-                            { length: transactions.last_page },
-                            (_, i) => (
-                                <a
-                                    key={i}
-                                    href={`?page=${i + 1}&start_date=${filters.start_date}&end_date=${filters.end_date}`}
-                                    className={`rounded px-3 py-1 text-sm ${
-                                        transactions.current_page === i + 1
-                                            ? 'bg-primary text-primary-foreground'
-                                            : 'border'
-                                    }`}
-                                >
-                                    {i + 1}
-                                </a>
-                            ),
-                        )}
+                {transactions.last_page >= 1 && (
+                    <div className="mt-4">
+                        <Pagination>
+                            <PaginationContent>
+                                <PaginationItem>
+                                    <PaginationPrevious
+                                        href={
+                                            transactions.current_page > 1
+                                                ? getPaginationLink(
+                                                      transactions.current_page -
+                                                          1,
+                                                  )
+                                                : undefined
+                                        }
+                                        className={
+                                            transactions.current_page <= 1
+                                                ? 'pointer-events-none opacity-50'
+                                                : ''
+                                        }
+                                    />
+                                </PaginationItem>
+
+                                {Array.from(
+                                    { length: transactions.last_page },
+                                    (_, i) => i + 1,
+                                )
+                                    .filter(
+                                        (page) =>
+                                            page === 1 ||
+                                            page === transactions.last_page ||
+                                            Math.abs(
+                                                page -
+                                                    transactions.current_page,
+                                            ) <= 2,
+                                    )
+                                    .map((page, index, array) => (
+                                        <PaginationItem key={page}>
+                                            {index > 0 &&
+                                            page - array[index - 1] > 1 ? (
+                                                <PaginationEllipsis />
+                                            ) : (
+                                                <PaginationLink
+                                                    href={getPaginationLink(
+                                                        page,
+                                                    )}
+                                                    isActive={
+                                                        page ===
+                                                        transactions.current_page
+                                                    }
+                                                >
+                                                    {page}
+                                                </PaginationLink>
+                                            )}
+                                        </PaginationItem>
+                                    ))}
+
+                                <PaginationItem>
+                                    <PaginationNext
+                                        href={
+                                            transactions.current_page <
+                                            transactions.last_page
+                                                ? getPaginationLink(
+                                                      transactions.current_page +
+                                                          1,
+                                                  )
+                                                : undefined
+                                        }
+                                        className={
+                                            transactions.current_page >=
+                                            transactions.last_page
+                                                ? 'pointer-events-none opacity-50'
+                                                : ''
+                                        }
+                                    />
+                                </PaginationItem>
+                            </PaginationContent>
+                        </Pagination>
                     </div>
                 )}
             </div>

@@ -8,7 +8,7 @@ import {
     YAxis,
 } from 'recharts';
 import {
-    formatCurrency,
+    formatCompactNumber,
     formatShortDate,
 } from '@/components/charts/chart-utils';
 import ChartEmptyState from '@/components/charts/ChartEmptyState';
@@ -59,7 +59,7 @@ function CustomTooltip({
                 {displayLabel}
             </p>
             <p className="text-sm text-slate-300">
-                Revenue: {formatCurrency(revenue as number)}
+                Revenue: {formatCompactNumber(revenue as number)}
             </p>
             <p className="text-sm text-slate-300">
                 Transactions: {transactions}
@@ -126,7 +126,7 @@ export default function RevenueChart({ data }: Props) {
                     tick={{ fill: tickFill, fontSize: 11 }}
                     tickLine={{ stroke: '#e2e8f0' }}
                     axisLine={{ stroke: '#e2e8f0' }}
-                    tickFormatter={(value) => formatCurrency(value)}
+                    tickFormatter={(value) => formatCompactNumber(value)}
                     dx={-10}
                 />
                 <Tooltip content={<CustomTooltip />} />

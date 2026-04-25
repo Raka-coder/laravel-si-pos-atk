@@ -8,6 +8,7 @@ import { z } from 'zod';
 import InputError from '@/components/input-error';
 import { ProductDetailDialog } from '@/components/product-detail-dialog';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Dialog,
     DialogClose,
@@ -280,6 +281,8 @@ export default function ProductIndex() {
         return new Intl.NumberFormat('id-ID', {
             style: 'currency',
             currency: 'IDR',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
         }).format(value);
     };
 
@@ -463,6 +466,31 @@ export default function ProductIndex() {
                                             }
                                         />
                                     </div>
+                                </div>
+                                <div className="grid gap-2">
+                                    <div className="flex items-center gap-2">
+                                        <Checkbox
+                                            id="create-is_active"
+                                            checked={!!createFormData.is_active}
+                                            onCheckedChange={(checked) =>
+                                                createSetValue(
+                                                    'is_active',
+                                                    checked === true,
+                                                )
+                                            }
+                                        />
+                                        <Label
+                                            htmlFor="create-is_active"
+                                            className="cursor-pointer"
+                                        >
+                                            Product active
+                                        </Label>
+                                    </div>
+                                    <InputError
+                                        message={
+                                            createErrors.is_active?.message
+                                        }
+                                    />
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="image">Product Image</Label>
@@ -935,6 +963,29 @@ export default function ProductIndex() {
                             </div>
                         </div>
                         <div className="grid gap-2">
+                            <div className="flex items-center gap-2">
+                                <Checkbox
+                                    id="edit-is_active"
+                                    checked={!!editFormData.is_active}
+                                    onCheckedChange={(checked) =>
+                                        editSetValue(
+                                            'is_active',
+                                            checked === true,
+                                        )
+                                    }
+                                />
+                                <Label
+                                    htmlFor="edit-is_active"
+                                    className="cursor-pointer"
+                                >
+                                    Product active
+                                </Label>
+                            </div>
+                            <InputError
+                                message={editErrors.is_active?.message}
+                            />
+                        </div>
+                        <div className="grid gap-2">
                             <Label htmlFor="edit-image">Product Image</Label>
                             {editImagePreview && (
                                 <div className="mb-2 flex items-center gap-4">
@@ -1060,7 +1111,6 @@ export default function ProductIndex() {
                 open={!!showProduct}
                 onOpenChange={(open) => !open && setShowProduct(null)}
             />
-
         </>
     );
 }

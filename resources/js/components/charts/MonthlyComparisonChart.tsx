@@ -7,7 +7,7 @@ import {
     XAxis,
     YAxis,
 } from 'recharts';
-import { formatCurrency } from '@/components/charts/chart-utils';
+import { formatCompactNumber } from '@/components/charts/chart-utils';
 import ChartEmptyState from '@/components/charts/ChartEmptyState';
 
 interface MonthlyRevenueData {
@@ -70,7 +70,7 @@ function CustomTooltip({
                 {label as string}
             </p>
             <p className="text-sm text-slate-300">
-                Revenue: {formatCurrency(revenue as number)}
+                Revenue: {formatCompactNumber(revenue as number)}
             </p>
             <p className="text-sm text-slate-300">
                 Transactions: {transactions}
@@ -116,7 +116,7 @@ export default function MonthlyComparisonChart({ data }: Props) {
                     tick={{ fill: tickFill, fontSize: 11 }}
                     tickLine={{ stroke: '#e2e8f0' }}
                     axisLine={{ stroke: '#e2e8f0' }}
-                    tickFormatter={(value) => formatCurrency(value)}
+                    tickFormatter={(value) => formatCompactNumber(value)}
                     dx={-10}
                 />
                 <Tooltip content={<CustomTooltip />} />

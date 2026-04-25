@@ -19,8 +19,8 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 
 interface Category {
     id: number;
@@ -87,36 +87,40 @@ export function ProductDetailDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-xl p-0 overflow-hidden border shadow-xl sm:rounded-xl bg-background selection:bg-primary selection:text-primary-foreground">
+            <DialogContent className="overflow-hidden border bg-background p-0 shadow-xl selection:bg-primary selection:text-primary-foreground sm:max-w-xl sm:rounded-xl">
                 <ScrollArea className="max-h-[80vh]">
                     <div className="flex flex-col sm:flex-row">
                         {/* 1. Visual Section - Minimal & Small */}
-                        <aside className="sm:w-45 bg-muted/20 border-b sm:border-b-0 sm:border-r border-border/50 flex flex-col items-center justify-start p-6 gap-4">
-                            <div className="relative group w-30 aspect-square rounded-xl overflow-hidden shadow-sm border border-border/60 bg-background">
+                        <aside className="flex flex-col items-center justify-start gap-4 border-b border-border/50 bg-muted/20 p-6 sm:w-45 sm:border-r sm:border-b-0">
+                            <div className="group relative aspect-square w-30 overflow-hidden rounded-xl border border-border/60 bg-background shadow-sm">
                                 {product.image ? (
                                     <img
                                         src={`/storage/${product.image}`}
                                         alt={product.name}
-                                        className="w-full h-full object-cover"
+                                        className="h-full w-full object-cover"
                                     />
                                 ) : (
-                                    <div className="w-full h-full flex flex-col items-center justify-center">
+                                    <div className="flex h-full w-full flex-col items-center justify-center">
                                         <PackageSearch className="h-8 w-8 text-muted-foreground/30" />
                                     </div>
                                 )}
                             </div>
 
-                            <div className="flex flex-col gap-2 w-full">
+                            <div className="flex w-full flex-col gap-2">
                                 <Badge
-                                    variant={product.is_active ? 'default' : 'secondary'}
-                                    className="h-5 justify-center rounded-md text-[10px] font-bold uppercase tracking-tight"
+                                    variant={
+                                        product.is_active
+                                            ? 'default'
+                                            : 'secondary'
+                                    }
+                                    className="h-5 justify-center rounded-md text-[10px] font-bold tracking-tight uppercase"
                                 >
                                     {product.is_active ? 'Active' : 'Inactive'}
                                 </Badge>
                                 {isLowStock && (
                                     <Badge
                                         variant="destructive"
-                                        className="h-5 justify-center rounded-md text-[9px] font-bold uppercase tracking-tight"
+                                        className="h-5 justify-center rounded-md text-[9px] font-bold tracking-tight uppercase"
                                     >
                                         Low Stock
                                     </Badge>
@@ -125,9 +129,9 @@ export function ProductDetailDialog({
                         </aside>
 
                         {/* 2. Content Section - Tight Spacing */}
-                        <main className="flex-1 p-6 flex flex-col">
-                            <DialogHeader className="mb-5 text-left space-y-1">
-                                <div className="flex items-center gap-1.5 text-[10px] font-bold text-primary/80 uppercase tracking-wider">
+                        <main className="flex flex-1 flex-col p-6">
+                            <DialogHeader className="mb-5 space-y-1 text-left">
+                                <div className="flex items-center gap-1.5 text-[10px] font-bold tracking-wider text-primary/80 uppercase">
                                     <Layers3 className="h-3 w-3" />
                                     {product.category?.name || 'Uncategorized'}
                                 </div>
@@ -135,39 +139,54 @@ export function ProductDetailDialog({
                                     {product.name}
                                 </DialogTitle>
                                 <DialogDescription className="flex items-center gap-2 pt-0.5">
-                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-muted rounded text-[12px] font-mono text-muted-foreground border border-border/40">
-                                        <Hash className="h-2.5 w-2.5" /> {product.product_code}
+                                    <span className="inline-flex items-center gap-1 rounded border border-border/40 bg-muted px-1.5 py-0.5 font-mono text-[12px] text-muted-foreground">
+                                        <Hash className="h-2.5 w-2.5" />{' '}
+                                        {product.product_code}
                                     </span>
                                 </DialogDescription>
                             </DialogHeader>
 
                             {/* Info Matrix */}
-                            <section className="grid grid-cols-2 gap-x-8 gap-y-5 mb-2">
+                            <section className="mb-2 grid grid-cols-2 gap-x-8 gap-y-5">
                                 <div className="space-y-0.5">
-                                    <h4 className="text-[12px] font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
-                                        <CircleDollarSign className="h-3 w-3" /> Selling Price
+                                    <h4 className="flex items-center gap-1.5 text-[12px] font-semibold text-muted-foreground uppercase">
+                                        <CircleDollarSign className="h-3 w-3" />{' '}
+                                        Selling Price
                                     </h4>
                                     <p className="text-2xl font-bold text-foreground tabular-nums">
                                         {formatCurrency(product.sell_price)}
                                     </p>
-                                    <p className="text-[12px] text-emerald-600 font-medium">
-                                        Margin: {Math.round(((product.sell_price - product.buy_price) / (product.buy_price || 1)) * 100)}%
+                                    <p className="text-[12px] font-medium text-emerald-600">
+                                        Margin:{' '}
+                                        {Math.round(
+                                            ((product.sell_price -
+                                                product.buy_price) /
+                                                (product.buy_price || 1)) *
+                                                100,
+                                        )}
+                                        %
                                     </p>
                                 </div>
 
                                 <div className="space-y-0.5">
-                                    <h4 className="text-[12px] font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
-                                        <Box className="h-3 w-3" /> Current Stock
+                                    <h4 className="flex items-center gap-1.5 text-[12px] font-semibold text-muted-foreground uppercase">
+                                        <Box className="h-3 w-3" /> Current
+                                        Stock
                                     </h4>
                                     <div className="flex items-baseline gap-1">
-                                        <p className={`text-2xl font-bold tabular-nums ${isLowStock ? 'text-destructive' : 'text-foreground'}`}>
+                                        <p
+                                            className={`text-2xl font-bold tabular-nums ${isLowStock ? 'text-destructive' : 'text-foreground'}`}
+                                        >
                                             {product.stock}
                                         </p>
                                         <span className="text-[12px] font-medium text-muted-foreground">
-                                            {product.unit?.short_name || 'Units'}
+                                            {product.unit?.short_name ||
+                                                'Units'}
                                         </span>
                                     </div>
-                                    <p className="text-[12px] text-muted-foreground">Threshold: {product.min_stock}</p>
+                                    <p className="text-[12px] text-muted-foreground">
+                                        Threshold: {product.min_stock}
+                                    </p>
                                 </div>
                             </section>
 
@@ -176,27 +195,34 @@ export function ProductDetailDialog({
                             {/* Details - Text Only */}
                             <footer className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
-                                    <h5 className="text-[12px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                                        <Scale className="h-2.5 w-2.5" /> Measurement
+                                    <h5 className="flex items-center gap-1.5 text-[12px] font-bold tracking-wider text-muted-foreground uppercase">
+                                        <Scale className="h-2.5 w-2.5" />{' '}
+                                        Measurement
                                     </h5>
                                     <p className="text-[12px] font-semibold text-foreground/80">
-                                        {product.unit?.name || '-'} ({product.unit?.short_name || '-'})
+                                        {product.unit?.name || '-'} (
+                                        {product.unit?.short_name || '-'})
                                     </p>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <h5 className="text-[12px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                                        <History className="h-2.5 w-2.5" /> Lifecycle Info
+                                    <h5 className="flex items-center gap-1.5 text-[12px] font-bold tracking-wider text-muted-foreground uppercase">
+                                        <History className="h-2.5 w-2.5" />{' '}
+                                        Lifecycle Info
                                     </h5>
                                     <div className="space-y-1">
                                         <div className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground">
                                             <Calendar className="h-2.5 w-2.5 opacity-40" />
                                             <span>Added:</span>
-                                            <span className="text-foreground/70">{formatDate(product.created_at)}</span>
+                                            <span className="text-foreground/70">
+                                                {formatDate(product.created_at)}
+                                            </span>
                                         </div>
                                         <div className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground">
                                             <Clock className="h-2.5 w-2.5 opacity-40" />
                                             <span>Updated:</span>
-                                            <span className="text-foreground/70">{formatDate(product.updated_at)}</span>
+                                            <span className="text-foreground/70">
+                                                {formatDate(product.updated_at)}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>

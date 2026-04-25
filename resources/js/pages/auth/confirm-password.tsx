@@ -14,6 +14,14 @@ export default function ConfirmPassword() {
             <Form {...store.form()} resetOnSuccess={['password']}>
                 {({ processing, errors }) => (
                     <div className="space-y-6">
+                        <div className="flex justify-center">
+                            <img
+                                src="/logo.svg"
+                                alt="POS Logo"
+                                className="h-10 w-10"
+                            />
+                        </div>
+
                         <div className="grid gap-2">
                             <Label htmlFor="password">Password</Label>
                             <PasswordInput

@@ -7,7 +7,7 @@ import {
     ResponsiveContainer,
     Tooltip,
 } from 'recharts';
-import { formatCurrency } from '@/components/charts/chart-utils';
+import { formatCompactNumber } from '@/components/charts/chart-utils';
 import ChartEmptyState from '@/components/charts/ChartEmptyState';
 
 interface CategoryRevenueData {
@@ -56,7 +56,7 @@ function CustomTooltip({
         <div className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 shadow-lg">
             <p className="mb-1 text-xs font-semibold text-slate-200">{name}</p>
             <p className="text-sm text-slate-300">
-                {formatCurrency(value as number)}
+                {formatCompactNumber(value as number)}
             </p>
             <p className="text-sm text-slate-300">
                 {percentage?.toFixed(1) ?? '0.0'}% of total

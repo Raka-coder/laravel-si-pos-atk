@@ -299,7 +299,7 @@ export default function ShopSettingsPage() {
                             </div>
                             <div className="h-2 w-full rounded-full bg-muted">
                                 <div
-                                    className="h-full rounded-full bg-foreground/80 transition-all duration-300"
+                                    className="h-full rounded-full bg-primary transition-all duration-300"
                                     style={{ width: `${profileCompletion}%` }}
                                 />
                             </div>

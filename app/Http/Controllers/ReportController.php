@@ -23,7 +23,8 @@ class ReportController extends Controller
             ->whereBetween('created_at', [$startDate, $endDate.' 23:59:59'])
             ->where('payment_status', 'paid')
             ->orderBy('created_at', 'desc')
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString();
 
         $summary = [
             'total_revenue' => Transaction::whereBetween('created_at', [$startDate, $endDate.' 23:59:59'])
@@ -56,7 +57,8 @@ class ReportController extends Controller
         $expenses = Expense::with(['user', 'category'])
             ->whereBetween('date', [$startDate, $endDate])
             ->orderBy('date', 'desc')
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString();
 
         $totalByCategory = Expense::with('category')
             ->whereBetween('date', [$startDate, $endDate])

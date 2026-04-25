@@ -11,8 +11,10 @@ use App\Models\TransactionItem;
 use App\Services\MidtransService;
 use App\Services\TransactionService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -72,7 +74,7 @@ class TransactionController extends Controller
             try {
                 $midtransService = app(MidtransService::class);
 
-                \Log::info('Midtrans Service Config', [
+                Log::info('Midtrans Service Config', [
                     'isConfigured' => $midtransService->isConfigured(),
                     'serverKey' => $midtransService->isConfigured() ? 'set' : 'missing',
                 ]);
@@ -80,7 +82,7 @@ class TransactionController extends Controller
                 if ($midtransService->isConfigured()) {
                     $snapResult = $midtransService->createSnapToken($transaction);
 
-                    \Log::info('Midtrans Snap Result', $snapResult);
+                    Log::info('Midtrans Snap Result', $snapResult);
 
                     if ($snapResult['success']) {
                         return response()->json([
@@ -92,26 +94,27 @@ class TransactionController extends Controller
                             'redirect_url' => $snapResult['redirect_url'],
                         ]);
                     } else {
+                        $transaction->delete();
+
                         return response()->json([
                             'success' => false,
                             'error' => $snapResult['error'] ?? 'Failed to create snap token',
                         ], 500);
                     }
                 } else {
+                    $transaction->delete();
+
                     return response()->json([
                         'success' => false,
                         'error' => 'Midtrans is not configured. Please configure your keys in Shop Settings.',
                     ], 500);
                 }
             } catch (\Exception $e) {
-                \Log::error('Midtrans Payment Error: '.$e->getMessage(), [
+                Log::error('Midtrans Payment Error: '.$e->getMessage(), [
                     'trace' => $e->getTraceAsString(),
                 ]);
 
-                // If Midtrans fails, mark as failed
-                $transaction->update([
-                    'payment_status' => 'cancelled',
-                ]);
+                $transaction->delete();
 
                 return response()->json([
                     'success' => false,
@@ -122,6 +125,32 @@ class TransactionController extends Controller
 
         // For cash, redirect to transaction detail
         return redirect()->route('transactions.show', $transaction->id);
+    }
+
+    public function cancelMidtrans(Transaction $transaction): JsonResponse
+    {
+        if ($transaction->payment_method !== 'midtrans') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Transaction is not a Midtrans payment.',
+            ], 422);
+        }
+
+        if ($transaction->payment_status !== 'pending') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only pending Midtrans transactions can be cancelled.',
+            ], 422);
+        }
+
+        $transactionId = $transaction->id;
+        $transaction->delete();
+
+        return response()->json([
+            'success' => true,
+            'transaction_id' => $transactionId,
+            'cancelled' => true,
+        ]);
     }
 
     public function show(Transaction $transaction)
@@ -191,6 +220,8 @@ class TransactionController extends Controller
         ]);
 
         return DB::transaction(function () use ($request, $transaction) {
+            $actorId = $request->user()?->id ?? $transaction->user_id;
+
             $oldItems = $transaction->items()->get();
             foreach ($oldItems as $oldItem) {
                 $product = $oldItem->product;
@@ -209,7 +240,7 @@ class TransactionController extends Controller
                         'stock_after' => $product->stock,
                         'reason' => 'Edit transaction #'.$transaction->receipt_number,
                         'product_id' => $product->id,
-                        'user_id' => auth()->id(),
+                        'user_id' => $actorId,
                         'reference_id' => $transaction->id,
                     ]);
                 }
@@ -250,7 +281,7 @@ class TransactionController extends Controller
                     'stock_after' => $product->stock,
                     'reason' => 'Edit transaction #'.$transaction->receipt_number,
                     'product_id' => $product->id,
-                    'user_id' => auth()->id(),
+                    'user_id' => $actorId,
                     'reference_id' => $transaction->id,
                 ]);
             }

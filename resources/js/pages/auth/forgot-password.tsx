@@ -51,6 +51,10 @@ export default function ForgotPassword({ status }: { status?: string }) {
             )}
 
             <div className="space-y-6">
+                <div className="flex justify-center">
+                    <img src="/logo.svg" alt="POS Logo" className="h-10 w-10" />
+                </div>
+
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <div className="grid gap-2">
                         <Label htmlFor="email">Email address</Label>

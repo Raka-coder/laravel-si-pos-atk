@@ -7,9 +7,50 @@ use App\Models\ChatbotMessage;
 use App\Services\PosAgentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class ChatController
 {
+    private function sanitizeAssistantResponse(string $content): string
+    {
+        $cleaned = trim($content);
+
+        $cleaned = preg_replace('/\*\*(.*?)\*\*/s', '$1', $cleaned) ?? $cleaned;
+        $cleaned = preg_replace('/\*(.*?)\*/s', '$1', $cleaned) ?? $cleaned;
+        $cleaned = preg_replace('/`{1,3}(.*?)`{1,3}/s', '$1', $cleaned) ?? $cleaned;
+
+        $cleaned = preg_replace('/^\s*#{1,6}\s*/m', '', $cleaned) ?? $cleaned;
+        $cleaned = preg_replace('/^\s*[-*]\s+/m', '- ', $cleaned) ?? $cleaned;
+
+        $cleaned = preg_replace('/\|\s*---[^\n]*\n?/m', '', $cleaned) ?? $cleaned;
+        $cleaned = preg_replace_callback('/(?:^\|.*\|\s*\n?){2,}/m', function (array $matches): string {
+            $lines = preg_split('/\r?\n/', trim($matches[0])) ?: [];
+            $normalized = [];
+
+            foreach ($lines as $line) {
+                $trimmedLine = trim($line);
+
+                if ($trimmedLine === '' || Str::contains($trimmedLine, '---')) {
+                    continue;
+                }
+
+                $cells = array_values(array_filter(array_map('trim', explode('|', trim($trimmedLine, '|'))), fn ($cell) => $cell !== ''));
+
+                if ($cells === []) {
+                    continue;
+                }
+
+                $normalized[] = '- '.implode(' - ', $cells);
+            }
+
+            return implode(PHP_EOL, $normalized);
+        }, $cleaned) ?? $cleaned;
+
+        $cleaned = preg_replace('/\n{3,}/', "\n\n", $cleaned) ?? $cleaned;
+
+        return trim($cleaned);
+    }
+
     public function index()
     {
         return inertia('Chat/Index');
@@ -32,6 +73,8 @@ class ChatController
                 $user?->id,
                 $conversationId
             );
+
+            $result['response'] = $this->sanitizeAssistantResponse($result['response']);
 
             $conversation = ChatbotConversation::where('user_id', $user?->id)
                 ->orderBy('created_at', 'desc')
@@ -99,10 +142,14 @@ class ChatController
             ->orderBy('created_at')
             ->get()
             ->map(function ($msg) {
+                $content = $msg->role === 'assistant'
+                    ? $this->sanitizeAssistantResponse($msg->content)
+                    : $msg->content;
+
                 return [
                     'id' => $msg->id,
                     'role' => $msg->role,
-                    'content' => $msg->content,
+                    'content' => $content,
                     'used_tool' => $msg->used_tool,
                     'tool_used' => $msg->tool_used,
                     'created_at' => $msg->created_at->toIso8601String(),

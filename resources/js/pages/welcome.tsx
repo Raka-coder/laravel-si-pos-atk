@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
 import FeatureGrid from '@/components/landing/FeatureGrid';
+import Footer from '@/components/landing/Footer';
 import Header from '@/components/landing/Header';
 import Hero from '@/components/landing/Hero';
 
@@ -23,22 +24,7 @@ export default function Welcome() {
                     <FeatureGrid />
                 </main>
 
-                <footer className="w-full border-t border-border py-12">
-                    <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 px-4 sm:flex-row">
-                        <div className="flex items-center gap-2">
-                            <img src="/logo.svg" alt="POS Logo" className="h-6 w-6 opacity-60" />
-                            <span className="font-semibold text-muted-foreground">POS ATK-Sync</span>
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                            © {new Date().getFullYear()} POS ATK-Sync. Built with Laravel, Inertia, and React.
-                        </p>
-                        <div className="flex gap-6 text-sm font-medium text-muted-foreground">
-                            <a href="#" className="hover:text-primary transition-colors">Privacy</a>
-                            <a href="#" className="hover:text-primary transition-colors">Terms</a>
-                            <a href="#" className="hover:text-primary transition-colors">Contact</a>
-                        </div>
-                    </div>
-                </footer>
+                <Footer />
             </div>
         </div>
     );

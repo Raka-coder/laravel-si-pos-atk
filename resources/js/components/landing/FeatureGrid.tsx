@@ -4,7 +4,7 @@ import { Package, BarChart3, CreditCard, Bot, ShieldCheck, Users } from 'lucide-
 const features = [
     {
         title: 'Inventory Management',
-        description: 'Track stock levels in real-time with automated low-stock alerts and smart reordering.',
+        description: 'Track stock levels in real-time with automated low-stock alerts.',
         icon: Package,
     },
     {
@@ -36,7 +36,7 @@ const features = [
 
 export default function FeatureGrid() {
     return (
-        <section className="relative w-full max-w-7xl px-4 py-24">
+        <section className="relative w-full max-w-5xl px-4 py-24">
             <div className="mb-16 text-center">
                 <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
                     Everything you need to <br className="hidden sm:block" />

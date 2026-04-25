@@ -13,7 +13,7 @@ class ExampleTest extends TestCase
     {
         $response = $this->get(route('home'));
 
-        // Home route redirects to login
-        $response->assertRedirect(route('login'));
+        // Home route now shows the landing page
+        $response->assertStatus(200);
     }
 }

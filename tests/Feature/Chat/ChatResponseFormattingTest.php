@@ -26,7 +26,7 @@ class ChatResponseFormattingTest extends TestCase
                 ]);
         });
 
-        $response = $this->actingAs($user)->postJson('/chat/send', [
+        $response = $this->actingAs($user)->postWithCsrf('/chat/send', [
             'message' => 'ringkasan penjualan hari ini',
         ]);
 

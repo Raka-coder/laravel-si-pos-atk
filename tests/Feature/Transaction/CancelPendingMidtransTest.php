@@ -22,7 +22,7 @@ class CancelPendingMidtransTest extends TestCase
         ]);
 
         $response = $this->actingAs($user)
-            ->deleteJson(route('transactions.cancel-midtrans', $transaction));
+            ->deleteWithCsrf(route('transactions.cancel-midtrans', $transaction));
 
         $response->assertOk()->assertJson([
             'success' => true,
@@ -46,7 +46,7 @@ class CancelPendingMidtransTest extends TestCase
         ]);
 
         $response = $this->actingAs($user)
-            ->deleteJson(route('transactions.cancel-midtrans', $transaction));
+            ->deleteWithCsrf(route('transactions.cancel-midtrans', $transaction));
 
         $response->assertStatus(422)->assertJson([
             'success' => false,
@@ -70,7 +70,7 @@ class CancelPendingMidtransTest extends TestCase
         ]);
 
         $response = $this->actingAs($user)
-            ->deleteJson(route('transactions.cancel-midtrans', $transaction));
+            ->deleteWithCsrf(route('transactions.cancel-midtrans', $transaction));
 
         $response->assertStatus(422)->assertJson([
             'success' => false,

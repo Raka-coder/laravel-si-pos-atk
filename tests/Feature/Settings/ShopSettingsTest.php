@@ -16,7 +16,7 @@ class ShopSettingsTest extends TestCase
     {
         $owner = User::factory()->owner()->create();
 
-        ShopSetting::query()->create([
+        ShopSetting::query()->updateOrCreate([], [
             'shop_name' => 'Toko Uji',
             'tax_rate' => 11,
             'paper_size' => 'mm_80',

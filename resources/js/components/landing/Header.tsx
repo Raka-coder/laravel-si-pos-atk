@@ -13,7 +13,7 @@ export default function Header() {
                         <img src="/logo.svg" alt="POS Logo" className="h-7 w-7" />
                     </div>
                     <span className="text-xl font-bold tracking-tight text-foreground">
-                        POS ATK-Sync
+                        PoS ATK-Sync
                     </span>
                 </Link>
 

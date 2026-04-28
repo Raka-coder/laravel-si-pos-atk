@@ -6,6 +6,7 @@ export default function Hero() {
     return (
         <section className="relative flex min-h-[90vh] w-full flex-col items-center justify-center overflow-hidden px-4 pt-32 pb-16">
             <div className="z-10 flex w-full max-w-7xl flex-col items-center text-center">
+                <span className="sr-only">Welcome to POS ATK-Sync</span>
                 {/* Badge */}
                 <div className="mb-6 flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 backdrop-blur-md">
                     <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse" />
@@ -17,8 +18,8 @@ export default function Hero() {
                 {/* Headline */}
                 <h1 className="mb-6 max-w-4xl text-5xl font-extrabold tracking-tight text-foreground sm:text-6xl lg:text-7xl">
                     Smarter Retail, <br />
-                    <span className="bg-gradient-to-r from-primary to-indigo-600 bg-clip-text text-transparent dark:to-indigo-400">
-                        Seamless Payments
+                    <span className="bg-linear-to-r from-primary to-indigo-600 bg-clip-text text-transparent dark:to-indigo-400">
+                        Welcome to POS ATK-Sync
                     </span>
                 </h1>
 
@@ -47,7 +48,7 @@ export default function Hero() {
                     <div className="relative transform-gpu transition-all duration-700 ease-out hover:rotate-x-2 hover:rotate-y-1 hover:scale-[1.02]">
                         {/* Glassmorphic Mockup Container */}
                         <div className="overflow-hidden rounded-3xl border border-white/30 bg-white/70 p-2 shadow-2xl backdrop-blur-2xl dark:border-white/10 dark:bg-black/50">
-                            <div className="aspect-[16/10] overflow-hidden rounded-2xl bg-background">
+                            <div className="aspect-16/10 overflow-hidden rounded-2xl bg-background">
                                 {/* Simplified Dashboard Content Simulation */}
                                 <div className="flex h-full w-full flex-col p-6">
                                     <div className="mb-8 flex items-center justify-between">

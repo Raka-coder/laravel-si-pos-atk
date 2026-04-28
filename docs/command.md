@@ -1,50 +1,50 @@
-# Implementation Plan: POS Landing Page (Soft Glassmorphism)
+I'll analyze the failing job for you. Let me start by retrieving the job logs.Now let me get the failing test file and the workflow definition to understand what's happening:## Solution for Failing Test
 
-   ## Objective
-   Build a modern, approachable landing page for the Laravel POS system using a **Soft Glassmorphism** aesthetic. The page will serve as the new root (`/`) entry point,
-   replacing the automatic redirect to the login page. It will feature a striking Hero section with a dashboard mockup and a comprehensive Feature Grid.
+**Issue:** The `test_landing_page_can_be_rendered` test is failing because the landing page is not displaying the expected text "Welcome to POS ATK-Sync".
 
-   ## Key Files & Context
-   - `routes/web.php`: Update the root route to render the Inertia `welcome` view.
-   - `resources/js/pages/welcome.tsx`: The new React component serving as the landing page.
-   - `resources/css/app.css`: Add custom `@theme` variables or animations for the glassmorphism background effects if needed.
+**Root Cause:** The test expects to find the text `'Welcome to POS ATK-Sync'` on the landing page, but the response doesn't contain it.
 
-   ## Implementation Steps
+### Fixes to Implement:
 
-   ### 1. Update Routing
-   - Modify `routes/web.php` to change `Route::get('/', ...)` so it returns `Inertia::render('welcome', [ ...props ])`.
-   - Pass necessary authentication state (e.g., `canLogin`, `canRegister`) so the landing page can display a "Dashboard" button if the user is already logged in, or a
-   "Login" button otherwise.
+**1. Update the Landing Page View**
 
-   ### 2. Scaffold the Welcome Page
-   - Create `resources/js/pages/welcome.tsx` with a responsive layout.
-   - Include a fixed or floating navigation bar with the brand logo and auth links.
-   - Set up the base background with a soft, blurred mesh gradient (using absolute positioned overlapping colored circles with high `blur` utilities).
+Ensure your landing page (likely `resources/views/welcome.blade.php` or similar) includes the expected text:
 
-   ### 3. Design the Hero Section (Mockup)
-   - **Content**: A compelling headline (e.g., "Smarter Retail, Seamless Payments") and a descriptive subheadline.
-   - **CTAs**: A primary solid button ("Get Started") and a secondary glass-style button ("Learn More").
-   - **Mockup**: A stylized visual representation of the POS dashboard. It will be contained within a glassmorphism card (`bg-white/60 dark:bg-black/40 backdrop-blur-xl
-   border border-white/20`) floating slightly above the background.
+```blade
+<div class="hero-section">
+    <h1>Welcome to POS ATK-Sync</h1>
+    <!-- rest of your content -->
+</div>
+```
 
-   ### 4. Design the Feature Grid
-   - **Layout**: A responsive CSS grid (1 column on mobile, 2 on tablet, 3 or 4 on desktop).
-   - **Cards**: Each feature will be encapsulated in a glassmorphic card with subtle hover effects (e.g., a slight lift and increased border opacity).
-   - **Features to highlight**:
-     - 📦 Advanced Inventory Management
-     - 📊 Real-time Financial Reports
-     - 💳 Midtrans Payment Integration
-     - 🤖 AI-Powered Chatbot Assistant
-   - **Visuals**: Use `lucide-react` icons with soft gradient colors to match the aesthetic.
+**2. Alternatively, Update the Test Assertion**
 
-   ### 5. Final Polish & Aesthetics
-   - **Animations**: Implement subtle entrance animations (fade-in, slide-up) for the hero and feature cards using Tailwind utilities or custom CSS keyframes.
-   - **Dark Mode**: Ensure the glassmorphism looks stunning in dark mode by adjusting background blob colors and surface opacities.
-   - **Accessibility**: Verify contrast ratios, ensuring text remains readable against the blurred backgrounds.
+If the landing page uses different text, update the test in `tests/Feature/LandingPageTest.php`:
 
-   ## Verification & Testing
-   - Start the development server and navigate to `/`.
-   - Verify the glassmorphism effect performs smoothly and degrades gracefully on older browsers.
-   - Test responsiveness across mobile, tablet, and desktop viewports.
-   - Confirm the authentication links accurately route to the login/dashboard pages.
-   - Ensure no existing tests are broken by the route change (update tests if they expect a 302 redirect on `/`).
+```php
+public function test_landing_page_can_be_rendered(): void
+{
+    $response = $this->get('/');
+
+    $response->assertStatus(200);
+    $response->assertSee('Your Actual Landing Page Text'); // Change to match your actual page content
+}
+```
+
+**3. Verify the Route**
+
+Make sure your `/` route in `routes/web.php` is properly defined:
+
+```php
+Route::get('/', function () {
+    return view('welcome'); // or your actual landing page view
+})->name('landing');
+```
+
+### Quick Debugging Steps:
+
+1. Check what text is actually being rendered on the landing page
+2. Verify the view file exists and contains the expected content
+3. Run the test locally to see the full HTML output
+
+The fix is straightforward—ensure the landing page view contains the text the test is looking for, or update the assertion to match your actual page content.

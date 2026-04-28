@@ -41,7 +41,7 @@ Metode *Blackbox Testing* dipilih untuk proyek POS ini berdasarkan alasan beriku
 #### **C. Modul Kasir / Point of Sale (POS)**
 | ID | Fitur | Aktor | Skenario Pengujian | Input (Data) | Hasil yang Diharapkan | Status |
 |:---|:---|:---:|:---|:---|:---|:---:|
-| POS-01 | Cari Produk | Semua | Mencari produk berdasarkan nama/SKU | Keyword: "Kopi" | Daftar produk terfilter sesuai keyword | Berhasil |
+| POS-01 | Cari Produk | Semua | Mencari produk berdasarkan nama/SKU | Keyword: "buku" | Daftar produk terfilter sesuai keyword | Berhasil |
 | POS-02 | Keranjang Belanja | Semua | Menambah beberapa produk ke keranjang | Klik produk berkali-kali | Qty bertambah, subtotal terhitung otomatis | Berhasil |
 | POS-03 | Edit Item Keranjang | Semua | Mengubah Qty atau menghapus item | Ubah Qty jadi 5, klik Hapus | Total belanja terupdate secara realtime | Berhasil |
 | POS-04 | Pembayaran Tunai | Semua | Transaksi dengan uang pas/lebih | Nominal bayar >= Total | Transaksi sukses, kembalian dihitung benar | Berhasil |
@@ -65,8 +65,8 @@ Metode *Blackbox Testing* dipilih untuk proyek POS ini berdasarkan alasan beriku
 #### **F. Modul Chatbot AI & Pengaturan**
 | ID | Fitur | Aktor | Skenario Pengujian | Input (Data) | Hasil yang Diharapkan | Status |
 |:---|:---|:---:|:---|:---|:---|:---:|
-| AI-01 | Konsultasi Data | Owner | Menanyakan data via Chat | "Siapa pelanggan terajin?" | AI memberikan analisis data pelanggan | Berhasil |
-| SET-01 | Branding Toko | Owner | Mengubah Nama Toko | "POS Digital Jaya" | Perubahan muncul di seluruh sistem & struk | Berhasil |
+| AI-01 | Konsultasi Data | Owner | Menanyakan data via Chat | "Berapa penghasilan hari/bulan ini?" | AI memberikan analisis data transaksi | Berhasil |
+| SET-01 | Keputusan Bisnis | Owner | Menanyakan Saran via Chat | "Bagaimana saran penjualan produk saat ini?" | Saran & balasan dijawab oleh chatbot | Berhasil |
 
 ---
 

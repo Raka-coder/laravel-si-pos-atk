@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Head, router } from '@inertiajs/react';
-import { Mail, Lock } from 'lucide-react';
+import { Mail, Lock, ShieldCheck, User } from 'lucide-react';
 import { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
@@ -121,12 +121,21 @@ export default function Login({ status, canResetPassword }: Props) {
                                             value as 'owner' | 'cashier',
                                         )
                                     }
+                                    className="w-full"
                                 >
-                                    <TabsList className="grid w-full grid-cols-2">
-                                        <TabsTrigger value="owner">
+                                    <TabsList className="grid w-full grid-cols-2 p-1 bg-muted/60 border border-muted-foreground/10 dark:bg-muted dark:border-transparent">
+                                        <TabsTrigger 
+                                            value="owner"
+                                            className="flex items-center gap-2 transition-all data-active:shadow-sm data-active:bg-background data-active:text-primary dark:data-active:bg-input/50"
+                                        >
+                                            <ShieldCheck className="h-3.5 w-3.5" />
                                             Owner
                                         </TabsTrigger>
-                                        <TabsTrigger value="cashier">
+                                        <TabsTrigger 
+                                            value="cashier"
+                                            className="flex items-center gap-2 transition-all data-active:shadow-sm data-active:bg-background data-active:text-primary dark:data-active:bg-input/50"
+                                        >
+                                            <User className="h-3.5 w-3.5" />
                                             Cashier
                                         </TabsTrigger>
                                     </TabsList>

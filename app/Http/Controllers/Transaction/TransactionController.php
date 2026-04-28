@@ -9,6 +9,7 @@ use App\Models\StockMovement;
 use App\Models\Transaction;
 use App\Models\TransactionItem;
 use App\Services\MidtransService;
+use App\Services\ReceiptPrinterService;
 use App\Services\TransactionService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
@@ -184,6 +185,25 @@ class TransactionController extends Controller
         ]);
 
         return $pdf->download('receipt-'.$transaction->receipt_number.'.pdf');
+    }
+
+    public function printDirect(Transaction $transaction, ReceiptPrinterService $printerService)
+    {
+        $transaction->load(['items', 'user']);
+
+        $success = $printerService->printTransaction($transaction);
+
+        if ($success) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Resi sedang dicetak.',
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal mencetak resi. Pastikan printer terhubung.',
+        ], 500);
     }
 
     public function pos(): Response

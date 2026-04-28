@@ -131,6 +131,34 @@ export default function TransactionShow() {
     const { transaction, products, taxRate } = usePage<Props>().props;
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [isPrinting, setIsPrinting] = useState(false);
+
+    const handlePrintDirect = async () => {
+        setIsPrinting(true);
+        
+        try {
+            const response = await fetch(`/transactions/${transaction.id}/print-direct`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+        });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                alert(result.message);
+            } else {
+                alert(result.message || 'Gagal mencetak struk.');
+            }
+        } catch (error) {
+            console.error('Print error:', error);
+            alert('Terjadi kesalahan saat mencoba mencetak.');
+        } finally {
+            setIsPrinting(false);
+        }
+    };
 
     const {
         register,
@@ -592,13 +620,22 @@ export default function TransactionShow() {
                                 </DialogContent>
                             </Dialog>
                         )}
+                        <Button 
+                            variant="outline" 
+                            size={'lg'} 
+                            onClick={handlePrintDirect}
+                            disabled={isPrinting}
+                        >
+                            <Printer className="mr-2 h-4 w-4" />
+                            {isPrinting ? 'Printing...' : 'Print Thermal'}
+                        </Button>
                         <Button variant="outline" size={'lg'} asChild>
                             <a
                                 href={`/transactions/receipt/${transaction.id}`}
                                 target="_blank"
                             >
                                 <Printer className="mr-2 h-4 w-4" />
-                                Print Receipt
+                                Download PDF
                             </a>
                         </Button>
                         <Button variant="outline" size={'lg'} asChild>

@@ -59,7 +59,7 @@ export default function Error({ status }: Props) {
                             className="flex-1 rounded-xl border-white/20 bg-white/40 backdrop-blur-xl dark:border-white/10 dark:bg-black/20"
                             onClick={() => window.history.back()}
                         >
-                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            <ArrowLeft className="mr-0.5 h-4 w-4" />
                             Go Back
                         </Button>
                     </div>

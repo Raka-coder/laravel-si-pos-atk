@@ -236,7 +236,7 @@ export default function SalesReport() {
                                         variant="outline"
                                         className="w-48 justify-start text-left font-normal"
                                     >
-                                        <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                                        <CalendarIcon className="mr-0.5 h-4 w-4 text-muted-foreground" />
                                         {startDate ? (
                                             format(startDate, 'PPP')
                                         ) : (
@@ -277,7 +277,7 @@ export default function SalesReport() {
                                         variant="outline"
                                         className="w-48 justify-start text-left font-normal"
                                     >
-                                        <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                                        <CalendarIcon className="mr-0.5 h-4 w-4 text-muted-foreground" />
                                         {endDate ? (
                                             format(endDate, 'PPP')
                                         ) : (

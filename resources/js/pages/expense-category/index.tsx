@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Head, router, usePage } from '@inertiajs/react';
-import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { Check, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -63,6 +63,7 @@ interface Props {
         data: ExpenseCategory[];
         current_page: number;
         last_page: number;
+        per_page: number;
         total: number;
     };
     filters: {
@@ -209,7 +210,7 @@ export default function ExpenseCategoryIndex() {
                     <Dialog open={isOpen} onOpenChange={setIsOpen}>
                         <DialogTrigger asChild>
                             <Button size={'lg'}>
-                                <Plus className="mr-2 h-4 w-4" />
+                                <Plus className="mr-0.5 h-4 w-4" />
                                 Add Expense Category
                             </Button>
                         </DialogTrigger>
@@ -244,9 +245,14 @@ export default function ExpenseCategoryIndex() {
                                     onClick={createHandleSubmit(onCreateSubmit)}
                                     disabled={isCreateProcessing}
                                 >
-                                    {isCreateProcessing
-                                        ? 'Creating...'
-                                        : 'Create'}
+                                    {isCreateProcessing ? (
+                                        'Creating...'
+                                    ) : (
+                                        <>
+                                            <Plus className="mr-0.5 h-4 w-4" />
+                                            Create
+                                        </>
+                                    )}
                                 </Button>
                             </DialogFooter>
                         </DialogContent>
@@ -271,7 +277,7 @@ export default function ExpenseCategoryIndex() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>ID</TableHead>
+                                    <TableHead>No</TableHead>
                                     <TableHead>Name</TableHead>
                                     <TableHead className="text-right">
                                         Actions
@@ -279,9 +285,14 @@ export default function ExpenseCategoryIndex() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {categories.data.map((category) => (
+                                {categories.data.map((category, index) => (
                                     <TableRow key={category.id}>
-                                        <TableCell>{category.id}</TableCell>
+                                        <TableCell>
+                                            {(categories.current_page - 1) *
+                                                categories.per_page +
+                                                index +
+                                                1}
+                                        </TableCell>
                                         <TableCell>{category.name}</TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex items-center justify-end gap-2">
@@ -458,7 +469,14 @@ export default function ExpenseCategoryIndex() {
                             onClick={editHandleSubmit(onEditSubmit)}
                             disabled={isEditProcessing}
                         >
-                            {isEditProcessing ? 'Saving...' : 'Save Changes'}
+                            {isEditProcessing ? (
+                                'Saving...'
+                            ) : (
+                                <>
+                                    <Check className="mr-0.5 h-4 w-4" />
+                                    Save Changes
+                                </>
+                            )}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

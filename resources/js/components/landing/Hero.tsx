@@ -38,7 +38,7 @@ export default function Hero() {
                         </Link>
                     </Button>
                     <Button variant="outline" size="lg" className="h-14 rounded-2xl border-white/20 bg-white/40 px-8 text-lg font-semibold backdrop-blur-xl transition-transform hover:scale-105 active:scale-95 dark:border-white/10 dark:bg-black/20">
-                        <Play className="mr-2 h-5 w-5 fill-primary text-primary" />
+                        <Play className="mr-0.5 h-5 w-5 fill-primary text-primary" />
                         Watch Demo
                     </Button>
                 </div>

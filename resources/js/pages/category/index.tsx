@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Head, usePage, router } from '@inertiajs/react';
-import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { Check, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -207,7 +207,7 @@ export default function CategoryIndex() {
                     <Dialog open={isOpen} onOpenChange={setIsOpen}>
                         <DialogTrigger asChild>
                             <Button size="lg">
-                                <Plus className="mr-2 h-4 w-4" />
+                                <Plus className="mr-0.5 h-4 w-4" />
                                 Add Product Category
                             </Button>
                         </DialogTrigger>
@@ -244,9 +244,14 @@ export default function CategoryIndex() {
                                     onClick={createHandleSubmit(onCreateSubmit)}
                                     disabled={isCreateProcessing}
                                 >
-                                    {isCreateProcessing
-                                        ? 'Creating...'
-                                        : 'Create'}
+                                    {isCreateProcessing ? (
+                                        'Creating...'
+                                    ) : (
+                                        <>
+                                            <Plus className="mr-0.5 h-4 w-4" />
+                                            Create
+                                        </>
+                                    )}
                                 </Button>
                             </DialogFooter>
                         </DialogContent>
@@ -273,7 +278,7 @@ export default function CategoryIndex() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>ID</TableHead>
+                                    <TableHead>No</TableHead>
                                     <TableHead>Name</TableHead>
                                     <TableHead className="text-right">
                                         Actions
@@ -281,13 +286,16 @@ export default function CategoryIndex() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {categories.data.map((category) => (
+                                {categories.data.map((category, index) => (
                                     <TableRow
                                         key={category.id}
                                         className="hover:bg-muted/50"
                                     >
                                         <TableCell className="text-sm">
-                                            {category.id}
+                                            {(categories.current_page - 1) *
+                                                categories.per_page +
+                                                index +
+                                                1}
                                         </TableCell>
                                         <TableCell className="text-sm">
                                             {category.name}
@@ -468,7 +476,14 @@ export default function CategoryIndex() {
                             onClick={editHandleSubmit(onEditSubmit)}
                             disabled={isEditProcessing}
                         >
-                            {isEditProcessing ? 'Saving...' : 'Save Changes'}
+                            {isEditProcessing ? (
+                                'Saving...'
+                            ) : (
+                                <>
+                                    <Check className="mr-0.5 h-4 w-4" />
+                                    Save Changes
+                                </>
+                            )}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

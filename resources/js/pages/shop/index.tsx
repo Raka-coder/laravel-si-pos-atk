@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Head, router, usePage } from '@inertiajs/react';
-import { Receipt, Store, Trash2, Upload } from 'lucide-react';
+import { Check, Receipt, Store, Trash2, Upload } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
@@ -251,7 +251,14 @@ export default function ShopSettingsPage() {
                         disabled={isProcessing}
                         size={'lg'}
                     >
-                        {isProcessing ? 'Saving...' : 'Save Changes'}
+                        {isProcessing ? (
+                            'Saving...'
+                        ) : (
+                            <>
+                                <Check className="mr-0.5 h-4 w-4" />
+                                Save Changes
+                            </>
+                        )}
                     </Button>
                 </div>
 

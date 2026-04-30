@@ -1,6 +1,7 @@
 import { Transition } from '@headlessui/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Head, Link, usePage, router } from '@inertiajs/react';
+import { Save } from 'lucide-react';
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -136,8 +137,14 @@ export default function Profile({
                             disabled={isProcessing}
                             data-test="update-profile-button"
                         >
-                            {isProcessing ? 'Saving...' : 'Save'}
-                        </Button>
+                            {isProcessing ? (
+                                'Saving...'
+                            ) : (
+                            <>
+                                <Save className="mr-0.5 h-4 w-4" />
+                                Save
+                            </>
+                            )}                        </Button>
 
                         <Transition
                             show={recentlySuccessful}

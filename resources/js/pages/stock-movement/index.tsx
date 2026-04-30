@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Head, router, usePage } from '@inertiajs/react';
-import { Plus } from 'lucide-react';
+import { Plus, Save } from 'lucide-react';
 import { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
@@ -19,6 +19,15 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Pagination,
+    PaginationContent,
+    PaginationEllipsis,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from '@/components/ui/pagination';
 import {
     Select,
     SelectContent,
@@ -82,6 +91,7 @@ interface Props {
         data: StockMovement[];
         current_page: number;
         last_page: number;
+        per_page: number;
         total: number;
     };
     products: Product[];
@@ -138,7 +148,7 @@ const getTypeLabel = (type: string) => {
 };
 
 export default function StockMovementIndex() {
-    const { movements, products } = usePage<Props>().props;
+    const { movements, products, filters } = usePage<Props>().props;
 
     const [isOpen, setIsOpen] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -173,6 +183,32 @@ export default function StockMovementIndex() {
         });
     };
 
+    const getPaginationLink = (page: number) => {
+        const params = new URLSearchParams();
+
+        if (filters.product_id) {
+            params.set('product_id', filters.product_id);
+        }
+
+        if (filters.type) {
+            params.set('type', filters.type);
+        }
+
+        if (filters.date_from) {
+            params.set('date_from', filters.date_from);
+        }
+
+        if (filters.date_to) {
+            params.set('date_to', filters.date_to);
+        }
+
+        if (page > 1) {
+            params.set('page', page.toString());
+        }
+
+        return params.toString() ? `?${params.toString()}` : '/stock-movements';
+    };
+
     return (
         <>
             <Head title="Stock Movements" />
@@ -183,7 +219,7 @@ export default function StockMovementIndex() {
                     <Dialog open={isOpen} onOpenChange={setIsOpen}>
                         <DialogTrigger asChild>
                             <Button size="lg">
-                                <Plus className="mr-2 h-4 w-4" />
+                                <Plus className="mr-0.5 h-4 w-4" />
                                 Add Movement
                             </Button>
                         </DialogTrigger>
@@ -287,7 +323,14 @@ export default function StockMovementIndex() {
                                     onClick={handleSubmit(onSubmit)}
                                     disabled={isProcessing}
                                 >
-                                    {isProcessing ? 'Saving...' : 'Save'}
+                                    {isProcessing ? (
+                                        'Saving...'
+                                    ) : (
+                                        <>
+                                            <Save className="mr-0.5 h-4 w-4" />
+                                            Save
+                                        </>
+                                    )}
                                 </Button>
                             </DialogFooter>
                         </DialogContent>
@@ -298,6 +341,7 @@ export default function StockMovementIndex() {
                     <Table>
                         <TableHeader>
                             <TableRow>
+                                <TableHead>No</TableHead>
                                 <TableHead>Date</TableHead>
                                 <TableHead>Product</TableHead>
                                 <TableHead className="text-center">
@@ -317,8 +361,14 @@ export default function StockMovementIndex() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {movements.data.map((movement) => (
+                            {movements.data.map((movement, index) => (
                                 <TableRow key={movement.id}>
+                                    <TableCell>
+                                        {(movements.current_page - 1) *
+                                            movements.per_page +
+                                            index +
+                                            1}
+                                    </TableCell>
                                     <TableCell className="whitespace-nowrap">
                                         {formatDate(movement.created_at)}
                                     </TableCell>
@@ -368,7 +418,7 @@ export default function StockMovementIndex() {
                             {movements.data.length === 0 && (
                                 <TableRow>
                                     <TableCell
-                                        colSpan={8}
+                                        colSpan={9}
                                         className="h-24 text-center text-muted-foreground"
                                     >
                                         No stock movements found
@@ -377,6 +427,87 @@ export default function StockMovementIndex() {
                             )}
                         </TableBody>
                     </Table>
+
+                    {/* Pagination */}
+                    {movements.last_page >= 1 && (
+                        <div className="mt-4">
+                            <Pagination>
+                                <PaginationContent>
+                                    <PaginationItem>
+                                        <PaginationPrevious
+                                            href={
+                                                movements.current_page > 1
+                                                    ? getPaginationLink(
+                                                          movements.current_page -
+                                                              1,
+                                                      )
+                                                    : undefined
+                                            }
+                                            className={
+                                                movements.current_page <= 1
+                                                    ? 'pointer-events-none opacity-50'
+                                                    : ''
+                                            }
+                                        />
+                                    </PaginationItem>
+
+                                    {Array.from(
+                                        { length: movements.last_page },
+                                        (_, i) => i + 1,
+                                    )
+                                        .filter(
+                                            (page) =>
+                                                page === 1 ||
+                                                page === movements.last_page ||
+                                                Math.abs(
+                                                    page -
+                                                        movements.current_page,
+                                                ) <= 2,
+                                        )
+                                        .map((page, index, array) => (
+                                            <PaginationItem key={page}>
+                                                {index > 0 &&
+                                                page - array[index - 1] > 1 ? (
+                                                    <PaginationEllipsis />
+                                                ) : (
+                                                    <PaginationLink
+                                                        href={getPaginationLink(
+                                                            page,
+                                                        )}
+                                                        isActive={
+                                                            page ===
+                                                            movements.current_page
+                                                        }
+                                                    >
+                                                        {page}
+                                                    </PaginationLink>
+                                                )}
+                                            </PaginationItem>
+                                        ))}
+
+                                    <PaginationItem>
+                                        <PaginationNext
+                                            href={
+                                                movements.current_page <
+                                                movements.last_page
+                                                    ? getPaginationLink(
+                                                          movements.current_page +
+                                                              1,
+                                                      )
+                                                    : undefined
+                                            }
+                                            className={
+                                                movements.current_page >=
+                                                movements.last_page
+                                                    ? 'pointer-events-none opacity-50'
+                                                    : ''
+                                            }
+                                        />
+                                    </PaginationItem>
+                                </PaginationContent>
+                            </Pagination>
+                        </div>
+                    )}
                 </div>
             </div>
         </>

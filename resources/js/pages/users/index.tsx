@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Head, usePage, router } from '@inertiajs/react';
 import {
+    Check,
     Pencil,
     Plus,
     Search,
@@ -317,7 +318,7 @@ export default function UserIndex() {
                     <Dialog open={isOpen} onOpenChange={setIsOpen}>
                         <DialogTrigger asChild>
                             <Button size={'lg'}>
-                                <Plus className="mr-2 h-4 w-4" />
+                                <Plus className="mr-0.5 h-4 w-4" />
                                 Add User
                             </Button>
                         </DialogTrigger>
@@ -436,9 +437,14 @@ export default function UserIndex() {
                                     onClick={createHandleSubmit(onCreateSubmit)}
                                     disabled={isCreateProcessing}
                                 >
-                                    {isCreateProcessing
-                                        ? 'Creating...'
-                                        : 'Create'}
+                                    {isCreateProcessing ? (
+                                        'Creating...'
+                                    ) : (
+                                        <>
+                                            <Plus className="mr-0.5 h-4 w-4" />
+                                            Create
+                                        </>
+                                    )}
                                 </Button>
                             </DialogFooter>
                         </DialogContent>
@@ -466,7 +472,7 @@ export default function UserIndex() {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead className="text-left">
-                                        ID
+                                        No
                                     </TableHead>
                                     <TableHead className="text-left">
                                         Name
@@ -805,7 +811,14 @@ export default function UserIndex() {
                             onClick={editHandleSubmit(onEditSubmit)}
                             disabled={isEditProcessing}
                         >
-                            {isEditProcessing ? 'Saving...' : 'Save Changes'}
+                            {isEditProcessing ? (
+                                'Saving...'
+                            ) : (
+                                <>
+                                    <Check className="mr-0.5 h-4 w-4" />
+                                    Save Changes
+                                </>
+                            )}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -859,9 +872,14 @@ export default function UserIndex() {
                             onClick={resetHandleSubmit(onResetPasswordSubmit)}
                             disabled={isResetProcessing}
                         >
-                            {isResetProcessing
-                                ? 'Resetting...'
-                                : 'Reset Password'}
+                            {isResetProcessing ? (
+                                'Resetting...'
+                            ) : (
+                                <>
+                                    <Key className="mr-0.5 h-4 w-4" />
+                                    Reset Password
+                                </>
+                            )}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

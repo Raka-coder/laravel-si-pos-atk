@@ -626,7 +626,7 @@ export default function POSIndex() {
                                 onClick={handleClearCart}
                                 disabled={items.length === 0}
                             >
-                                <Trash2 className="mr-2 h-4 w-4" />
+                                <Trash2 className="mr-0.5 h-4 w-4" />
                                 Clear
                             </Button>
                             <Button
@@ -940,7 +940,7 @@ export default function POSIndex() {
                                         'QR Not Available'
                                     ) : (
                                         <>
-                                            <CheckCircle2 className="mr-2 h-4 w-4" />
+                                            <CheckCircle2 className="mr-0.5 h-4 w-4" />
                                             Sudah Bayar
                                         </>
                                     )}

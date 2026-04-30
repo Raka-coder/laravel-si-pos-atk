@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Head, router, usePage } from '@inertiajs/react';
 import { format } from 'date-fns';
-import { CalendarIcon, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { CalendarIcon, Check, Pencil, Plus, Save, Search, Trash2 } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
@@ -291,7 +291,7 @@ export default function ExpenseIndex() {
                     <Dialog open={isOpen} onOpenChange={setIsOpen}>
                         <DialogTrigger asChild>
                             <Button size={'lg'}>
-                                <Plus className="mr-2 h-4 w-4" />
+                                <Plus className="mr-0.5 h-4 w-4" />
                                 Add Expense
                             </Button>
                         </DialogTrigger>
@@ -337,7 +337,7 @@ export default function ExpenseIndex() {
                                                 variant="outline"
                                                 className="w-full justify-start text-left font-normal"
                                             >
-                                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                                <CalendarIcon className="mr-0.5 h-4 w-4" />
                                                 {createFormData.date ? (
                                                     format(
                                                         new Date(
@@ -439,7 +439,14 @@ export default function ExpenseIndex() {
                                     onClick={createHandleSubmit(onCreateSubmit)}
                                     disabled={isCreateProcessing}
                                 >
-                                    {isCreateProcessing ? 'Saving...' : 'Save'}
+                                    {isCreateProcessing ? (
+                                        'Saving...'
+                                    ) : (
+                                        <>
+                                            <Save className="mr-0.5 h-4 w-4" />
+                                            Save
+                                        </>
+                                    )}
                                 </Button>
                             </DialogFooter>
                         </DialogContent>
@@ -670,7 +677,7 @@ export default function ExpenseIndex() {
                                         variant="outline"
                                         className="w-full justify-start text-left font-normal"
                                     >
-                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        <CalendarIcon className="mr-0.5 h-4 w-4" />
                                         {editFormData.date ? (
                                             format(
                                                 new Date(editFormData.date),
@@ -751,7 +758,14 @@ export default function ExpenseIndex() {
                             onClick={editHandleSubmit(onEditSubmit)}
                             disabled={isEditProcessing}
                         >
-                            {isEditProcessing ? 'Saving...' : 'Save Changes'}
+                            {isEditProcessing ? (
+                                'Saving...'
+                            ) : (
+                                <>
+                                    <Check className="mr-0.5 h-4 w-4" />
+                                    Save Changes
+                                </>
+                            )}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -797,3 +811,4 @@ ExpenseIndex.layout = {
         },
     ] as BreadcrumbItem[],
 };
+;

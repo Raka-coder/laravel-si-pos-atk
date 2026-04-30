@@ -1,7 +1,7 @@
 import { Transition } from '@headlessui/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Head, router } from '@inertiajs/react';
-import { ShieldCheck } from 'lucide-react';
+import { Save, ShieldCheck } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -198,7 +198,14 @@ export default function Security({
                             disabled={isProcessing}
                             data-test="update-password-button"
                         >
-                            {isProcessing ? 'Saving...' : 'Save password'}
+                            {isProcessing ? (
+                                'Saving...'
+                            ) : (
+                                <>
+                                    <Save className="mr-0.5 h-4 w-4" />
+                                    Save password
+                                </>
+                            )}
                         </Button>
 
                         <Transition

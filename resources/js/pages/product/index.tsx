@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Head, usePage, router } from '@inertiajs/react';
-import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { Check, Pencil, Plus, Search, Trash2, Eye } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
@@ -311,7 +311,7 @@ export default function ProductIndex() {
                     <Dialog open={isOpen} onOpenChange={setIsOpen}>
                         <DialogTrigger asChild>
                             <Button size="lg">
-                                <Plus className="mr-2 h-4 w-4" />
+                                <Plus className="mr-0.5 h-4 w-4" />
                                 Add Product
                             </Button>
                         </DialogTrigger>
@@ -562,9 +562,14 @@ export default function ProductIndex() {
                                     onClick={createHandleSubmit(onCreateSubmit)}
                                     disabled={isCreateProcessing}
                                 >
-                                    {isCreateProcessing
-                                        ? 'Creating...'
-                                        : 'Create'}
+                                    {isCreateProcessing ? (
+                                        'Creating...'
+                                    ) : (
+                                        <>
+                                            <Plus className="mr-0.5 h-4 w-4" />
+                                            Create
+                                        </>
+                                    )}
                                 </Button>
                             </DialogFooter>
                         </DialogContent>
@@ -1068,7 +1073,14 @@ export default function ProductIndex() {
                             onClick={editHandleSubmit(onEditSubmit)}
                             disabled={isEditProcessing}
                         >
-                            {isEditProcessing ? 'Saving...' : 'Save Changes'}
+                            {isEditProcessing ? (
+                                'Saving...'
+                            ) : (
+                                <>
+                                    <Check className="mr-0.5 h-4 w-4" />
+                                    Save Changes
+                                </>
+                            )}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

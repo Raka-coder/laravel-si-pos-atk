@@ -16,7 +16,7 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    private const CACHE_TTL = 10; // 10 seconds cache
+    private const CACHE_TTL = 3; // 3 seconds cache
 
     public function __invoke(): Response
     {

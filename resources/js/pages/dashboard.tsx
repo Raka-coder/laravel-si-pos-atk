@@ -717,7 +717,7 @@ export default function Dashboard() {
                                             size="lg"
                                         >
                                             <a href="/products">
-                                                <Package className="mr-2 h-4 w-4" />
+                                                <Package className="mr-0.5 h-4 w-4" />
                                                 Products
                                             </a>
                                         </Button>
@@ -727,7 +727,7 @@ export default function Dashboard() {
                                             size="lg"
                                         >
                                             <a href="/stock-movements">
-                                                <RefreshCw className="mr-2 h-4 w-4" />
+                                                <RefreshCw className="mr-0.5 h-4 w-4" />
                                                 Stock Movements
                                             </a>
                                         </Button>
@@ -737,7 +737,7 @@ export default function Dashboard() {
                                             size="lg"
                                         >
                                             <a href="/transactions">
-                                                <Wallet className="mr-2 h-4 w-4" />
+                                                <Wallet className="mr-0.5 h-4 w-4" />
                                                 Transactions
                                             </a>
                                             </Button>
@@ -747,7 +747,7 @@ export default function Dashboard() {
                                                 size="lg"
                                             >
                                                 <a href="/users">
-                                                    <Users className="mr-2 h-4 w-4" />
+                                                    <Users className="mr-0.5 h-4 w-4" />
                                                     Manage Users
                                                 </a>
                                             </Button>

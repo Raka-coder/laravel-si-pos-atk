@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Head, router, usePage } from '@inertiajs/react';
-import { Check, Pencil, Printer } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { Check, Pencil, Plus, Printer, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 import { useFieldArray, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -17,7 +17,6 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
@@ -38,8 +37,8 @@ import type { BreadcrumbItem } from '@/types';
 const transactionItemSchema = z.object({
     id: z.number().optional(),
     product_id: z.number(),
-    qty: z.number().min(1, 'Quantity must be at least 1'),
-    price: z.number().min(0, 'Price must be non-negative'),
+    quantity: z.number().min(1, 'Quantity must be at least 1'),
+    price_sell: z.number().min(0, 'Price must be non-negative'),
 });
 
 const transactionSchema = z.object({
@@ -58,16 +57,16 @@ interface Product {
 interface TransactionItem {
     id: number;
     product_id: number;
-    qty: number;
-    price: number;
+    quantity: number;
+    price_sell: number;
     product: Product;
 }
 
 interface Transaction {
     id: number;
     receipt_number: string;
-    total_amount: number;
-    cash_amount: number;
+    total_price: number;
+    amount_paid: number;
     change_amount: number;
     created_at: string;
     user: {
@@ -106,24 +105,19 @@ export default function TransactionShow() {
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
 
-    const {
-        control,
-        handleSubmit,
-        reset,
-        formState: { errors },
-    } = useForm<TransactionForm>({
+    const { control, handleSubmit } = useForm<TransactionForm>({
         resolver: zodResolver(transactionSchema),
         defaultValues: {
             items: transaction.items.map((item) => ({
                 id: item.id,
                 product_id: item.product_id,
-                qty: item.qty,
-                price: item.price,
+                quantity: item.quantity,
+                price_sell: item.price_sell,
             })),
         },
     });
 
-    const { fields, append, remove } = useFieldArray({
+    const { fields, append, remove, update } = useFieldArray({
         control,
         name: 'items',
     });
@@ -134,7 +128,7 @@ export default function TransactionShow() {
     });
 
     const totalAmount = watchItems.reduce(
-        (acc, item) => acc + (item.price || 0) * (item.qty || 0),
+        (acc, item) => acc + (item.price_sell || 0) * (item.quantity || 0),
         0,
     );
 
@@ -190,16 +184,16 @@ export default function TransactionShow() {
                                                 <TableHeader>
                                                     <TableRow>
                                                         <TableHead>Product</TableHead>
-                                                        <TableHead className="w-[150px]">
+                                                        <TableHead className="w-37.5">
                                                             Price
                                                         </TableHead>
-                                                        <TableHead className="w-[100px]">
+                                                        <TableHead className="w-25">
                                                             Qty
                                                         </TableHead>
-                                                        <TableHead className="w-[150px] text-right">
+                                                        <TableHead className="w-37.5 text-right">
                                                             Subtotal
                                                         </TableHead>
-                                                        <TableHead className="w-[50px]"></TableHead>
+                                                        <TableHead className="w-25"></TableHead>
                                                     </TableRow>
                                                 </TableHeader>
                                                 <TableBody>
@@ -224,29 +218,20 @@ export default function TransactionShow() {
                                                                                         value,
                                                                                     ),
                                                                             );
+
                                                                         if (product) {
-                                                                            control._names.array.add(
-                                                                                `items.${index}.product_id`,
+                                                                            update(
+                                                                                index,
+                                                                                {
+                                                                                    ...watchItems[
+                                                                                        index
+                                                                                    ],
+                                                                                    product_id:
+                                                                                        product.id,
+                                                                                    price_sell:
+                                                                                        product.sell_price,
+                                                                                },
                                                                             );
-                                                                            control._names.array.add(
-                                                                                `items.${index}.price`,
-                                                                            );
-                                                                            // This is a bit hacky due to useFieldArray
-                                                                            const newItems =
-                                                                                [
-                                                                                    ...watchItems,
-                                                                                ];
-                                                                            newItems[
-                                                                                index
-                                                                            ].product_id =
-                                                                                product.id;
-                                                                            newItems[
-                                                                                index
-                                                                            ].price =
-                                                                                product.sell_price;
-                                                                            reset({
-                                                                                items: newItems,
-                                                                            });
                                                                         }
                                                                     }}
                                                                 >
@@ -284,24 +269,23 @@ export default function TransactionShow() {
                                                                     value={
                                                                         watchItems[
                                                                             index
-                                                                        ]?.price
+                                                                        ]?.price_sell
                                                                     }
                                                                     onChange={(
                                                                         e,
                                                                     ) => {
-                                                                        const newItems =
-                                                                            [
-                                                                                ...watchItems,
-                                                                            ];
-                                                                        newItems[
-                                                                            index
-                                                                        ].price =
-                                                                            Number(
-                                                                                e.target.value,
-                                                                            );
-                                                                        reset({
-                                                                            items: newItems,
-                                                                        });
+                                                                        update(
+                                                                            index,
+                                                                            {
+                                                                                ...watchItems[
+                                                                                    index
+                                                                                ],
+                                                                                price_sell:
+                                                                                    Number(
+                                                                                        e.target.value,
+                                                                                    ),
+                                                                            },
+                                                                        );
                                                                     }}
                                                                 />
                                                             </TableCell>
@@ -311,24 +295,23 @@ export default function TransactionShow() {
                                                                     value={
                                                                         watchItems[
                                                                             index
-                                                                        ]?.qty
+                                                                        ]?.quantity
                                                                     }
                                                                     onChange={(
                                                                         e,
                                                                     ) => {
-                                                                        const newItems =
-                                                                            [
-                                                                                ...watchItems,
-                                                                            ];
-                                                                        newItems[
-                                                                            index
-                                                                        ].qty =
-                                                                            Number(
-                                                                                e.target.value,
-                                                                            );
-                                                                        reset({
-                                                                            items: newItems,
-                                                                        });
+                                                                        update(
+                                                                            index,
+                                                                            {
+                                                                                ...watchItems[
+                                                                                    index
+                                                                                ],
+                                                                                quantity:
+                                                                                    Number(
+                                                                                        e.target.value,
+                                                                                    ),
+                                                                            },
+                                                                        );
                                                                     }}
                                                                 />
                                                             </TableCell>
@@ -336,11 +319,11 @@ export default function TransactionShow() {
                                                                 {formatCurrency(
                                                                     (watchItems[
                                                                         index
-                                                                    ]?.price ||
+                                                                    ]?.price_sell ||
                                                                         0) *
                                                                         (watchItems[
                                                                             index
-                                                                        ]?.qty ||
+                                                                        ]?.quantity ||
                                                                             0),
                                                                 )}
                                                             </TableCell>
@@ -376,9 +359,10 @@ export default function TransactionShow() {
                                                     append({
                                                         product_id:
                                                             products[0]?.id,
-                                                        qty: 1,
-                                                        price: products[0]
-                                                            ?.sell_price,
+                                                        quantity: 1,
+                                                        price_sell:
+                                                            products[0]
+                                                                ?.sell_price,
                                                     })
                                                 }
                                             >
@@ -421,9 +405,9 @@ export default function TransactionShow() {
                                 </DialogContent>
                             </Dialog>
                         )}
-                        <Button 
-                            variant="outline" 
-                            size={'lg'} 
+                        <Button
+                            variant="outline"
+                            size={'lg'}
                             onClick={handlePrintDirect}
                             disabled={isPrinting}
                         >
@@ -455,13 +439,13 @@ export default function TransactionShow() {
                                                 {item.product.name}
                                             </TableCell>
                                             <TableCell className="text-right">
-                                                {formatCurrency(item.price)}
+                                                {formatCurrency(item.price_sell)}
                                             </TableCell>
                                             <TableCell className="text-center">
-                                                {item.qty}
+                                                {item.quantity}
                                             </TableCell>
                                             <TableCell className="text-right">
-                                                {formatCurrency(item.price * item.qty)}
+                                                {formatCurrency(item.price_sell * item.quantity)}
                                             </TableCell>
                                         </TableRow>
                                     ))}
@@ -498,11 +482,11 @@ export default function TransactionShow() {
                             <CardContent className="space-y-4">
                                 <div className="flex justify-between text-lg">
                                     <span className="font-semibold">Total</span>
-                                    <span className="font-bold">{formatCurrency(transaction.total_amount)}</span>
+                                    <span className="font-bold">{formatCurrency(transaction.total_price)}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground">Cash</span>
-                                    <span className="font-medium">{formatCurrency(transaction.cash_amount)}</span>
+                                    <span className="font-medium">{formatCurrency(transaction.amount_paid)}</span>
                                 </div>
                                 <div className="flex justify-between text-green-600">
                                     <span className="font-semibold">Change</span>
@@ -524,4 +508,10 @@ TransactionShow.layout = {
     ] as BreadcrumbItem[],
 };
 
+
+TransactionShow.layout = {
+    breadcrumbs: [
+        { title: 'Transactions', href: '/transactions' },
+        { title: 'Details', href: '#' },
+    ] as BreadcrumbItem[],
 };

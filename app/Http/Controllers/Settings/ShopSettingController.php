@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
 use App\Models\ShopSetting;
+use App\Http\Requests\Settings\UpdateShopSettingRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,51 +22,34 @@ class ShopSettingController extends Controller
         ]);
     }
 
-    public function update(Request $request): RedirectResponse
+    public function update(UpdateShopSettingRequest $request): RedirectResponse
     {
         $shop = ShopSetting::getShop();
 
-        $data = $request->validate([
-            'shop_name' => 'required|string|max:255',
-            'address' => 'nullable|string',
-            'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:50',
-            'npwp' => 'nullable|string|max:50',
-            'logo' => 'nullable|mimes:jpg,jpeg,png,gif,webp,svg+xml|max:2048',
-            'qris_image' => 'nullable|image|max:2048',
-            'remove_logo' => 'nullable|string',
-            'remove_qris' => 'nullable|string',
-            'midtrans_merchant_id' => 'nullable|string|max:100',
-            'midtrans_client_key' => 'nullable|string|max:200',
-            'midtrans_server_key' => 'nullable|string|max:200',
-            'midtrans_is_production' => 'nullable|boolean',
-            'tax_rate' => 'required|numeric|min:0|max:100',
-            'receipt_footer' => 'nullable|string',
-            'paper_size' => 'required|string|in:mm_58,mm_80',
-        ]);
+        $data = $request->validated();
 
         if ($request->hasFile('logo')) {
             if ($shop->logo_path) {
-                \Storage::disk('public')->delete($shop->logo_path);
+                Storage::disk('public')->delete($shop->logo_path);
             }
             $path = $request->file('logo')->store('shop', 'public');
             $data['logo_path'] = $path;
         } elseif ($request->input('remove_logo') === '1') {
             if ($shop->logo_path) {
-                \Storage::disk('public')->delete($shop->logo_path);
+                Storage::disk('public')->delete($shop->logo_path);
             }
             $data['logo_path'] = null;
         }
 
         if ($request->hasFile('qris_image')) {
             if ($shop->qris_image_path) {
-                \Storage::disk('public')->delete($shop->qris_image_path);
+                Storage::disk('public')->delete($shop->qris_image_path);
             }
             $path = $request->file('qris_image')->store('shop', 'public');
             $data['qris_image_path'] = $path;
         } elseif ($request->input('remove_qris') === '1') {
             if ($shop->qris_image_path) {
-                \Storage::disk('public')->delete($shop->qris_image_path);
+                Storage::disk('public')->delete($shop->qris_image_path);
             }
             $data['qris_image_path'] = null;
         }

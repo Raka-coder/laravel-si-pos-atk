@@ -1,3 +1,4 @@
+
 import { Link, usePage } from '@inertiajs/react';
 import {
     Box,

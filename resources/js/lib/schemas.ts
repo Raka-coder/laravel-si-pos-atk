@@ -80,10 +80,42 @@ export const userSchema = z.object({
 export type UserFormData = z.infer<typeof userSchema>;
 
 export const stockMovementSchema = z.object({
-    product_id: z.coerce.number().min(1, 'Produk wajib dipilih'),
-    quantity: z.coerce.number().min(1, 'Jumlah wajib diisi'),
-    type: z.enum(['in', 'out']),
-    notes: z.string().optional(),
+    product_id: z.string().min(1, 'Product is required'),
+    movement_type: z.enum(['in', 'out', 'adjustment']),
+    qty: z.string().refine((val) => !isNaN(Number(val)) && Number(val) >= 1, {
+        message: 'Quantity must be at least 1',
+    }),
+    reason: z.string().min(1, 'Reason is required'),
 });
 
 export type StockMovementFormData = z.infer<typeof stockMovementSchema>;
+
+export const shopSettingsSchemaExtended = z.object({
+    shop_name: z.string().min(1, 'Shop name is required'),
+    address: z.string().min(1, 'Address is required'),
+    email: z.string().email('Invalid email address').or(z.literal('')),
+    phone: z.string().min(1, 'Phone number is required'),
+    logo: z.any().optional(),
+    qris_image: z.any().optional(),
+    remove_logo: z.string().optional(),
+    remove_qris: z.string().optional(),
+    midtrans_merchant_id: z.string().optional(),
+    tax_rate: z
+        .string()
+        .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+            message: 'Tax rate must be a positive number',
+        }),
+    receipt_footer: z.string().optional(),
+    paper_size: z.enum(['mm_58', 'mm_80']),
+});
+
+export type ShopSettingsFormDataExtended = z.infer<typeof shopSettingsSchemaExtended>;
+
+export const stockMovementFilterSchema = z.object({
+    product_id: z.string().optional(),
+    type: z.string().optional(),
+    date_from: z.string().optional(),
+    date_to: z.string().optional(),
+});
+
+export type StockMovementFilterData = z.infer<typeof stockMovementFilterSchema>;

@@ -140,11 +140,12 @@ export default function Profile({
                             {isProcessing ? (
                                 'Saving...'
                             ) : (
-                            <>
-                                <Save className="mr-0.5 h-4 w-4" />
-                                Save
-                            </>
-                            )}                        </Button>
+                                <>
+                                    <Save className="mr-0.5 h-4 w-4" />
+                                    Save
+                                </>
+                            )}{' '}
+                        </Button>
 
                         <Transition
                             show={recentlySuccessful}

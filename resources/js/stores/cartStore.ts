@@ -1,26 +1,14 @@
 import { create } from 'zustand';
+import type { Product } from '@/types';
 
-interface Product {
-    id: number;
-    barcode: string;
-    name: string;
-    buy_price: number;
-    sell_price: number;
-    stock: number;
-    min_stock: number;
-    is_active: boolean;
-    category: { id: number; name: string } | null;
-    unit: { id: number; name: string; short_name: string } | null;
-}
-
-interface CartItem {
+export interface CartItem {
     id: number;
     product: Product;
     quantity: number;
     subtotal: number;
 }
 
-interface CartStore {
+export interface CartState {
     items: CartItem[];
     subtotal: number;
     taxAmount: number;
@@ -42,7 +30,7 @@ interface CartStore {
     }>;
 }
 
-export const useCartStore = create<CartStore>((set, get) => ({
+export const useCartStore = create<CartState>((set, get) => ({
     items: [],
     subtotal: 0,
     taxAmount: 0,

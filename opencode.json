@@ -1,14 +1,42 @@
 {
-    "$schema": "https://opencode.ai/config.json",
-    "mcp": {
-        "laravel-boost": {
-            "type": "local",
-            "enabled": true,
-            "command": [
-                "php",
-                "artisan",
-                "boost:mcp"
-            ]
-        }
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "laravel-boost": {
+      "type": "local",
+      "enabled": true,
+      "command": [
+        "php",
+        "artisan",
+        "boost:mcp"
+      ]
     }
+  },
+  "provider": {
+    "9router": {
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "baseURL": "http://localhost:20128/v1",
+        "apiKey": "sk-47a649fcba01f5dc-h2cihx-e89cb7cb"
+      },
+      "models": {
+        "ag/claude-sonnet-4-6": {
+          "name": "ag/claude-sonnet-4-6"
+        },
+        "ag/gemini-3-flash": {
+          "name": "ag/gemini-3-flash"
+        },
+        "ag/gpt-oss-120b-medium": {
+          "name": "ag/gpt-oss-120b-medium"
+        }
+      }
+    }
+  },
+  "model": "9router/ag/claude-sonnet-4-6",
+  "agent": {
+    "explorer": {
+      "description": "Fast explorer subagent for codebase exploration",
+      "mode": "subagent",
+      "model": "9router/ag/claude-sonnet-4-6"
+    }
+  }
 }

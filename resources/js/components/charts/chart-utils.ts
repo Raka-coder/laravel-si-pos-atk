@@ -1,8 +1,4 @@
-const currencyFormatter = new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0,
-});
+import { formatCurrency as sharedFormatCurrency } from '@/lib/formatters';
 
 const shortDateFormatter = new Intl.DateTimeFormat('en-US', {
     month: 'short',
@@ -11,7 +7,7 @@ const shortDateFormatter = new Intl.DateTimeFormat('en-US', {
 });
 
 export function formatCurrency(value: number): string {
-    return currencyFormatter.format(value);
+    return sharedFormatCurrency(value);
 }
 
 export function formatCompactNumber(value: number): string {

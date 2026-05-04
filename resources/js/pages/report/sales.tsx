@@ -34,34 +34,8 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import type { BreadcrumbItem } from '@/types';
-
-interface TransactionItem {
-    id: number;
-    product_name: string;
-    quantity: number;
-    price_sell: number;
-    price_buy_snapshot: number;
-    subtotal: number;
-    product: {
-        id: number;
-        name: string;
-    } | null;
-}
-
-interface Transaction {
-    id: number;
-    receipt_number: string;
-    total_price: number;
-    payment_method: string;
-    payment_status: string;
-    created_at: string;
-    user: {
-        id: number;
-        name: string;
-    };
-    items: TransactionItem[];
-}
+import { formatCurrency, formatDate } from '@/lib/formatters';
+import type { BreadcrumbItem, Transaction } from '@/types';
 
 interface Props {
     [key: string]: unknown;
@@ -81,24 +55,6 @@ interface Props {
         end_date: string;
     };
 }
-
-const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('id-ID', {
-        style: 'currency',
-        currency: 'IDR',
-        minimumFractionDigits: 0,
-    }).format(value);
-};
-
-const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('id-ID', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-    });
-};
 
 export default function SalesReport() {
     const { transactions, summary, filters } = usePage<Props>().props;
@@ -337,8 +293,9 @@ export default function SalesReport() {
                                         {transaction.receipt_number}
                                     </TableCell>
                                     <TableCell>
-                                        {transaction.user.name}
+                                        {transaction.user?.name}
                                     </TableCell>
+
                                     <TableCell>
                                         <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-none">
                                             {transaction.payment_method}

@@ -28,31 +28,8 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import type { BreadcrumbItem } from '@/types';
-
-interface ExpenseCategory {
-    id: number;
-    name: string;
-}
-
-interface User {
-    id: number;
-    name: string;
-}
-
-interface Expense {
-    id: number;
-    name: string;
-    amount: number;
-    date: string;
-    note: string | null;
-    expense_category_id: number | null;
-    user_id: number;
-    category: ExpenseCategory | null;
-    user: User;
-    created_at: string;
-    updated_at: string;
-}
+import { formatCurrency, formatDate } from '@/lib/formatters';
+import type { BreadcrumbItem, Expense } from '@/types';
 
 interface Props {
     [key: string]: unknown;
@@ -71,22 +48,6 @@ interface Props {
         end_date: string;
     };
 }
-
-const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('id-ID', {
-        style: 'currency',
-        currency: 'IDR',
-        minimumFractionDigits: 0,
-    }).format(value);
-};
-
-const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('id-ID', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-    });
-};
 
 export default function ExpensesReport() {
     const { expenses, summary, filters } = usePage<Props>().props;

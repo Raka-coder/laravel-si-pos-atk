@@ -21,58 +21,14 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-
-interface Category {
-    id: number;
-    name: string;
-}
-
-interface Unit {
-    id: number;
-    name: string;
-    short_name: string;
-}
-
-interface Product {
-    id: number;
-    product_code: string;
-    barcode: string | null;
-    name: string;
-    buy_price: number;
-    sell_price: number;
-    stock: number;
-    min_stock: number;
-    image: string | null;
-    is_active: boolean;
-    category_id: number | null;
-    unit_id: number | null;
-    category: Category | null;
-    unit: Unit | null;
-    created_at: string;
-    updated_at: string;
-}
+import { formatCurrency, formatDate } from '@/lib/formatters';
+import type { Product } from '@/types';
 
 interface ProductDetailDialogProps {
     product: Product | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }
-
-const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('id-ID', {
-        style: 'currency',
-        currency: 'IDR',
-        minimumFractionDigits: 0,
-    }).format(value);
-};
-
-const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-    });
-};
 
 export function ProductDetailDialog({
     product,
@@ -214,14 +170,22 @@ export function ProductDetailDialog({
                                             <Calendar className="h-2.5 w-2.5 opacity-40" />
                                             <span>Added:</span>
                                             <span className="text-foreground/70">
-                                                {formatDate(product.created_at)}
+                                                {product.created_at
+                                                    ? formatDate(
+                                                          product.created_at,
+                                                      )
+                                                    : '-'}
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground">
                                             <Clock className="h-2.5 w-2.5 opacity-40" />
                                             <span>Updated:</span>
                                             <span className="text-foreground/70">
-                                                {formatDate(product.updated_at)}
+                                                {product.updated_at
+                                                    ? formatDate(
+                                                          product.updated_at,
+                                                      )
+                                                    : '-'}
                                             </span>
                                         </div>
                                     </div>

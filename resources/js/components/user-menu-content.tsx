@@ -106,7 +106,7 @@ export function UserMenuContent({ user }: Props) {
                                 onClick={handleLogout}
                             >
                                 <LogOut className="mr-0.5 h-4 w-4" />
-                                Log Out
+                                Log out
                             </Link>
                         </AlertDialogAction>
                     </AlertDialogFooter>

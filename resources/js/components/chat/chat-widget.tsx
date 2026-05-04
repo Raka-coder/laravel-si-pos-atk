@@ -39,7 +39,7 @@ export function ChatWidget({ isOpen, onToggle }: ChatWidgetProps) {
 
     const autoResizeTextarea = useCallback(() => {
         const textarea = textareaRef.current;
-        
+
         if (textarea) {
             textarea.style.height = 'auto';
             textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
@@ -162,7 +162,7 @@ export function ChatWidget({ isOpen, onToggle }: ChatWidgetProps) {
             {isOpen && (
                 <Card
                     size="sm"
-                    className="fixed right-6 bottom-6 z-50 w-full max-w-100 flex flex-col py-0! shadow-2xl"
+                    className="fixed right-6 bottom-6 z-50 flex w-full max-w-100 flex-col py-0! shadow-2xl"
                 >
                     {/* Header */}
                     <CardHeader className="border-b bg-primary px-4 py-3 text-primary-foreground [&:has([data-slot=card-action])]:grid-cols-[1fr_auto]">
@@ -175,7 +175,10 @@ export function ChatWidget({ isOpen, onToggle }: ChatWidgetProps) {
                                 </div>
                             </div>
                         </div>
-                        <div className="flex items-center gap-1" data-slot="card-action">
+                        <div
+                            className="flex items-center gap-1"
+                            data-slot="card-action"
+                        >
                             <Button
                                 onClick={handleReset}
                                 variant="ghost"
@@ -198,13 +201,17 @@ export function ChatWidget({ isOpen, onToggle }: ChatWidgetProps) {
                     </CardHeader>
 
                     {/* Messages */}
-                    <CardContent className="flex flex-1 flex-col gap-3 overflow-y-auto px-4 py-3" style={{ minHeight: '400px', maxHeight: '400px' }}>
+                    <CardContent
+                        className="flex flex-1 flex-col gap-3 overflow-y-auto px-4 py-3"
+                        style={{ minHeight: '400px', maxHeight: '400px' }}
+                    >
                         {messages.map((message) => (
                             <div
                                 key={message.id}
                                 className={cn(
                                     'flex gap-2',
-                                    message.role === 'user' && 'flex-row-reverse',
+                                    message.role === 'user' &&
+                                        'flex-row-reverse',
                                 )}
                             >
                                 <div
@@ -256,7 +263,7 @@ export function ChatWidget({ isOpen, onToggle }: ChatWidgetProps) {
                             onChange={(e) => setInput(e.target.value)}
                             onKeyDown={handleKeyDown}
                             placeholder="Type Message..."
-                            className="min-h-10 max-h-30 resize-none py-2 text-xs/relaxed"
+                            className="max-h-30 min-h-10 resize-none py-2 text-xs/relaxed"
                             rows={1}
                             disabled={isLoading}
                         />

@@ -1,6 +1,11 @@
 import { Head, usePage } from '@inertiajs/react';
 import { format } from 'date-fns';
-import { CalendarIcon, ArrowDownCircle, DollarSign, TrendingUp } from 'lucide-react';
+import {
+    CalendarIcon,
+    ArrowDownCircle,
+    DollarSign,
+    TrendingUp,
+} from 'lucide-react';
 import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -11,6 +16,7 @@ import {
     DropdownMenuContent,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { formatCurrency } from '@/lib/formatters';
 import type { BreadcrumbItem } from '@/types';
 
 interface Props {
@@ -27,14 +33,6 @@ interface Props {
         end_date: string;
     };
 }
-
-const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('id-ID', {
-        style: 'currency',
-        currency: 'IDR',
-        minimumFractionDigits: 0,
-    }).format(value);
-};
 
 export default function ProfitLossReport() {
     const { summary, sales_by_day, expenses_by_day, filters } =

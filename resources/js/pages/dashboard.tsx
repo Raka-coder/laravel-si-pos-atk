@@ -17,50 +17,30 @@ import RevenueChart from '@/components/charts/RevenueChart';
 import TopProductsChart from '@/components/charts/TopProductsChart';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { formatCurrency } from '@/lib/formatters';
 import { dashboard } from '@/routes';
-import type { BreadcrumbItem } from '@/types';
+import type { BreadcrumbItem, Product } from '@/types';
 
 interface Stats {
-    total_products?: number;
-    total_categories?: number;
-    total_units?: number;
-    low_stock_products?: number;
-    active_products?: number;
     today_sales: number;
     today_revenue: number;
-    today_expenses?: number;
-    month_expenses?: number;
+    avg_transaction: number;
+    peak_hour?: number;
     month_revenue?: number;
     month_profit?: number;
-    avg_transaction?: number;
-    peak_hour?: number;
-}
-
-interface Product {
-    id: number;
-    name: string;
-    stock: number;
-    min_stock: number;
-    category: { name: string } | null;
-    unit: { short_name: string } | null;
+    today_expenses?: number;
+    month_expenses?: number;
+    low_stock_products?: number;
+    total_products?: number;
+    active_products?: number;
 }
 
 interface ChartData {
-    daily_revenue: { date: string; revenue: number; transactions: number }[];
-    payment_methods: { payment_method: string; count: number; total: number }[];
-    top_products: {
-        product_id: number;
-        product_name: string;
-        total_qty: number;
-        total_revenue: number;
-    }[];
-    category_revenue: { category_name: string | null; revenue: number }[];
-    monthly_revenue: {
-        year: number;
-        month: number;
-        revenue: number;
-        transactions: number;
-    }[];
+    daily_revenue?: any[];
+    payment_methods?: any[];
+    top_products?: any[];
+    category_revenue?: any[];
+    monthly_revenue?: any[];
 }
 
 interface HourlyData {
@@ -91,14 +71,6 @@ interface Props {
     todayPaymentMethods?: TodayPaymentMethod[];
     todayTopProducts?: TodayTopProduct[];
 }
-
-const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('id-ID', {
-        style: 'currency',
-        currency: 'IDR',
-        minimumFractionDigits: 0,
-    }).format(value);
-};
 
 export default function Dashboard() {
     const {
@@ -740,17 +712,17 @@ export default function Dashboard() {
                                                 <Wallet className="mr-0.5 h-4 w-4" />
                                                 Transactions
                                             </a>
-                                            </Button>
-                                            <Button
-                                                asChild
-                                                variant="outline"
-                                                size="lg"
-                                            >
-                                                <a href="/users">
-                                                    <Users className="mr-0.5 h-4 w-4" />
-                                                    Manage Users
-                                                </a>
-                                            </Button>
+                                        </Button>
+                                        <Button
+                                            asChild
+                                            variant="outline"
+                                            size="lg"
+                                        >
+                                            <a href="/users">
+                                                <Users className="mr-0.5 h-4 w-4" />
+                                                Manage Users
+                                            </a>
+                                        </Button>
                                     </div>
                                 </CardContent>
                             </Card>

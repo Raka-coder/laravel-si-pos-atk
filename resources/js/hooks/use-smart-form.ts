@@ -28,7 +28,7 @@ export function useSmartMutation<T>({
                     queryClient.invalidateQueries({ queryKey: [key] });
                 });
             }
-            
+
             onSuccess?.();
         },
         onError: (error: Error) => {

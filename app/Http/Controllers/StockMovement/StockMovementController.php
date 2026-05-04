@@ -22,6 +22,14 @@ class StockMovementController extends Controller
         $query = StockMovement::with(['product', 'user', 'transaction'])
             ->orderBy('created_at', 'desc');
 
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->whereHas('product', function ($pq) use ($request) {
+                    $pq->where('name', 'like', '%'.$request->search.'%');
+                })->orWhere('reason', 'like', '%'.$request->search.'%');
+            });
+        }
+
         if ($request->filled('product_id')) {
             $query->where('product_id', $request->product_id);
         }
@@ -38,13 +46,14 @@ class StockMovementController extends Controller
             $query->whereDate('created_at', '<=', $request->date_to);
         }
 
-        $movements = $query->paginate(20);
+        $movements = $query->paginate(20)->withQueryString();
         $products = Product::orderBy('name')->get();
 
         return Inertia::render('stock-movement/index', [
             'movements' => $movements,
             'products' => $products,
             'filters' => [
+                'search' => $request->search,
                 'product_id' => $request->product_id,
                 'type' => $request->type,
                 'date_from' => $request->date_from,

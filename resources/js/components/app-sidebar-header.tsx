@@ -27,24 +27,21 @@ export function AppSidebarHeader({
                     <Breadcrumbs breadcrumbs={breadcrumbs} />
                 </div>
                 <div className="ml-auto flex items-center gap-2">
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon-lg"
-                                onClick={() => setIsChatOpen(!isChatOpen)}
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon-lg"
+                                    onClick={() => setIsChatOpen(!isChatOpen)}
                                     aria-label="Buka chat"
-                                    
-                            >
-                                <BotMessageSquare className="h-5 w-5" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            Ask Chatbot
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
+                                >
+                                    <BotMessageSquare className="h-5 w-5" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Ask Chatbot</TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                 </div>
             </header>
             <ChatWidget

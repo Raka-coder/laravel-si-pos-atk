@@ -7,26 +7,28 @@ interface Props {
 }
 
 export default function Error({ status }: Props) {
-    const title = {
-        404: '404: Page Not Found',
-        403: '403: Forbidden',
-        500: '500: Server Error',
-        503: '503: Service Unavailable',
-    }[status] || 'An Error Occurred';
+    const title =
+        {
+            404: '404: Page Not Found',
+            403: '403: Forbidden',
+            500: '500: Server Error',
+            503: '503: Service Unavailable',
+        }[status] || 'An Error Occurred';
 
-    const description = {
-        404: "Sorry, the page you're looking for doesn't exist or has been moved.",
-        403: "Sorry, you don't have permission to access this page.",
-        500: "Whoops, something went wrong on our servers. Please try again later.",
-        503: "Sorry, we're doing some maintenance. Please check back soon.",
-    }[status] || 'Something went wrong.';
+    const description =
+        {
+            404: "Sorry, the page you're looking for doesn't exist or has been moved.",
+            403: "Sorry, you don't have permission to access this page.",
+            500: 'Whoops, something went wrong on our servers. Please try again later.',
+            503: "Sorry, we're doing some maintenance. Please check back soon.",
+        }[status] || 'Something went wrong.';
 
     return (
         <div className="relative flex min-h-screen w-full items-center justify-center bg-background selection:bg-primary selection:text-primary-foreground">
             <Head title={title} />
 
             {/* Mesh Gradient Background */}
-            <div className="fixed inset-0 overflow-hidden pointer-events-none">
+            <div className="pointer-events-none fixed inset-0 overflow-hidden">
                 <div className="absolute -top-[10%] -left-[10%] h-[50%] w-[50%] rounded-full bg-blue-500/20 blur-[120px] dark:bg-blue-600/10" />
                 <div className="absolute top-[20%] -right-[10%] h-[40%] w-[40%] rounded-full bg-emerald-500/20 blur-[100px] dark:bg-emerald-600/10" />
                 <div className="absolute -bottom-[10%] left-[20%] h-[40%] w-[40%] rounded-full bg-primary/20 blur-[110px] dark:bg-primary/10" />
@@ -43,19 +45,21 @@ export default function Error({ status }: Props) {
                     <h1 className="mb-3 text-2xl font-bold text-foreground">
                         {title}
                     </h1>
-                    <p className="mb-8 text-muted-foreground">
-                        {description}
-                    </p>
+                    <p className="mb-8 text-muted-foreground">{description}</p>
 
                     <div className="flex flex-col gap-3 sm:flex-row">
-                        <Button asChild variant="default" className="flex-1 rounded-xl shadow-lg shadow-primary/20">
+                        <Button
+                            asChild
+                            variant="default"
+                            className="flex-1 rounded-xl shadow-lg shadow-primary/20"
+                        >
                             <Link href="/" className="flex items-center gap-2">
                                 <Home className="h-4 w-4" />
                                 Go Home
                             </Link>
                         </Button>
-                        <Button 
-                            variant="outline" 
+                        <Button
+                            variant="outline"
                             className="flex-1 rounded-xl border-white/20 bg-white/40 backdrop-blur-xl dark:border-white/10 dark:bg-black/20"
                             onClick={() => window.history.back()}
                         >
@@ -66,8 +70,14 @@ export default function Error({ status }: Props) {
                 </div>
 
                 <div className="mt-8 flex justify-center gap-2">
-                    <img src="/logo.svg" alt="POS Logo" className="h-5 w-5 opacity-40" />
-                    <span className="text-sm font-semibold text-muted-foreground opacity-60">POS ATK-Sync</span>
+                    <img
+                        src="/logo.svg"
+                        alt="POS Logo"
+                        className="h-5 w-5 opacity-40"
+                    />
+                    <span className="text-sm font-semibold text-muted-foreground opacity-60">
+                        POS ATK-Sync
+                    </span>
                 </div>
             </div>
         </div>

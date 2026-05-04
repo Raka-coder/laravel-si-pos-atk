@@ -10,6 +10,7 @@ use App\Http\Controllers\Payment\MidtransCallbackController;
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\Settings\ShopSettingController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\StockMovement\StockMovementController;
 use App\Http\Controllers\Transaction\TransactionController;
 use App\Http\Controllers\Unit\UnitController;
@@ -78,5 +79,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('transactions.cancel-midtrans');
     Route::get('transactions/receipt/{transaction}', [TransactionController::class, 'receipt'])->name('transactions.receipt');
 });
+
+// SEO Routes
+Route::get('sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
 require __DIR__.'/settings.php';

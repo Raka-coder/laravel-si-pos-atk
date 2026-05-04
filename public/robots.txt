@@ -1,2 +1,18 @@
+# robots.txt for ATK-Sync POS
+# https://atksync.example.com
+
 User-agent: *
-Disallow:
+Allow: /
+
+# Disallow admin and internal routes
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /products
+Disallow: /transactions
+Disallow: /reports
+Disallow: /expenses
+Disallow: /settings/
+Disallow: /pos
+
+# Sitemap
+Sitemap: https://atksync.example.com/sitemap.xml

@@ -18,8 +18,9 @@ export default function Hero() {
                 {/* Headline */}
                 <h1 className="mb-6 max-w-4xl text-5xl font-extrabold tracking-tight text-foreground sm:text-6xl lg:text-7xl">
                     Smarter Retail, <br />
+                    
                     <span className="bg-linear-to-r from-primary to-indigo-600 bg-clip-text text-transparent dark:to-indigo-400">
-                        Welcome to POS ATK-Sync
+                        Welcome to PoS ATK-Sync
                     </span>
                 </h1>
 

@@ -7,7 +7,18 @@ import Hero from '@/components/landing/Hero';
 export default function Welcome() {
     return (
         <div className="relative min-h-screen w-full bg-background selection:bg-primary selection:text-primary-foreground">
-            <Head title="Welcome to POS ATK-Sync" />
+            <Head>
+                <title>ATK-Sync POS - Sistem Point of Sale Modern</title>
+                <meta name="description" content="Sistem Point of Sale modern untuk toko ATK dengan fitur lengkap." />
+                <meta name="keywords" content="pos, point of sale, toko atk, kasir, inventory" />
+                <meta property="og:title" content="ATK-Sync POS - Sistem POS Modern" />
+                <meta property="og:description" content="Sistem Point of Sale modern untuk toko ATK." />
+                <meta property="og:type" content="website" />
+                <meta property="og:site_name" content="ATK-Sync POS" />
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content="ATK-Sync POS - Sistem POS Modern" />
+                <meta name="twitter:description" content="Sistem Point of Sale modern untuk toko ATK." />
+            </Head>
 
             {/* Mesh Gradient Background */}
             <div className="pointer-events-none fixed inset-0 overflow-hidden">

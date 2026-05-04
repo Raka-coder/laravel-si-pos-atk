@@ -25,7 +25,11 @@ export default function Error({ status }: Props) {
 
     return (
         <div className="relative flex min-h-screen w-full items-center justify-center bg-background selection:bg-primary selection:text-primary-foreground">
-            <Head title={title} />
+            <Head>
+                <title>{title}</title>
+                <meta name="description" content={description} />
+                <meta name="robots" content="noindex, nofollow" />
+            </Head>
 
             {/* Mesh Gradient Background */}
             <div className="pointer-events-none fixed inset-0 overflow-hidden">

@@ -27,10 +27,12 @@ yarn-error.log
 /.vscode
 /.zed
 
-.gemini/
+/.gemini
 gha-creds-*.json
-.agents
-.claude
-.codex
-.kilocode/
-.qwen/
+/.agents
+/.claude
+/.codex
+/.kilocode
+/.qwen
+
+/docs

@@ -12,7 +12,7 @@ class LogoutResponse implements LogoutResponseContract
     {
         return $request->wantsJson()
             ? new JsonResponse('', 204)
-            : redirect(Fortify::redirects('logout', '/login'))
+            : redirect(Fortify::redirects('logout', '/'))
                 ->with('success', 'Logout berhasil.');
     }
 }

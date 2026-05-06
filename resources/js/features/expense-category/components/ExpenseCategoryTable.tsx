@@ -26,6 +26,16 @@ export function ExpenseCategoryTable({
 }: ExpenseCategoryTableProps) {
     const columns: Column<ExpenseCategory>[] = [
         {
+            header: 'No',
+            className: 'w-[50px] text-center',
+            cell: (_, index) => {
+                const page = categories.current_page || 1;
+                const perPage = categories.per_page || categories.data.length;
+                
+                return (page - 1) * perPage + index + 1;
+            },
+        },
+        {
             header: 'Name',
             accessorKey: 'name',
             className: 'text-left font-medium',

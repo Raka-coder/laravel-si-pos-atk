@@ -113,6 +113,15 @@ export default function UnitIndex() {
 
     const columns: Column<Unit>[] = [
         {
+            header: 'No',
+            className: 'w-[50px] text-center',
+            cell: (_, index) => {
+                const page = units.current_page || 1;
+                const perPage = units.per_page || units.data.length;
+                return (page - 1) * perPage + index + 1;
+            },
+        },
+        {
             header: 'Name',
             accessorKey: 'name',
             className: 'text-left font-medium',

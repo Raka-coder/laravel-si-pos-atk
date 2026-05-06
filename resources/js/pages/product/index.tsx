@@ -142,7 +142,7 @@ export default function ProductIndex() {
     const columns: Column<Product>[] = [
         {
             header: 'Image',
-            className: 'w-16',
+            className: 'w-18',
             cell: useCallback(
                 (product: Product) => <ProductImageCell product={product} />,
                 [],
@@ -151,7 +151,7 @@ export default function ProductIndex() {
         {
             header: 'Product Code',
             accessorKey: 'product_code',
-            className: 'font-mono text-sm',
+            className: 'text-sm font-medium',
         },
         {
             header: 'Name',

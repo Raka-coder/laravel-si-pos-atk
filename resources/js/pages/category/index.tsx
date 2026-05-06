@@ -118,6 +118,16 @@ export default function CategoryIndex() {
 
     const columns: Column<Category>[] = [
         {
+            header: 'No',
+            className: 'w-[50px] text-center',
+            cell: (_, index) => {
+                const page = categories.current_page || 1;
+                const perPage = categories.per_page || categories.data.length; 
+                
+                return (page - 1) * perPage + index + 1;
+            },
+        },
+        {
             header: 'Name',
             accessorKey: 'name',
             className: 'text-left font-medium',

@@ -26,6 +26,12 @@
       "sourceType": "github",
       "computedHash": "21071166f94d9ec8ff063eccde279124767662a029161629f4b1250de0a7a499"
     },
+    "readme-i18n": {
+      "source": "xixu-me/skills",
+      "sourceType": "github",
+      "skillPath": "skills/readme-i18n/SKILL.md",
+      "computedHash": "667e1a9ec1be5d8cd28113558740af67861e372792587bf0e65d14ddebbcf38e"
+    },
     "refactoring-ui": {
       "source": "wondelai/skills",
       "sourceType": "github",

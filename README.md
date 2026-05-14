@@ -10,7 +10,7 @@
 
 [![PHP](https://img.shields.io/badge/PHP-8.4-777BB4?style=for-the-badge&logo=php&logoColor=white)](https://php.net)
 [![Laravel](https://img.shields.io/badge/Laravel-13-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)](https://laravel.com)
-[![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://mysql.com)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://postgresql.org)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
 [![Inertia](https://img.shields.io/badge/Inertia-v3-9553E9?style=for-the-badge&logo=inertia&logoColor=white)](https://inertiajs.com)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org)
@@ -29,12 +29,12 @@
 |---|---|
 | [![PHP](https://img.shields.io/badge/PHP-8.4-777BB4?style=flat-square&logo=php&logoColor=white)](https://php.net) | Hypertext Preprocessor |
 | [![Laravel](https://img.shields.io/badge/Laravel-13-FF2D20?style=flat-square&logo=laravel&logoColor=white)](https://laravel.com) | PHP Framework |
-| [![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=flat-square&logo=mysql&logoColor=white)](https://mysql.com) | Database |
+| [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://postgresql.org) | Database |
 | [![Laravel Fortify](https://img.shields.io/badge/Fortify-1.36-FF2D20?style=flat-square&logo=laravel&logoColor=white)](https://laravel.com/docs/fortify) | Authentication Backend (Login, Register, 2FA, Email Verify) |
 | [![Spatie Permission](https://img.shields.io/badge/Spatie_Permission-7.2-39E09B?style=flat-square&logo=spatie&logoColor=white)](https://spatie.be/docs/laravel-permission) | Role & Permission (RBAC) |
 | [![Midtrans](https://img.shields.io/badge/Midtrans-2.6-00A79D?style=flat-square&logoColor=white)](https://midtrans.com) | Payment Gateway (QRIS, E-Wallet, VA) |
 | [![Prism PHP](https://img.shields.io/badge/Prism_PHP-0.100-4F46E5?style=flat-square&logo=php&logoColor=white)](https://prism-php.com) | AI/LLM Orchestration (Gemini, Claude, GPT) |
-| [![Maatwebsite Excel](https://img.shields.io/badge/Laravel_Excel-3.1-217346?style=flat-square&logo=microsoft-excel&logoColor=white)](https://laravel-excel.com) | Excel Export |
+| [![OpenSpout](https://img.shields.io/badge/OpenSpout-4.1-217346?style=flat-square&logoColor=white)](https://github.com/openspout/openspout) | Excel/CSV Export |
 | [![DomPDF](https://img.shields.io/badge/DomPDF-3.1-AA0000?style=flat-square&logo=adobe&logoColor=white)](https://github.com/barryvdh/laravel-dompdf) | PDF Generation |
 | [![Mike42 ESC/POS](https://img.shields.io/badge/ESC/POS-4.0-000000?style=flat-square&logo=printful&logoColor=white)](https://github.com/mike42/escpos-php) | Thermal Printer Support |
 | [![Intervention Image](https://img.shields.io/badge/Intervention-4.0-FACC15?style=flat-square&logo=imagemagick&logoColor=black)](https://image.intervention.io) | Image Optimization |
@@ -165,7 +165,7 @@
 
 - **PHP** >= 8.4
 - **Node.js** >= 20.x
-- **MySQL** >= 8.0
+- **PostgreSQL** >= 16 atau **MySQL** >= 8.0
 - **Composer** & **NPM**
 
 ---
@@ -220,7 +220,7 @@ Di `config/prism.php`, ganti `default_driver` ke provider yang diinginkan:
 2. Dapatkan **Merchant ID**, **Client Key**, **Server Key** dari dashboard Midtrans
 3. Isi di `.env`:
 ```bash
-MIDTRANTIS_CLIENT_KEY=
+MIDTRANS_CLIENT_KEY=
 MIDTRANS_SERVER_KEY=
 MIDTRANS_MERCHANT_ID=
 MIDTRANS_IS_PRODUCTION=false
@@ -243,7 +243,53 @@ PRINTER_FILE_PATH=/dev/usb/lp0
 
 ---
 
-## 🚀 Instalasi Cepat
+## 🚀 Deployment (Laravel Cloud)
+
+Aplikasi ini dioptimalkan untuk deploy ke [Laravel Cloud](https://cloud.laravel.com).
+
+### Persistent Storage (Object Storage)
+
+Gunakan **Cloudflare R2** (built-in di Laravel Cloud) untuk penyimpanan file:
+
+1. Tambahkan **Object Storage** dari dashboard environment Laravel Cloud
+2. Set environment variables:
+```bash
+FILESYSTEM_DISK=s3
+AWS_BUCKET=<bucket-name>
+AWS_DEFAULT_REGION=auto
+AWS_ENDPOINT=<r2-endpoint>
+AWS_URL=<bucket-public-url>
+AWS_ACCESS_KEY_ID=<key-id>
+AWS_SECRET_ACCESS_KEY=<secret-key>
+AWS_USE_PATH_STYLE_ENDPOINT=false
+```
+3. Build command di Laravel Cloud:
+```bash
+npm install && npm run build
+```
+
+### Environment Variables
+
+Pastikan semua env var diatur di dashboard Laravel Cloud:
+```bash
+APP_KEY=
+APP_URL=
+DB_CONNECTION=pgsql
+DB_HOST=
+DB_PORT=5432
+DB_DATABASE=
+DB_USERNAME=
+DB_PASSWORD=
+FILESYSTEM_DISK=s3
+MIDTRANS_CLIENT_KEY=
+MIDTRANS_SERVER_KEY=
+MIDTRANS_MERCHANT_ID=
+MIDTRANS_IS_PRODUCTION=false
+GEMINI_API_KEY=
+SESSION_DRIVER=database
+```
+
+---
 
 ### 1. Clone & Install
 ```bash
@@ -263,7 +309,11 @@ Edit file `.env` dan sesuaikan konfigurasi database, Gemini API Key, dan Midtran
 
 ### 3. Storage Setup
 ```bash
+# Local development
 php artisan storage:link
+
+# Production (Laravel Cloud): Set FILESYSTEM_DISK=s3 di .env
+# dan konfigurasi Cloudflare R2 / S3 credentials
 ```
 
 ### 4. Database Migration & Seeding

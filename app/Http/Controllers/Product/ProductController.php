@@ -51,47 +51,45 @@ class ProductController extends Controller
         ]);
     }
 
-    private function uploadImage(UploadedFile $file): string
+    private function uploadImage(UploadedFile $file): ?string
     {
-        $isLocal = config('filesystems.disks.public.driver') === 'local';
-        $disk = Storage::disk('public');
-
-        $tempDir = $isLocal ? storage_path('app/public/products') : storage_path('app/products_tmp');
-        if (! is_dir($tempDir)) {
-            mkdir($tempDir, 0755, true);
-        }
-
-        $tempPath = $tempDir.'/'.uniqid().'.'.$file->extension();
-        $file->move($tempDir, basename($tempPath));
-
         try {
-            $optimizer = new ImageOptimizer;
-            $optimizedPath = $optimizer->optimize($tempPath, 800, 800, 80);
-            $optimizer->generateThumbnail($optimizedPath, 200);
-        } catch (\Exception $e) {
-            Log::warning('Image optimization failed, using original: '.$e->getMessage());
-            $optimizedPath = $tempPath;
-        }
+            $isLocal = config('filesystems.disks.public.driver') === 'local';
 
-        $filename = basename($optimizedPath);
-        $thumbFilename = str_replace('.webp', '_thumb.webp', $filename);
-        $thumbPath = dirname($optimizedPath).'/'.$thumbFilename;
-
-        if ($isLocal) {
-            return str_replace('\\', '/', str_replace(storage_path('app/public/'), '', $optimizedPath));
-        }
-
-        $s3Path = 'products/'.$filename;
-        $s3ThumbPath = 'products/'.$thumbFilename;
-
-        try {
-            $disk->put($s3Path, fopen($optimizedPath, 'r'));
-            if (file_exists($thumbPath)) {
-                $disk->put($s3ThumbPath, fopen($thumbPath, 'r'));
+            $tempDir = $isLocal ? storage_path('app/public/products') : storage_path('app/products_tmp');
+            if (! is_dir($tempDir)) {
+                mkdir($tempDir, 0755, true);
             }
-        } catch (\Exception $e) {
-            Log::error('S3 upload failed: '.$e->getMessage());
-        } finally {
+
+            $tempPath = $tempDir.'/'.uniqid().'.'.$file->extension();
+            $file->move($tempDir, basename($tempPath));
+
+            try {
+                $optimizer = new ImageOptimizer;
+                $optimizedPath = $optimizer->optimize($tempPath, 800, 800, 80);
+                $optimizer->generateThumbnail($optimizedPath, 200);
+            } catch (\Exception $e) {
+                Log::warning('Image optimization failed: '.$e->getMessage());
+                $optimizedPath = $tempPath;
+            }
+
+            $filename = basename($optimizedPath);
+            $thumbFilename = str_replace('.webp', '_thumb.webp', $filename);
+            $thumbPath = dirname($optimizedPath).'/'.$thumbFilename;
+
+            if ($isLocal) {
+                return str_replace('\\', '/', str_replace(storage_path('app/public/'), '', $optimizedPath));
+            }
+
+            $disk = Storage::disk('public');
+            $s3Path = 'products/'.$filename;
+            $s3ThumbPath = 'products/'.$thumbFilename;
+
+            $disk->put($s3Path, fopen($optimizedPath, 'r'), ['visibility' => 'public']);
+            if (file_exists($thumbPath)) {
+                $disk->put($s3ThumbPath, fopen($thumbPath, 'r'), ['visibility' => 'public']);
+            }
+
             unlink($optimizedPath);
             if (file_exists($thumbPath)) {
                 unlink($thumbPath);
@@ -99,18 +97,26 @@ class ProductController extends Controller
             if ($optimizedPath !== $tempPath && file_exists($tempPath)) {
                 unlink($tempPath);
             }
-        }
 
-        return $s3Path;
+            return $s3Path;
+        } catch (\Exception $e) {
+            Log::error('Image upload failed: '.$e->getMessage());
+
+            return null;
+        }
     }
 
     private function deleteImage(string $imagePath): void
     {
-        $disk = Storage::disk('public');
-        $thumbPath = str_replace('.webp', '_thumb.webp', $imagePath);
+        try {
+            $disk = Storage::disk('public');
+            $thumbPath = str_replace('.webp', '_thumb.webp', $imagePath);
 
-        $disk->delete($imagePath);
-        $disk->delete($thumbPath);
+            $disk->delete($imagePath);
+            $disk->delete($thumbPath);
+        } catch (\Exception $e) {
+            Log::error('Image delete failed: '.$e->getMessage());
+        }
     }
 
     public function store(StoreProductRequest $request): RedirectResponse
@@ -118,7 +124,10 @@ class ProductController extends Controller
         $validated = $request->validated();
 
         if ($request->hasFile('image')) {
-            $validated['image'] = $this->uploadImage($request->file('image'));
+            $uploaded = $this->uploadImage($request->file('image'));
+            if ($uploaded) {
+                $validated['image'] = $uploaded;
+            }
         }
 
         Product::create($validated);
@@ -140,7 +149,10 @@ class ProductController extends Controller
                 $this->deleteImage($product->image);
             }
 
-            $validated['image'] = $this->uploadImage($request->file('image'));
+            $uploaded = $this->uploadImage($request->file('image'));
+            if ($uploaded) {
+                $validated['image'] = $uploaded;
+            }
         }
 
         $product->update($validated);

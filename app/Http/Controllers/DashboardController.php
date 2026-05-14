@@ -52,7 +52,7 @@ class DashboardController extends Controller
         $cacheKey = 'dashboard_quick_'.$authUserId.'_'.now()->format('Y-m-d-H-i');
 
         return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($isOwner, $userId) {
-            $driver = DB::getDriverName();
+            $driver = strtolower(DB::getDriverName());
             $today = today();
             $startDate = now()->subDays(30)->startOfDay();
             $date = $driver === 'sqlite' ? 'date(created_at)' : ($driver === 'pgsql' ? 'created_at::date' : 'DATE(created_at)');
@@ -192,10 +192,8 @@ class DashboardController extends Controller
         // Get actual transaction timestamps with timezone conversion to WIB
         if ($driver === 'sqlite') {
             $timeSelect = "strftime('%Y-%m-%d %H:%M', datetime(created_at, '+7 hours')) as time";
-        } elseif ($driver === 'pgsql') {
-            $timeSelect = "TO_CHAR(created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta', 'YYYY-MM-DD HH24:MI') as time";
         } else {
-            $timeSelect = "DATE_FORMAT(DATE_ADD(created_at, INTERVAL 7 HOUR), '%Y-%m-%d %H:%i') as time";
+            $timeSelect = "TO_CHAR(created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta', 'YYYY-MM-DD HH24:MI') as time";
         }
 
         $transactions = Transaction::selectRaw($timeSelect.', total_price')
@@ -264,7 +262,7 @@ class DashboardController extends Controller
         $stats['avg_transaction'] = $avgTransaction;
         $stats['peak_hour'] = $peakTime;
 
-        $weeklyDate = $driver === 'sqlite' ? 'date(created_at)' : ($driver === 'pgsql' ? 'created_at::date' : 'DATE(created_at)');
+        $weeklyDate = $driver === 'sqlite' ? 'date(created_at)' : 'created_at::date';
         $weeklyRevenue = Transaction::selectRaw("{$weeklyDate} as date, COALESCE(SUM(total_price), 0) as revenue, COUNT(*) as transactions")
             ->where('payment_status', 'paid')
             ->where('created_at', '>=', now()->subDays(6)->startOfDay())

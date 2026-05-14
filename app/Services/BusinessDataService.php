@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Transaction;
 use App\Models\TransactionItem;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class BusinessDataService
 {
@@ -82,11 +83,13 @@ class BusinessDataService
     {
         $startDate = Carbon::now()->subDays($days - 1)->startOfDay();
         $endDate = Carbon::now()->endOfDay();
+        $driver = DB::getDriverName();
+        $dateCol = $driver === 'sqlite' ? 'date(transaction_date)' : ($driver === 'pgsql' ? 'transaction_date::date' : 'DATE(transaction_date)');
 
         $dailySales = Transaction::whereBetween('transaction_date', [$startDate, $endDate])
             ->where('payment_status', 'paid')
-            ->selectRaw('DATE(transaction_date) as date, COUNT(*) as transactions, SUM(total_price) as revenue')
-            ->groupBy('date')
+            ->selectRaw("{$dateCol} as date, COUNT(*) as transactions, SUM(total_price) as revenue")
+            ->groupBy(DB::raw($dateCol))
             ->orderBy('date')
             ->get();
 

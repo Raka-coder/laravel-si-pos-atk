@@ -1,0 +1,328 @@
+@startuml
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #feffff
+skinparam classBorderColor #2b9bfb
+skinparam stereotypeBackgroundColor #3498DB
+skinparam stereotypeCBackgroundColor #3498DB
+
+' ============================================
+' ENUMS
+' ============================================
+
+enum PaymentMethod {
+  cash
+  qris
+  midtrans
+}
+
+enum PaymentStatus {
+  pending
+  paid
+  cancelled
+  refunded
+}
+
+enum MovementType {
+  in
+  out
+  adjustment
+  sale
+  return
+}
+
+enum MessageRole {
+  user
+  assistant
+  system
+}
+
+' ============================================
+' AUTHENTICATION & AUTHORIZATION
+' ============================================
+
+class User {
+  +id: BIGINT
+  +name: STRING
+  +email: STRING
+  +email_verified_at: TIMESTAMP
+  +password: STRING
+  +is_active: BOOLEAN
+  +two_factor_secret: TEXT
+  +two_factor_recovery_codes: TEXT
+  +two_factor_confirmed_at: TIMESTAMP
+  +remember_token: STRING
+  +created_at: TIMESTAMP
+  +updated_at: TIMESTAMP
+  --
+  +login()
+  +logout()
+  +hasRole()
+}
+
+class Role {
+  +id: BIGINT
+  +name: STRING
+  +guard_name: STRING
+  +created_at: TIMESTAMP
+  +updated_at: TIMESTAMP
+}
+
+class Permission {
+  +id: BIGINT
+  +name: STRING
+  +guard_name: STRING
+  +created_at: TIMESTAMP
+  +updated_at: TIMESTAMP
+}
+
+class ModelHasRoles {
+  +role_id: BIGINT
+  +model_type: STRING
+  +model_id: BIGINT
+}
+
+class ModelHasPermissions {
+  +permission_id: BIGINT
+  +model_type: STRING
+  +model_id: BIGINT
+}
+
+class RoleHasPermissions {
+  +permission_id: BIGINT
+  +role_id: BIGINT
+}
+
+' ============================================
+' MASTER DATA
+' ============================================
+
+class Category {
+  +id: BIGINT
+  +name: STRING
+  +created_at: TIMESTAMP
+  +updated_at: TIMESTAMP
+}
+
+class Unit {
+  +id: BIGINT
+  +name: STRING
+  +short_name: STRING
+  +created_at: TIMESTAMP
+  +updated_at: TIMESTAMP
+}
+
+class Product {
+  +id: BIGINT
+  +product_code: STRING
+  +barcode: STRING
+  +name: STRING
+  +buy_price: DECIMAL
+  +sell_price: DECIMAL
+  +stock: INTEGER
+  +min_stock: INTEGER
+  +image: STRING
+  +is_active: BOOLEAN
+  +category_id: BIGINT
+  +unit_id: BIGINT
+  +created_at: TIMESTAMP
+  +updated_at: TIMESTAMP
+  --
+  +generateProductCode()
+  +updateStock()
+  +isLowStock()
+}
+
+class ExpenseCategory {
+  +id: BIGINT
+  +name: STRING
+  +created_at: TIMESTAMP
+  +updated_at: TIMESTAMP
+}
+
+' ============================================
+' TRANSACTION
+' ============================================
+
+class Transaction {
+  +id: BIGINT
+  +receipt_number: STRING
+  +subtotal: DECIMAL
+  +discount_amount: DECIMAL
+  +tax_amount: DECIMAL
+  +total_price: DECIMAL
+  +payment_method: PaymentMethod
+  +payment_status: PaymentStatus
+  +payment_reference: STRING
+  +amount_paid: DECIMAL
+  +change_amount: DECIMAL
+  +note: TEXT
+  +transaction_date: TIMESTAMP
+  +user_id: BIGINT
+  +created_at: TIMESTAMP
+  +updated_at: TIMESTAMP
+  --
+  +calculateTotal()
+  +calculateChange()
+  +updatePaymentStatus()
+}
+
+class TransactionItem {
+  +id: BIGINT
+  +transaction_id: BIGINT
+  +product_id: BIGINT
+  +product_name: STRING
+  +price_buy_snapshot: DECIMAL
+  +price_sell: DECIMAL
+  +quantity: INTEGER
+  +discount_amount: DECIMAL
+  +subtotal: DECIMAL
+  --
+  +calculateSubtotal()
+}
+
+' ============================================
+' INVENTORY
+' ============================================
+
+class StockMovement {
+  +id: BIGINT
+  +movement_type: MovementType
+  +qty: INTEGER
+  +stock_before: INTEGER
+  +stock_after: INTEGER
+  +reason: STRING
+  +product_id: BIGINT
+  +user_id: BIGINT
+  +reference_id: BIGINT
+  +created_at: TIMESTAMP
+  +updated_at: TIMESTAMP
+}
+
+' ============================================
+' EXPENSE
+' ============================================
+
+class Expense {
+  +id: BIGINT
+  +user_id: BIGINT
+  +expense_category_id: BIGINT
+  +name: STRING
+  +amount: DECIMAL
+  +date: DATE
+  +note: TEXT
+  +created_at: TIMESTAMP
+  +updated_at: TIMESTAMP
+}
+
+' ============================================
+' SETTINGS
+' ============================================
+
+class ShopSetting {
+  +id: BIGINT
+  +shop_name: STRING
+  +address: TEXT
+  +email: STRING
+  +phone: STRING
+  +npwp: STRING
+  +logo_path: STRING
+  +qris_image_path: STRING
+  +midtrans_merchant_id: STRING
+  +midtrans_client_key: STRING
+  +midtrans_server_key: STRING
+  +midtrans_is_production: BOOLEAN
+  +tax_rate: DECIMAL
+  +receipt_footer: TEXT
+  +paper_size: STRING
+  +created_at: TIMESTAMP
+  +updated_at: TIMESTAMP
+}
+
+' ============================================
+' CHATBOT
+' ============================================
+
+class ChatConversation {
+  +id: BIGINT
+  +user_id: BIGINT
+  +title: STRING
+  +created_at: TIMESTAMP
+  +updated_at: TIMESTAMP
+  --
+  +addMessage()
+  +getMessages()
+}
+
+class ChatMessage {
+  +id: BIGINT
+  +conversation_id: BIGINT
+  +role: MessageRole
+  +content: TEXT
+  +metadata: JSON
+  +used_tool: BOOLEAN
+  +tool_used: STRING
+  +ip_address: STRING
+  +tokens_used: BIGINT
+  +created_at: TIMESTAMP
+  +updated_at: TIMESTAMP
+}
+
+' ============================================
+' QUEUE & CACHE
+' ============================================
+
+class Job {
+  +id: BIGINT
+  +queue: STRING
+  +payload: LONGTEXT
+  +attempts: TINYINT
+  +reserved_at: INTEGER
+  +available_at: INTEGER
+  +created_at: INTEGER
+}
+
+class FailedJob {
+  +id: BIGINT
+  +uuid: STRING
+  +connection: TEXT
+  +queue: TEXT
+  +payload: LONGTEXT
+  +exception: LONGTEXT
+  +failed_at: TIMESTAMP
+}
+
+' ============================================
+' RELATIONSHIPS
+' ============================================
+
+' User relationships
+User ||--o{ Transaction : creates
+User ||--o{ Expense : records
+User ||--o{ StockMovement : performs
+User ||--o{ ChatConversation : owns
+
+' Role & Permission (Many-to-Many)
+User ||--o{ ModelHasRoles : has
+Role ||--o{ ModelHasRoles : assigned_to
+Role ||--o{ RoleHasPermissions : has
+Permission ||--o{ RoleHasPermissions : assigned_to
+Permission ||--o{ ModelHasPermissions : has
+User ||--o{ ModelHasPermissions : has
+
+' Master data relationships
+Category ||--o{ Product : contains
+Unit ||--o{ Product : measures
+ExpenseCategory ||--o{ Expense : categorizes
+
+' Transaction relationships
+Transaction ||--|{ TransactionItem : contains
+Product ||--o{ TransactionItem : appears_in
+
+' Stock movement relationships
+Product ||--o{ StockMovement : tracks
+Transaction ||--o{ StockMovement : references
+
+' Chatbot relationships
+ChatConversation ||--|{ ChatMessage : contains
+@enduml

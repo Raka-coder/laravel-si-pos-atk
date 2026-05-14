@@ -9,6 +9,7 @@ use App\Models\Transaction;
 use App\Models\TransactionItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use OpenSpout\Writer\XLSX\Writer;
@@ -119,13 +120,15 @@ class ReportController extends Controller
         $totalExpenses = Expense::whereBetween('date', [$startDate, $endDate])->sum('amount');
         $netProfit = $grossProfit - $totalExpenses;
 
+        $driver = DB::getDriverName();
+        $dateCol = $driver === 'sqlite' ? 'date(created_at)' : ($driver === 'pgsql' ? 'created_at::date' : 'DATE(created_at)');
         $salesByDay = Transaction::when($userId, function ($query) use ($userId) {
             $query->where('user_id', $userId);
         })
             ->whereBetween('created_at', [$startDate, $endDate.' 23:59:59'])
             ->where('payment_status', 'paid')
-            ->selectRaw('DATE(created_at) as date, SUM(total_price) as total')
-            ->groupBy('date')
+            ->selectRaw("{$dateCol} as date, SUM(total_price) as total")
+            ->groupBy(DB::raw($dateCol))
             ->orderBy('date')
             ->get();
 

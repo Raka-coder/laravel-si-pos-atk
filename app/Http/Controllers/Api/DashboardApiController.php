@@ -36,15 +36,16 @@ class DashboardApiController extends Controller
         $data = Cache::remember($cacheKey, self::CACHE_TTL, function () use ($userId) {
             $startDate = now()->subDays(30)->startOfDay();
             $driver = DB::getDriverName();
+            $date = $driver === 'sqlite' ? 'date(created_at)' : ($driver === 'pgsql' ? 'created_at::date' : 'DATE(created_at)');
 
             // Daily revenue last 30 days
-            $dailyRevenue = Transaction::selectRaw('DATE(created_at) as date, COALESCE(SUM(total_price), 0) as revenue, COUNT(*) as transactions')
+            $dailyRevenue = Transaction::selectRaw("{$date} as date, COALESCE(SUM(total_price), 0) as revenue, COUNT(*) as transactions")
                 ->when($userId, function ($query) use ($userId) {
                     $query->where('user_id', $userId);
                 })
                 ->where('payment_status', 'paid')
                 ->where('created_at', '>=', $startDate)
-                ->groupBy('date')
+                ->groupBy(DB::raw($date))
                 ->orderBy('date')
                 ->get();
 
@@ -88,9 +89,13 @@ class DashboardApiController extends Controller
                 ->get();
 
             // Monthly comparison (last 6 months)
-            $monthSelect = $driver === 'sqlite'
-                ? 'strftime("%Y", created_at) as year, strftime("%m", created_at) as month'
-                : 'YEAR(created_at) as year, MONTH(created_at) as month';
+            if ($driver === 'sqlite') {
+                $monthSelect = 'strftime("%Y", created_at) as year, strftime("%m", created_at) as month';
+            } elseif ($driver === 'pgsql') {
+                $monthSelect = "EXTRACT(YEAR FROM created_at) as year, LPAD(EXTRACT(MONTH FROM created_at)::text, 2, '0') as month";
+            } else {
+                $monthSelect = 'YEAR(created_at) as year, MONTH(created_at) as month';
+            }
 
             $monthlyRevenue = Transaction::selectRaw($monthSelect.', COALESCE(SUM(total_price), 0) as revenue, COUNT(*) as transactions')
                 ->when($userId, function ($query) use ($userId) {
@@ -137,9 +142,13 @@ class DashboardApiController extends Controller
         $driver = DB::getDriverName();
         $today = today();
 
-        $hourSelect = $driver === 'sqlite'
-            ? 'strftime("%H", created_at) as hour'
-            : 'HOUR(created_at) as hour';
+        if ($driver === 'sqlite') {
+            $hourSelect = 'strftime("%H", created_at) as hour';
+        } elseif ($driver === 'pgsql') {
+            $hourSelect = "LPAD(EXTRACT(HOUR FROM created_at)::text, 2, '0') as hour";
+        } else {
+            $hourSelect = 'HOUR(created_at) as hour';
+        }
 
         $hourlyRevenue = Transaction::selectRaw($hourSelect.', COALESCE(SUM(total_price), 0) as revenue')
             ->when($userId, function ($query) use ($userId) {

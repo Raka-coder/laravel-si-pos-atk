@@ -55,6 +55,7 @@ class DashboardController extends Controller
             $driver = DB::getDriverName();
             $today = today();
             $startDate = now()->subDays(30)->startOfDay();
+            $date = $driver === 'sqlite' ? 'date(created_at)' : ($driver === 'pgsql' ? 'created_at::date' : 'DATE(created_at)');
 
             // OPTIMIZATION 1: Single query untuk today transactions dengan agregasi
             $todayStats = Transaction::whereDate('created_at', $today)
@@ -114,10 +115,10 @@ class DashboardController extends Controller
             $driver = DB::getDriverName();
 
             // Daily revenue last 30 days
-            $dailyRevenue = Transaction::selectRaw('DATE(created_at) as date, COALESCE(SUM(total_price), 0) as revenue, COUNT(*) as transactions')
+            $dailyRevenue = Transaction::selectRaw("{$date} as date, COALESCE(SUM(total_price), 0) as revenue, COUNT(*) as transactions")
                 ->where('payment_status', 'paid')
                 ->where('created_at', '>=', $startDate)
-                ->groupBy('date')
+                ->groupBy(DB::raw($date))
                 ->orderBy('date')
                 ->get();
 
@@ -152,9 +153,13 @@ class DashboardController extends Controller
                 ->get();
 
             // Monthly comparison (last 6 months)
-            $monthSelect = $driver === 'sqlite'
-                ? 'strftime("%Y", created_at) as year, strftime("%m", created_at) as month'
-                : 'YEAR(created_at) as year, MONTH(created_at) as month';
+            if ($driver === 'sqlite') {
+                $monthSelect = 'strftime("%Y", created_at) as year, strftime("%m", created_at) as month';
+            } elseif ($driver === 'pgsql') {
+                $monthSelect = "EXTRACT(YEAR FROM created_at) as year, LPAD(EXTRACT(MONTH FROM created_at)::text, 2, '0') as month";
+            } else {
+                $monthSelect = 'YEAR(created_at) as year, MONTH(created_at) as month';
+            }
 
             $monthlyRevenue = Transaction::selectRaw($monthSelect.', COALESCE(SUM(total_price), 0) as revenue, COUNT(*) as transactions')
                 ->where('payment_status', 'paid')
@@ -185,9 +190,13 @@ class DashboardController extends Controller
     private function getCashierStats(array $stats, string $driver, $today, ?int $userId): array
     {
         // Get actual transaction timestamps with timezone conversion to WIB
-        $timeSelect = $driver === 'sqlite'
-            ? "strftime('%Y-%m-%d %H:%M', datetime(created_at, '+7 hours')) as time"
-            : 'DATE_FORMAT(DATE_ADD(created_at, INTERVAL 7 HOUR), "%Y-%m-%d %H:%i") as time';
+        if ($driver === 'sqlite') {
+            $timeSelect = "strftime('%Y-%m-%d %H:%M', datetime(created_at, '+7 hours')) as time";
+        } elseif ($driver === 'pgsql') {
+            $timeSelect = "TO_CHAR(created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Jakarta', 'YYYY-MM-DD HH24:MI') as time";
+        } else {
+            $timeSelect = "DATE_FORMAT(DATE_ADD(created_at, INTERVAL 7 HOUR), '%Y-%m-%d %H:%i') as time";
+        }
 
         $transactions = Transaction::selectRaw($timeSelect.', total_price')
             ->where('payment_status', 'paid')
@@ -255,13 +264,14 @@ class DashboardController extends Controller
         $stats['avg_transaction'] = $avgTransaction;
         $stats['peak_hour'] = $peakTime;
 
-        $weeklyRevenue = Transaction::selectRaw('DATE(created_at) as date, COALESCE(SUM(total_price), 0) as revenue, COUNT(*) as transactions')
+        $weeklyDate = $driver === 'sqlite' ? 'date(created_at)' : ($driver === 'pgsql' ? 'created_at::date' : 'DATE(created_at)');
+        $weeklyRevenue = Transaction::selectRaw("{$weeklyDate} as date, COALESCE(SUM(total_price), 0) as revenue, COUNT(*) as transactions")
             ->where('payment_status', 'paid')
             ->where('created_at', '>=', now()->subDays(6)->startOfDay())
             ->when($userId, function ($query) use ($userId) {
                 $query->where('user_id', $userId);
             })
-            ->groupBy('date')
+            ->groupBy(DB::raw($weeklyDate))
             ->orderBy('date')
             ->get();
 

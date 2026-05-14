@@ -41,7 +41,7 @@ class ImageOptimizer
             $newPath = $pathInfo['dirname'].'/'.$pathInfo['filename'].'.webp';
 
             // Encode to webp format with compression and save
-            $image->encodeUsingPath($newPath, $quality);
+            $image->encodeUsingFileExtension('webp', $quality)->save($newPath);
 
             // Delete original file
             if (file_exists($imagePath) && $imagePath !== $newPath) {
@@ -79,7 +79,7 @@ class ImageOptimizer
             $thumbnailPath = $pathInfo['dirname'].'/'.$pathInfo['filename'].'_thumb.webp';
 
             // Encode to webp and save
-            $image->encodeUsingPath($thumbnailPath, 75);
+            $image->encodeUsingFileExtension('webp', 75)->save($thumbnailPath);
 
             return $thumbnailPath;
         } catch (\Exception $e) {

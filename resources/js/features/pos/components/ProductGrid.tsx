@@ -88,9 +88,9 @@ export function ProductGrid({
                             className="flex h-auto flex-col items-center justify-center rounded-lg border border-sidebar-border/70 bg-background p-3 transition-colors hover:bg-accent disabled:opacity-50"
                         >
                             <div className="mb-2 flex h-20 w-20 items-center justify-center overflow-hidden rounded-lg bg-muted">
-                                {product.image ? (
-                                    <img
-                                        src={`/storage/${product.image}`}
+                                {product.image_url ? (
+
+                                        src={product.image_url}
                                         alt={product.name}
                                         className="h-full w-full object-cover"
                                     />

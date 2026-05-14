@@ -74,7 +74,7 @@ export function ProductFormDialog({
             // Use timeout to avoid synchronous state update in effect
             setTimeout(() => {
                 setImagePreview(
-                    product.image ? `/storage/${product.image}` : null,
+                    product.image_url ?? null,
                 );
             }, 0);
         } else {

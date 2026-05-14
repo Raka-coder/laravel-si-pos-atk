@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * @method static ShopSetting create(array $attributes = [])
@@ -31,6 +33,30 @@ class ShopSetting extends Model
         'tax_rate' => 'decimal:2',
         'midtrans_is_production' => 'boolean',
     ];
+
+    protected $appends = ['logo_url', 'qris_image_url'];
+
+    protected function logoUrl(): Attribute
+    {
+        return Attribute::get(function () {
+            if (! $this->logo_path) {
+                return null;
+            }
+
+            return Storage::disk('public')->url($this->logo_path);
+        });
+    }
+
+    protected function qrisImageUrl(): Attribute
+    {
+        return Attribute::get(function () {
+            if (! $this->qris_image_path) {
+                return null;
+            }
+
+            return Storage::disk('public')->url($this->qris_image_path);
+        });
+    }
 
     public static function getShop(): self
     {

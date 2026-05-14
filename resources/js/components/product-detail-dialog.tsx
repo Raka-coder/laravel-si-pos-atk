@@ -49,9 +49,9 @@ export function ProductDetailDialog({
                         {/* 1. Visual Section - Minimal & Small */}
                         <aside className="flex flex-col items-center justify-start gap-4 border-b border-border/50 bg-muted/20 p-6 sm:w-45 sm:border-r sm:border-b-0">
                             <div className="group relative aspect-square w-30 overflow-hidden rounded-xl border border-border/60 bg-background shadow-sm">
-                                {product.image ? (
-                                    <img
-                                        src={`/storage/${product.image}`}
+                                {product.image_url ? (
+
+                                        src={product.image_url}
                                         alt={product.name}
                                         className="h-full w-full object-cover"
                                     />

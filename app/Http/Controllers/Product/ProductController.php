@@ -12,9 +12,11 @@ use App\Services\ImageOptimizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 
 class ProductController extends Controller
 {
@@ -49,24 +51,66 @@ class ProductController extends Controller
         ]);
     }
 
+    private function uploadImage(UploadedFile $file): string
+    {
+        $disk = Storage::disk('public');
+        $driver = $disk->getDriver()->getAdapter() instanceof LocalFilesystemAdapter
+            ? 'local'
+            : 's3';
+
+        if ($driver === 's3') {
+            $tempPath = $file->store('products', ['disk' => 'local']);
+            $fullPath = storage_path('app/private/'.$tempPath);
+        } else {
+            $imagePath = $file->store('products', 'public');
+            $fullPath = storage_path('app/public/'.$imagePath);
+        }
+
+        $optimizer = new ImageOptimizer;
+        $optimizedPath = $optimizer->optimize($fullPath, 800, 800, 80);
+        $optimizer->generateThumbnail($optimizedPath, 200);
+
+        if ($driver === 's3') {
+            $optimizedRelative = str_replace(storage_path('app/private/'), '', $optimizedPath);
+            $thumbPath = str_replace('.webp', '_thumb.webp', $optimizedPath);
+
+            $stream = fopen($optimizedPath, 'r');
+            $disk->writeStream('products/'.basename($optimizedPath), $stream);
+            fclose($stream);
+
+            if (file_exists($thumbPath)) {
+                $thumbStream = fopen($thumbPath, 'r');
+                $disk->writeStream('products/'.basename($thumbPath), $thumbStream);
+                fclose($thumbStream);
+            }
+
+            unlink($fullPath);
+            unlink($optimizedPath);
+            if (file_exists($thumbPath)) {
+                unlink($thumbPath);
+            }
+
+            return 'products/'.basename($optimizedPath);
+        }
+
+        return str_replace('\\', '/', str_replace(storage_path('app/public/'), '', $optimizedPath));
+    }
+
+    private function deleteImage(string $imagePath): void
+    {
+        $disk = Storage::disk('public');
+        $thumbPath = str_replace('.webp', '_thumb.webp', $imagePath);
+
+        $disk->delete($imagePath);
+        $disk->delete($thumbPath);
+    }
+
     public function store(StoreProductRequest $request): RedirectResponse
     {
         $validated = $request->validated();
 
         if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('products', 'public');
-            $fullPath = storage_path('app/public/'.$imagePath);
-
-            // Optimize image
-            $optimizer = new ImageOptimizer;
-            $optimizedPath = $optimizer->optimize($fullPath, 800, 800, 80);
-
-            // Generate thumbnail
-            $optimizer->generateThumbnail($optimizedPath, 200);
-
-            // Update image path to webp (relative to storage/app/public)
-            $relativePath = str_replace('\\', '/', str_replace(storage_path('app/public/'), '', $optimizedPath));
-            $validated['image'] = $relativePath;
+            $validated['image'] = $this->uploadImage($request->file('image'));
         }
 
         Product::create($validated);
@@ -78,49 +122,17 @@ class ProductController extends Controller
     {
         $validated = $request->validated();
 
-        // Handle remove image
         if ($request->boolean('remove_image') && $product->image) {
-            $oldPath = storage_path('app/public/'.$product->image);
-            $thumbPath = str_replace('.webp', '_thumb.webp', $oldPath);
-
-            if (file_exists($oldPath)) {
-                unlink($oldPath);
-            }
-            if (file_exists($thumbPath)) {
-                unlink($thumbPath);
-            }
-
-            Storage::disk('public')->delete($product->image);
+            $this->deleteImage($product->image);
             $validated['image'] = null;
         }
 
-        // Handle new image upload
         if ($request->hasFile('image')) {
-            // Delete old image and thumbnail
             if ($product->image) {
-                $oldPath = storage_path('app/public/'.$product->image);
-                $thumbPath = str_replace('.webp', '_thumb.webp', $oldPath);
-
-                if (file_exists($oldPath)) {
-                    unlink($oldPath);
-                }
-                if (file_exists($thumbPath)) {
-                    unlink($thumbPath);
-                }
-
-                Storage::disk('public')->delete($product->image);
+                $this->deleteImage($product->image);
             }
 
-            // Upload and optimize new image
-            $imagePath = $request->file('image')->store('products', 'public');
-            $fullPath = storage_path('app/public/'.$imagePath);
-
-            $optimizer = new ImageOptimizer;
-            $optimizedPath = $optimizer->optimize($fullPath, 800, 800, 80);
-            $optimizer->generateThumbnail($optimizedPath, 200);
-
-            $relativePath = str_replace('\\', '/', str_replace(storage_path('app/public/'), '', $optimizedPath));
-            $validated['image'] = $relativePath;
+            $validated['image'] = $this->uploadImage($request->file('image'));
         }
 
         $product->update($validated);
@@ -131,17 +143,7 @@ class ProductController extends Controller
     public function destroy(Product $product): RedirectResponse
     {
         if ($product->image) {
-            $oldPath = storage_path('app/public/'.$product->image);
-            $thumbPath = str_replace('.webp', '_thumb.webp', $oldPath);
-
-            if (file_exists($oldPath)) {
-                unlink($oldPath);
-            }
-            if (file_exists($thumbPath)) {
-                unlink($thumbPath);
-            }
-
-            Storage::disk('public')->delete($product->image);
+            $this->deleteImage($product->image);
         }
 
         $product->delete();

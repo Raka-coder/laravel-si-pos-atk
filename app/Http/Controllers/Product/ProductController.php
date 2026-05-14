@@ -13,10 +13,10 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
-use League\Flysystem\Local\LocalFilesystemAdapter;
 
 class ProductController extends Controller
 {
@@ -53,47 +53,55 @@ class ProductController extends Controller
 
     private function uploadImage(UploadedFile $file): string
     {
+        $isLocal = config('filesystems.disks.public.driver') === 'local';
         $disk = Storage::disk('public');
-        $driver = $disk->getDriver()->getAdapter() instanceof LocalFilesystemAdapter
-            ? 'local'
-            : 's3';
 
-        if ($driver === 's3') {
-            $tempPath = $file->store('products', ['disk' => 'local']);
-            $fullPath = storage_path('app/private/'.$tempPath);
-        } else {
-            $imagePath = $file->store('products', 'public');
-            $fullPath = storage_path('app/public/'.$imagePath);
+        $tempDir = $isLocal ? storage_path('app/public/products') : storage_path('app/products_tmp');
+        if (! is_dir($tempDir)) {
+            mkdir($tempDir, 0755, true);
         }
 
-        $optimizer = new ImageOptimizer;
-        $optimizedPath = $optimizer->optimize($fullPath, 800, 800, 80);
-        $optimizer->generateThumbnail($optimizedPath, 200);
+        $tempPath = $tempDir.'/'.uniqid().'.'.$file->extension();
+        $file->move($tempDir, basename($tempPath));
 
-        if ($driver === 's3') {
-            $optimizedRelative = str_replace(storage_path('app/private/'), '', $optimizedPath);
-            $thumbPath = str_replace('.webp', '_thumb.webp', $optimizedPath);
+        try {
+            $optimizer = new ImageOptimizer;
+            $optimizedPath = $optimizer->optimize($tempPath, 800, 800, 80);
+            $optimizer->generateThumbnail($optimizedPath, 200);
+        } catch (\Exception $e) {
+            Log::warning('Image optimization failed, using original: '.$e->getMessage());
+            $optimizedPath = $tempPath;
+        }
 
-            $stream = fopen($optimizedPath, 'r');
-            $disk->writeStream('products/'.basename($optimizedPath), $stream);
-            fclose($stream);
+        $filename = basename($optimizedPath);
+        $thumbFilename = str_replace('.webp', '_thumb.webp', $filename);
+        $thumbPath = dirname($optimizedPath).'/'.$thumbFilename;
 
+        if ($isLocal) {
+            return str_replace('\\', '/', str_replace(storage_path('app/public/'), '', $optimizedPath));
+        }
+
+        $s3Path = 'products/'.$filename;
+        $s3ThumbPath = 'products/'.$thumbFilename;
+
+        try {
+            $disk->put($s3Path, fopen($optimizedPath, 'r'));
             if (file_exists($thumbPath)) {
-                $thumbStream = fopen($thumbPath, 'r');
-                $disk->writeStream('products/'.basename($thumbPath), $thumbStream);
-                fclose($thumbStream);
+                $disk->put($s3ThumbPath, fopen($thumbPath, 'r'));
             }
-
-            unlink($fullPath);
+        } catch (\Exception $e) {
+            Log::error('S3 upload failed: '.$e->getMessage());
+        } finally {
             unlink($optimizedPath);
             if (file_exists($thumbPath)) {
                 unlink($thumbPath);
             }
-
-            return 'products/'.basename($optimizedPath);
+            if ($optimizedPath !== $tempPath && file_exists($tempPath)) {
+                unlink($tempPath);
+            }
         }
 
-        return str_replace('\\', '/', str_replace(storage_path('app/public/'), '', $optimizedPath));
+        return $s3Path;
     }
 
     private function deleteImage(string $imagePath): void

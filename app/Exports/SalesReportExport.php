@@ -3,19 +3,14 @@
 namespace App\Exports;
 
 use App\Models\Transaction;
-use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithMapping;
+use OpenSpout\Common\Entity\Row;
+use OpenSpout\Writer\XLSX\Writer;
 
-/**
- * @implements WithMapping<Transaction>
- */
-class SalesReportExport implements FromCollection, WithHeadings, WithMapping
+class SalesReportExport
 {
-    protected $startDate;
+    protected string $startDate;
 
-    protected $endDate;
+    protected string $endDate;
 
     public function __construct(string $startDate, string $endDate)
     {
@@ -23,41 +18,33 @@ class SalesReportExport implements FromCollection, WithHeadings, WithMapping
         $this->endDate = $endDate.' 23:59:59';
     }
 
-    public function collection(): Collection
+    public function write(Writer $writer): void
     {
-        return Transaction::with(['user', 'items.product'])
+        $transactions = Transaction::with(['user', 'items.product'])
             ->whereBetween('created_at', [$this->startDate, $this->endDate])
             ->where('payment_status', 'paid')
             ->orderBy('created_at', 'desc')
             ->get();
-    }
 
-    public function headings(): array
-    {
-        return [
-            'Date',
-            'Receipt Number',
-            'Cashier',
-            'Payment Method',
-            'Items Count',
-            'Total Revenue',
-            'Gross Profit',
-        ];
-    }
+        $writer->addRow(Row::fromValues([
+            'Date', 'Receipt Number', 'Cashier', 'Payment Method',
+            'Items Count', 'Total Revenue', 'Gross Profit',
+        ]));
 
-    public function map($transaction): array
-    {
-        $grossProfit = $transaction->items->sum(fn ($item) => ($item->price_sell - $item->price_buy_snapshot) * $item->quantity
-        );
+        foreach ($transactions as $transaction) {
+            $grossProfit = $transaction->items->sum(
+                fn ($item) => ($item->price_sell - $item->price_buy_snapshot) * $item->quantity
+            );
 
-        return [
-            $transaction->created_at->format('Y-m-d H:i'),
-            $transaction->receipt_number,
-            $transaction->user->name,
-            $transaction->payment_method,
-            $transaction->items->count(),
-            $transaction->total_price,
-            $grossProfit,
-        ];
+            $writer->addRow(Row::fromValues([
+                $transaction->created_at->format('Y-m-d H:i'),
+                $transaction->receipt_number,
+                $transaction->user->name,
+                $transaction->payment_method,
+                $transaction->items->count(),
+                $transaction->total_price,
+                $grossProfit,
+            ]));
+        }
     }
 }

@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
-use Maatwebsite\Excel\Facades\Excel;
+use OpenSpout\Writer\XLSX\Writer;
 
 class ReportController extends Controller
 {
@@ -157,7 +157,12 @@ class ReportController extends Controller
 
         $filename = 'sales_report_'.$startDate.'_to_'.$endDate.'.xlsx';
 
-        return Excel::download(new SalesReportExport($startDate, $endDate), $filename);
+        $writer = new Writer;
+        $writer->openToBrowser($filename);
+        (new SalesReportExport($startDate, $endDate))->write($writer);
+        $writer->close();
+
+        exit;
     }
 
     public function exportExpenses(Request $request)
@@ -167,6 +172,11 @@ class ReportController extends Controller
 
         $filename = 'expenses_report_'.$startDate.'_to_'.$endDate.'.xlsx';
 
-        return Excel::download(new ExpensesReportExport($startDate, $endDate), $filename);
+        $writer = new Writer;
+        $writer->openToBrowser($filename);
+        (new ExpensesReportExport($startDate, $endDate))->write($writer);
+        $writer->close();
+
+        exit;
     }
 }

@@ -3,19 +3,14 @@
 namespace App\Exports;
 
 use App\Models\Expense;
-use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithMapping;
+use OpenSpout\Common\Entity\Row;
+use OpenSpout\Writer\XLSX\Writer;
 
-/**
- * @implements WithMapping<Expense>
- */
-class ExpensesReportExport implements FromCollection, WithHeadings, WithMapping
+class ExpensesReportExport
 {
-    protected $startDate;
+    protected string $startDate;
 
-    protected $endDate;
+    protected string $endDate;
 
     public function __construct(string $startDate, string $endDate)
     {
@@ -23,35 +18,26 @@ class ExpensesReportExport implements FromCollection, WithHeadings, WithMapping
         $this->endDate = $endDate;
     }
 
-    public function collection(): Collection
+    public function write(Writer $writer): void
     {
-        return Expense::with(['user', 'category'])
+        $expenses = Expense::with(['user', 'category'])
             ->whereBetween('date', [$this->startDate, $this->endDate])
             ->orderBy('date', 'desc')
             ->get();
-    }
 
-    public function headings(): array
-    {
-        return [
-            'Date',
-            'Name',
-            'Category',
-            'Note',
-            'Amount',
-            'Created By',
-        ];
-    }
+        $writer->addRow(Row::fromValues([
+            'Date', 'Name', 'Category', 'Note', 'Amount', 'Created By',
+        ]));
 
-    public function map($expense): array
-    {
-        return [
-            $expense->date,
-            $expense->name,
-            $expense->category?->name ?? '-',
-            $expense->note ?? '-',
-            $expense->amount,
-            $expense->user->name,
-        ];
+        foreach ($expenses as $expense) {
+            $writer->addRow(Row::fromValues([
+                $expense->date,
+                $expense->name,
+                $expense->category?->name ?? '-',
+                $expense->note ?? '-',
+                $expense->amount,
+                $expense->user->name,
+            ]));
+        }
     }
 }

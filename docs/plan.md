@@ -1,1 +1,1 @@
-Masih terdapat kendala, saya tidak bisa create product pada halaman product, saya upload image dengan file webp
+Saat ini masih terdapat kendala yaitu pada bagian title dan SEO, saya test web yang sudah deploy hasilnya sama semua, saya ingin agar sesuai page yang dimuat

@@ -24,7 +24,7 @@ class DashboardController extends Controller
         $isOwner = $user && $user->hasRole('owner');
 
         // Minimal stats untuk initial load (fast)
-        $stats = $this->getQuickStats($isOwner);
+        $stats = $this->getQuickStats($isOwner, $user->id);
 
         if ($isOwner) {
             return Inertia::render('dashboard', [
@@ -41,16 +41,17 @@ class DashboardController extends Controller
             'hourlyRevenue' => $stats['hourlyData'],
             'todayPaymentMethods' => $stats['todayPaymentMethods'],
             'todayTopProducts' => $stats['todayTopProducts'],
+            'weeklyRevenue' => $stats['weeklyRevenue'],
             'lowStockProducts' => $stats['lowStockProducts'],
         ]);
     }
 
-    private function getQuickStats(bool $isOwner): array
+    private function getQuickStats(bool $isOwner, ?int $userId = null): array
     {
-        $userId = Auth::id() ?? 'guest';
-        $cacheKey = 'dashboard_quick_'.$userId.'_'.now()->format('Y-m-d-H-i');
+        $authUserId = Auth::id() ?? 'guest';
+        $cacheKey = 'dashboard_quick_'.$authUserId.'_'.now()->format('Y-m-d-H-i');
 
-        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($isOwner) {
+        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($isOwner, $userId) {
             $driver = DB::getDriverName();
             $today = today();
             $startDate = now()->subDays(30)->startOfDay();
@@ -58,6 +59,9 @@ class DashboardController extends Controller
             // OPTIMIZATION 1: Single query untuk today transactions dengan agregasi
             $todayStats = Transaction::whereDate('created_at', $today)
                 ->where('payment_status', 'paid')
+                ->when(! $isOwner && $userId, function ($query) use ($userId) {
+                    $query->where('user_id', $userId);
+                })
                 ->selectRaw('COUNT(*) as count, COALESCE(SUM(total_price), 0) as revenue')
                 ->first();
 
@@ -67,7 +71,7 @@ class DashboardController extends Controller
             ];
 
             if (! $isOwner) {
-                return $this->getCashierStats($stats, $driver, $today);
+                return $this->getCashierStats($stats, $driver, $today, $userId);
             }
 
             // OPTIMIZATION 2: Single query untuk expenses
@@ -178,60 +182,95 @@ class DashboardController extends Controller
         });
     }
 
-    private function getCashierStats(array $stats, string $driver, $today): array
+    private function getCashierStats(array $stats, string $driver, $today, ?int $userId): array
     {
-        $hourSelect = $driver === 'sqlite'
-            ? 'strftime("%H", created_at) as hour'
-            : 'HOUR(created_at) as hour';
+        // Get actual transaction timestamps with timezone conversion to WIB
+        $timeSelect = $driver === 'sqlite'
+            ? "strftime('%Y-%m-%d %H:%M', datetime(created_at, '+7 hours')) as time"
+            : 'DATE_FORMAT(DATE_ADD(created_at, INTERVAL 7 HOUR), "%Y-%m-%d %H:%i") as time';
 
-        $hourlyRevenue = Transaction::selectRaw($hourSelect.', COALESCE(SUM(total_price), 0) as revenue')
+        $transactions = Transaction::selectRaw($timeSelect.', total_price')
             ->where('payment_status', 'paid')
             ->whereDate('created_at', $today)
-            ->groupBy('hour')
-            ->orderBy('hour')
-            ->pluck('revenue', 'hour')
-            ->toArray();
+            ->when($userId, function ($query) use ($userId) {
+                $query->where('user_id', $userId);
+            })
+            ->orderBy('time')
+            ->get();
 
         $hourlyData = [];
-        for ($h = 0; $h < 24; $h++) {
-            $hourKey = (string) $h;
-            $hourlyData[] = [
-                'hour' => str_pad($h, 2, '0', STR_PAD_LEFT).':00',
-                'revenue' => (float) ($hourlyRevenue[$hourKey] ?? 0),
-            ];
+        foreach ($transactions as $tx) {
+            $time = $tx->time;
+            $hour = explode(' ', $time)[1];
+            $hourKey = substr($hour, 0, 2);
+            $minuteKey = substr($hour, 0, 5);
+
+            if (! isset($hourlyData[$minuteKey])) {
+                $hourlyData[$minuteKey] = [
+                    'hour' => $minuteKey,
+                    'revenue' => 0,
+                ];
+            }
+            $hourlyData[$minuteKey]['revenue'] += (float) $tx->total_price;
         }
+
+        ksort($hourlyData);
+        $hourlyData = array_values($hourlyData);
 
         $paymentStats = Transaction::selectRaw('payment_method, COUNT(*) as count, COALESCE(SUM(total_price), 0) as total')
             ->where('payment_status', 'paid')
             ->whereDate('created_at', $today)
+            ->when($userId, function ($query) use ($userId) {
+                $query->where('user_id', $userId);
+            })
             ->groupBy('payment_method')
             ->get();
 
         $todayTopProducts = TransactionItem::selectRaw('product_id, product_name, SUM(quantity) as total_qty, SUM(subtotal) as total_revenue')
-            ->whereHas('transaction', function ($q) use ($today) {
+            ->whereHas('transaction', function ($q) use ($today, $userId) {
                 $q->where('payment_status', 'paid')
-                    ->whereDate('created_at', $today);
+                    ->whereDate('created_at', $today)
+                    ->when($userId, function ($query) use ($userId) {
+                        $query->where('user_id', $userId);
+                    });
             })
             ->groupBy('product_id', 'product_name')
             ->orderByDesc('total_qty')
             ->limit(5)
             ->get();
 
-        $peakHour = ! empty($hourlyRevenue)
-            ? (array_keys($hourlyRevenue, max($hourlyRevenue))[0] ?? null)
-            : null;
+        $peakTime = null;
+        $maxRevenue = 0;
+        foreach ($hourlyData as $data) {
+            if ($data['revenue'] > $maxRevenue) {
+                $maxRevenue = $data['revenue'];
+                $peakTime = $data['hour'];
+            }
+        }
+
         $avgTransaction = $stats['today_sales'] > 0
             ? $stats['today_revenue'] / $stats['today_sales']
             : 0;
 
         $stats['avg_transaction'] = $avgTransaction;
-        $stats['peak_hour'] = $peakHour;
+        $stats['peak_hour'] = $peakTime;
+
+        $weeklyRevenue = Transaction::selectRaw('DATE(created_at) as date, COALESCE(SUM(total_price), 0) as revenue, COUNT(*) as transactions')
+            ->where('payment_status', 'paid')
+            ->where('created_at', '>=', now()->subDays(6)->startOfDay())
+            ->when($userId, function ($query) use ($userId) {
+                $query->where('user_id', $userId);
+            })
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
 
         return [
             'stats' => $stats,
             'hourlyData' => $hourlyData,
             'todayPaymentMethods' => $paymentStats,
             'todayTopProducts' => $todayTopProducts,
+            'weeklyRevenue' => $weeklyRevenue,
             'lowStockProducts' => Product::with(['category', 'unit'])
                 ->whereRaw('stock < min_stock')
                 ->orderBy('stock', 'asc')

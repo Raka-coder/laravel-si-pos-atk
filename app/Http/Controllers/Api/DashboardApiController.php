@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Transaction;
 use App\Models\TransactionItem;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -13,16 +14,34 @@ class DashboardApiController extends Controller
 {
     private const CACHE_TTL = 10; // 10 seconds
 
+    private function getUserFilter($query)
+    {
+        $user = Auth::user();
+        $isOwner = $user && $user->hasRole('owner');
+
+        if (! $isOwner && $user) {
+            $query->where('user_id', $user->id);
+        }
+
+        return $query;
+    }
+
     public function chartData(): JsonResponse
     {
-        $cacheKey = 'dashboard_charts_'.now()->format('Y-m-d-H-i');
+        $user = Auth::user();
+        $isOwner = $user && $user->hasRole('owner');
+        $userId = $isOwner ? null : $user->id;
+        $cacheKey = 'dashboard_charts_'.$user->id.'_'.now()->format('Y-m-d-H-i');
 
-        $data = Cache::remember($cacheKey, self::CACHE_TTL, function () {
+        $data = Cache::remember($cacheKey, self::CACHE_TTL, function () use ($userId) {
             $startDate = now()->subDays(30)->startOfDay();
             $driver = DB::getDriverName();
 
             // Daily revenue last 30 days
             $dailyRevenue = Transaction::selectRaw('DATE(created_at) as date, COALESCE(SUM(total_price), 0) as revenue, COUNT(*) as transactions')
+                ->when($userId, function ($query) use ($userId) {
+                    $query->where('user_id', $userId);
+                })
                 ->where('payment_status', 'paid')
                 ->where('created_at', '>=', $startDate)
                 ->groupBy('date')
@@ -31,6 +50,9 @@ class DashboardApiController extends Controller
 
             // Payment method distribution
             $paymentMethods = Transaction::selectRaw('payment_method, COUNT(*) as count, COALESCE(SUM(total_price), 0) as total')
+                ->when($userId, function ($query) use ($userId) {
+                    $query->where('user_id', $userId);
+                })
                 ->where('payment_status', 'paid')
                 ->where('created_at', '>=', $startDate)
                 ->groupBy('payment_method')
@@ -38,8 +60,11 @@ class DashboardApiController extends Controller
 
             // Top products
             $topProducts = TransactionItem::selectRaw('product_id, product_name, SUM(quantity) as total_qty, SUM(subtotal) as total_revenue')
-                ->whereHas('transaction', function ($q) use ($startDate) {
-                    $q->where('payment_status', 'paid')
+                ->whereHas('transaction', function ($q) use ($startDate, $userId) {
+                    $q->when($userId, function ($query) use ($userId) {
+                        $query->where('user_id', $userId);
+                    })
+                        ->where('payment_status', 'paid')
                         ->where('created_at', '>=', $startDate);
                 })
                 ->groupBy('product_id', 'product_name')
@@ -53,6 +78,9 @@ class DashboardApiController extends Controller
                 ->join('transactions as t', 'ti.transaction_id', '=', 't.id')
                 ->join('products as p', 'ti.product_id', '=', 'p.id')
                 ->leftJoin('categories as c', 'p.category_id', '=', 'c.id')
+                ->when($userId, function ($query) use ($userId) {
+                    $query->where('t.user_id', $userId);
+                })
                 ->where('t.payment_status', 'paid')
                 ->where('t.created_at', '>=', $startDate)
                 ->groupBy('c.name')
@@ -65,6 +93,9 @@ class DashboardApiController extends Controller
                 : 'YEAR(created_at) as year, MONTH(created_at) as month';
 
             $monthlyRevenue = Transaction::selectRaw($monthSelect.', COALESCE(SUM(total_price), 0) as revenue, COUNT(*) as transactions')
+                ->when($userId, function ($query) use ($userId) {
+                    $query->where('user_id', $userId);
+                })
                 ->where('payment_status', 'paid')
                 ->where('created_at', '>=', now()->subMonths(6)->startOfMonth())
                 ->groupBy('year', 'month')
@@ -91,7 +122,8 @@ class DashboardApiController extends Controller
     public function refreshStats(): JsonResponse
     {
         // Force refresh - bypass cache
-        $cacheKey = 'dashboard_charts_'.now()->format('Y-m-d-H-i');
+        $user = Auth::user();
+        $cacheKey = 'dashboard_charts_'.$user->id.'_'.now()->format('Y-m-d-H-i');
         Cache::forget($cacheKey);
 
         return $this->chartData();
@@ -99,6 +131,9 @@ class DashboardApiController extends Controller
 
     public function hourlyData(): JsonResponse
     {
+        $user = Auth::user();
+        $isOwner = $user && $user->hasRole('owner');
+        $userId = $isOwner ? null : $user->id;
         $driver = DB::getDriverName();
         $today = today();
 
@@ -107,6 +142,9 @@ class DashboardApiController extends Controller
             : 'HOUR(created_at) as hour';
 
         $hourlyRevenue = Transaction::selectRaw($hourSelect.', COALESCE(SUM(total_price), 0) as revenue')
+            ->when($userId, function ($query) use ($userId) {
+                $query->where('user_id', $userId);
+            })
             ->where('payment_status', 'paid')
             ->whereDate('created_at', $today)
             ->groupBy('hour')

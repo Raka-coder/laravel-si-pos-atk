@@ -1,5 +1,5 @@
 import { usePage } from '@inertiajs/react';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 
 interface FlashProps {
@@ -9,14 +9,20 @@ interface FlashProps {
 
 export default function FlashListener() {
     const { flash } = usePage<{ flash: FlashProps }>().props;
+    const lastShownRef = useRef<string>('');
 
     useEffect(() => {
-        if (flash?.success) {
-            toast.success(flash.success);
-        }
+        const message = flash?.success || flash?.error;
+        const type = flash?.success ? 'success' : flash?.error ? 'error' : null;
 
-        if (flash?.error) {
-            toast.error(flash.error);
+        if (message && message !== lastShownRef.current) {
+            lastShownRef.current = message;
+
+            if (type === 'success') {
+                toast.success(message);
+            } else if (type === 'error') {
+                toast.error(message);
+            }
         }
     }, [flash]);
 

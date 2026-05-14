@@ -73,7 +73,7 @@ class AuthenticationTest extends TestCase
         $response = $this->postWithCsrf(route('logout'));
 
         $this->assertGuest();
-        $response->assertRedirect('/');
+        $response->assertRedirect('/login');
     }
 
     public function test_users_are_rate_limited()

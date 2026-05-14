@@ -36,7 +36,7 @@ class AuthFlashResponseTest extends TestCase
 
         $response = $this->postWithCsrf(route('logout'));
 
-        $response->assertRedirect('/');
+        $response->assertRedirect('/login');
         $response->assertSessionHas('success', 'Logout berhasil.');
     }
 }

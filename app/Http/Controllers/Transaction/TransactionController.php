@@ -27,7 +27,13 @@ class TransactionController extends Controller
         $paymentMethod = $request->input('payment_method', 'all');
         $perPage = 20;
 
+        $user = $request->user();
+        $isOwner = $user && $user->hasRole('owner');
+
         $transactions = Transaction::with('user')
+            ->when(! $isOwner, function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('receipt_number', 'like', "%{$search}%")

@@ -8,18 +8,29 @@ use App\Models\Expense;
 use App\Models\Transaction;
 use App\Models\TransactionItem;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
 {
+    private function getUserFilter($user)
+    {
+        return $user && $user->hasRole('owner') ? null : $user->id;
+    }
+
     public function sales(Request $request): Response
     {
+        $user = Auth::user();
+        $userId = $this->getUserFilter($user);
         $startDate = $request->input('start_date', now()->startOfMonth()->toDateString());
         $endDate = $request->input('end_date', now()->endOfMonth()->toDateString());
 
         $transactions = Transaction::with(['user', 'items.product'])
+            ->when($userId, function ($query) use ($userId) {
+                $query->where('user_id', $userId);
+            })
             ->whereBetween('created_at', [$startDate, $endDate.' 23:59:59'])
             ->where('payment_status', 'paid')
             ->orderBy('created_at', 'desc')
@@ -27,14 +38,23 @@ class ReportController extends Controller
             ->withQueryString();
 
         $summary = [
-            'total_revenue' => Transaction::whereBetween('created_at', [$startDate, $endDate.' 23:59:59'])
+            'total_revenue' => Transaction::when($userId, function ($query) use ($userId) {
+                $query->where('user_id', $userId);
+            })
+                ->whereBetween('created_at', [$startDate, $endDate.' 23:59:59'])
                 ->where('payment_status', 'paid')
                 ->sum('total_price'),
-            'total_transactions' => Transaction::whereBetween('created_at', [$startDate, $endDate.' 23:59:59'])
+            'total_transactions' => Transaction::when($userId, function ($query) use ($userId) {
+                $query->where('user_id', $userId);
+            })
+                ->whereBetween('created_at', [$startDate, $endDate.' 23:59:59'])
                 ->where('payment_status', 'paid')
                 ->count(),
-            'gross_profit' => TransactionItem::whereHas('transaction', function ($query) use ($startDate, $endDate) {
-                $query->whereBetween('created_at', [$startDate, $endDate.' 23:59:59'])
+            'gross_profit' => TransactionItem::whereHas('transaction', function ($query) use ($startDate, $endDate, $userId) {
+                $query->when($userId, function ($q) use ($userId) {
+                    $q->where('user_id', $userId);
+                })
+                    ->whereBetween('created_at', [$startDate, $endDate.' 23:59:59'])
                     ->where('payment_status', 'paid');
             })->get()->sum(fn ($item) => ($item->price_sell - $item->price_buy_snapshot) * $item->quantity),
         ];
@@ -83,18 +103,26 @@ class ReportController extends Controller
 
     public function profitLoss(Request $request): Response
     {
+        $user = Auth::user();
+        $userId = $this->getUserFilter($user);
         $startDate = $request->input('start_date', now()->startOfMonth()->toDateString());
         $endDate = $request->input('end_date', now()->endOfMonth()->toDateString());
 
-        $grossProfit = TransactionItem::whereHas('transaction', function ($query) use ($startDate, $endDate) {
-            $query->whereBetween('created_at', [$startDate, $endDate.' 23:59:59'])
+        $grossProfit = TransactionItem::whereHas('transaction', function ($query) use ($startDate, $endDate, $userId) {
+            $query->when($userId, function ($q) use ($userId) {
+                $q->where('user_id', $userId);
+            })
+                ->whereBetween('created_at', [$startDate, $endDate.' 23:59:59'])
                 ->where('payment_status', 'paid');
         })->get()->sum(fn ($item) => ($item->price_sell - $item->price_buy_snapshot) * $item->quantity);
 
         $totalExpenses = Expense::whereBetween('date', [$startDate, $endDate])->sum('amount');
         $netProfit = $grossProfit - $totalExpenses;
 
-        $salesByDay = Transaction::whereBetween('created_at', [$startDate, $endDate.' 23:59:59'])
+        $salesByDay = Transaction::when($userId, function ($query) use ($userId) {
+            $query->where('user_id', $userId);
+        })
+            ->whereBetween('created_at', [$startDate, $endDate.' 23:59:59'])
             ->where('payment_status', 'paid')
             ->selectRaw('DATE(created_at) as date, SUM(total_price) as total')
             ->groupBy('date')

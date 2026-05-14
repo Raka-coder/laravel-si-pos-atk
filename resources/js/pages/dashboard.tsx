@@ -63,6 +63,7 @@ interface Props {
     hourlyRevenue?: HourlyData[];
     todayPaymentMethods?: TodayPaymentMethod[];
     todayTopProducts?: TodayTopProduct[];
+    weeklyRevenue?: { date: string; revenue: number | string; transactions: number | string }[];
 }
 
 export default function Dashboard() {
@@ -74,6 +75,7 @@ export default function Dashboard() {
         hourlyRevenue = [],
         todayPaymentMethods = [],
         todayTopProducts = [],
+        weeklyRevenue = [],
     } = usePage<Props>().props;
 
     const peakHour = stats.peak_hour as number | undefined;
@@ -93,6 +95,7 @@ export default function Dashboard() {
                     todayPaymentMethods={todayPaymentMethods}
                     todayTopProducts={todayTopProducts}
                     peakHour={peakHour}
+                    weeklyRevenue={weeklyRevenue}
                 /> : <OwnerDashboard
                     stats={stats}
                     lowStockProducts={lowStockProducts}
@@ -110,6 +113,7 @@ function CashierDashboard({
     todayPaymentMethods,
     todayTopProducts,
     peakHour,
+    weeklyRevenue,
 }: {
     stats: Stats;
     lowStockProducts: Product[];
@@ -117,6 +121,7 @@ function CashierDashboard({
     todayPaymentMethods: TodayPaymentMethod[];
     todayTopProducts: TodayTopProduct[];
     peakHour?: number;
+    weeklyRevenue?: { date: string; revenue: number | string; transactions: number | string }[];
 }) {
     return (
         <div className="flex flex-col gap-4">
@@ -124,8 +129,12 @@ function CashierDashboard({
                 <StatCard title="Today's Sales" value={stats.today_sales} description="Transactions" icon={TrendingUp} color="blue" />
                 <StatCard title="Today's Revenue" value={formatCurrency(stats.today_revenue)} description="Total income" icon={Wallet} color="emerald" />
                 <StatCard title="Avg. Transaction" value={formatCurrency(stats.avg_transaction || 0)} description="Per transaction" icon={CreditCard} color="indigo" />
-                <StatCard title="Peak Hour" value={peakHour !== undefined ? `${String(peakHour).padStart(2, '0')}:00` : '-'} description="Busiest hour" icon={TrendingUp} color="amber" />
+                <StatCard title="Peak Hour" value={peakHour !== undefined ? String(peakHour) : '-'} description="Waktu tersibuk (WIB)" icon={TrendingUp} color="amber" />
             </div>
+
+            <ChartCard title="Revenue Trend (7 Days)">
+                {weeklyRevenue && weeklyRevenue.length > 0 ? <RevenueChart data={weeklyRevenue} /> : <ChartEmptyState />}
+            </ChartCard>
 
             <ChartCard title="Hourly Sales Today">
                 {hourlyRevenue.length > 0 ? <HourlySalesChart data={hourlyRevenue} /> : <ChartEmptyState />}

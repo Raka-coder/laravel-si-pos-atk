@@ -4,7 +4,6 @@ namespace App\Http\Responses\Auth;
 
 use Illuminate\Http\JsonResponse;
 use Laravel\Fortify\Contracts\LogoutResponse as LogoutResponseContract;
-use Laravel\Fortify\Fortify;
 
 class LogoutResponse implements LogoutResponseContract
 {
@@ -12,7 +11,7 @@ class LogoutResponse implements LogoutResponseContract
     {
         return $request->wantsJson()
             ? new JsonResponse('', 204)
-            : redirect(Fortify::redirects('logout', '/'))
+            : redirect('/login')
                 ->with('success', 'Logout berhasil.');
     }
 }

@@ -1,5 +1,6 @@
 import { BotMessageSquare } from 'lucide-react';
 import { useState } from 'react';
+import { usePage } from '@inertiajs/react';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { ChatWidget } from '@/components/chat/chat-widget';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,8 @@ export function AppSidebarHeader({
     breadcrumbs?: BreadcrumbItemType[];
 }) {
     const [isChatOpen, setIsChatOpen] = useState(false);
+    const { auth } = usePage().props as { auth?: { isOwner?: boolean } };
+    const isOwner = auth?.isOwner === true;
 
     return (
         <>
@@ -27,27 +30,31 @@ export function AppSidebarHeader({
                     <Breadcrumbs breadcrumbs={breadcrumbs} />
                 </div>
                 <div className="ml-auto flex items-center gap-2">
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="icon-lg"
-                                    onClick={() => setIsChatOpen(!isChatOpen)}
-                                    aria-label="Buka chat"
-                                >
-                                    <BotMessageSquare className="h-5 w-5" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Ask Chatbot</TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
+                    {isOwner && (
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon-lg"
+                                        onClick={() => setIsChatOpen(!isChatOpen)}
+                                        aria-label="Buka chat"
+                                    >
+                                        <BotMessageSquare className="h-5 w-5" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Ask Chatbot</TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    )}
                 </div>
             </header>
-            <ChatWidget
-                isOpen={isChatOpen}
-                onToggle={() => setIsChatOpen(!isChatOpen)}
-            />
+            {isOwner && (
+                <ChatWidget
+                    isOpen={isChatOpen}
+                    onToggle={() => setIsChatOpen(!isChatOpen)}
+                />
+            )}
         </>
     );
 }

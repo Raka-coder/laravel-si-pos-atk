@@ -29,7 +29,7 @@ export function StockMovementTable({
         },
         {
             header: 'Product',
-            cell: (movement) => movement.product.name,
+            cell: (movement) => movement.product?.name ?? '-',
         },
         {
             header: 'Type',
@@ -76,7 +76,7 @@ export function StockMovementTable({
         },
         {
             header: 'User',
-            cell: (movement) => movement.user.name,
+            cell: (movement) => movement.user?.name ?? '-',
         },
     ];
 

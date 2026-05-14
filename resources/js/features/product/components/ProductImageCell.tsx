@@ -6,7 +6,7 @@ interface ProductImageCellProps {
 
 export function ProductImageCell({ product }: ProductImageCellProps) {
     return product.image_url ? (
-
+        <img
             src={product.image_url}
             alt={product.name}
             className="h-12 w-12 rounded-lg object-cover"

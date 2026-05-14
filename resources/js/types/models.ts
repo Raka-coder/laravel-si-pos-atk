@@ -36,6 +36,7 @@ export interface Product {
     stock: number;
     min_stock: number;
     image?: string | null;
+    image_url?: string | null;
     is_active: boolean;
     category_id: number;
     unit_id: number;

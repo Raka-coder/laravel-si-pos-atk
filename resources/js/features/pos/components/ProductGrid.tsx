@@ -89,7 +89,7 @@ export function ProductGrid({
                         >
                             <div className="mb-2 flex h-20 w-20 items-center justify-center overflow-hidden rounded-lg bg-muted">
                                 {product.image_url ? (
-
+                                    <img
                                         src={product.image_url}
                                         alt={product.name}
                                         className="h-full w-full object-cover"

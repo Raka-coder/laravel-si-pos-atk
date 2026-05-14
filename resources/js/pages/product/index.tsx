@@ -72,35 +72,19 @@ export default function ProductIndex() {
     const handleFormSubmit = (data: ProductForm, productId?: number) => {
         setIsProcessing(true);
 
-        const formData = new FormData();
+        const payload = {
+            ...data,
+            ...(productId ? { _method: 'put' as const } : {}),
+        };
 
-        Object.keys(data).forEach((key) => {
-            const dataKey = key as keyof ProductForm;
-
-            if (data[dataKey] !== null && data[dataKey] !== undefined) {
-                if (dataKey === 'image' && data.image instanceof File) {
-                    formData.append('image', data.image);
-                } else {
-                    formData.append(dataKey, String(data[dataKey]));
-                }
-            }
+        router.post(productId ? `/products/${productId}` : '/products', payload as any, {
+            forceFormData: !!payload.image,
+            onSuccess: () => {
+                setIsFormOpen(false);
+                if (productId) setEditingProduct(null);
+            },
+            onFinish: () => setIsProcessing(false),
         });
-
-        if (productId) {
-            formData.append('_method', 'PUT');
-            router.post(`/products/${productId}`, formData as any, {
-                onSuccess: () => {
-                    setIsFormOpen(false);
-                    setEditingProduct(null);
-                },
-                onFinish: () => setIsProcessing(false),
-            });
-        } else {
-            router.post('/products', formData as any, {
-                onSuccess: () => setIsFormOpen(false),
-                onFinish: () => setIsProcessing(false),
-            });
-        }
     };
 
     const handleDelete = () => {

@@ -34,7 +34,9 @@ Route::middleware(['auth', 'verified', 'role:owner'])->group(function () {
     Route::patch('users/{user}/toggle-active', [UserController::class, 'toggleActive'])->name('users.toggle-active');
     Route::patch('users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
 
-    Route::resource('product-categories', CategoryController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('product-categories', CategoryController::class)
+        ->parameters(['product-categories' => 'category'])
+        ->only(['index', 'store', 'update', 'destroy']);
     Route::resource('units', UnitController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::resource('products', ProductController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::get('products/barcode/{barcode}', [ProductController::class, 'byBarcode']);

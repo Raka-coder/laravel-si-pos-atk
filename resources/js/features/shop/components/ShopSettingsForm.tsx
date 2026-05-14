@@ -38,10 +38,10 @@ export function ShopSettingsForm({ shop }: ShopSettingsFormProps) {
     const [isProcessing, setIsProcessing] = useState(false);
 
     const [logoPreview, setLogoPreview] = useState<string | null>(
-        shop.logo_path ? `/storage/${shop.logo_path}` : null,
+        shop.logo_url ?? null,
     );
     const [qrisPreview, setQrisPreview] = useState<string | null>(
-        shop.qris_image_path ? `/storage/${shop.qris_image_path}` : null,
+        shop.qris_image_url ?? null,
     );
 
     const {

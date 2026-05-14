@@ -1,1 +1,1 @@
-Saat ini masih terdapat kendala yaitu pada bagian title dan SEO, saya test web yang sudah deploy hasilnya sama semua, saya ingin agar sesuai page yang dimuat
+saya tidak upload image ke bucket laravel cloud, saya sudah buat folder "products" dan "profiles" pada file explorer jadinya saya tidak bisa upload atau create product pada project laravel yang sudah di deploy

@@ -85,7 +85,9 @@ export interface Shop {
     phone: string | null;
     npwp: string | null;
     logo_path: string | null;
+    logo_url: string | null;
     qris_image_path: string | null;
+    qris_image_url: string | null;
     midtrans_merchant_id: string | null;
     tax_rate: number;
     receipt_footer: string | null;

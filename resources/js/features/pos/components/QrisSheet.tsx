@@ -72,12 +72,12 @@ export function QrisSheet({
 
                             {/* QR Code Area */}
                             <div className="flex flex-col items-center gap-6">
-                                {shop.qris_image_path ? (
+                                {shop.qris_image_url ? (
                                     <div className="group relative">
                                         <div className="absolute -inset-4 rounded-[2.5rem] bg-primary/5 opacity-50 blur-2xl" />
                                         <div className="relative rounded-2xl border-4 border-background bg-background p-4 shadow-2xl">
                                             <img
-                                                src={`/storage/${shop.qris_image_path}`}
+                                                src={shop.qris_image_url ?? ''}
                                                 alt="QRIS Code"
                                                 className="h-56 w-56 object-contain"
                                             />

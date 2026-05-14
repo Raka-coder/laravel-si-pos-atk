@@ -85,9 +85,11 @@ class ProductController extends Controller
             $s3Path = 'products/'.$filename;
             $s3ThumbPath = 'products/'.$thumbFilename;
 
-            $disk->put($s3Path, fopen($optimizedPath, 'r'), ['visibility' => 'public']);
+            if (! $disk->put($s3Path, fopen($optimizedPath, 'r'))) {
+                throw new \RuntimeException('Failed to upload image to storage');
+            }
             if (file_exists($thumbPath)) {
-                $disk->put($s3ThumbPath, fopen($thumbPath, 'r'), ['visibility' => 'public']);
+                $disk->put($s3ThumbPath, fopen($thumbPath, 'r'));
             }
 
             unlink($optimizedPath);

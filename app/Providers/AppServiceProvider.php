@@ -29,9 +29,9 @@ class AppServiceProvider extends ServiceProvider
         Product::observe(ProductObserver::class);
 
         $this->configureDefaults();
-        // if(config('app.env') === 'production') {
-        //     URL::forceScheme('https');
-        // }
+        if(config('app.env') === 'production') {
+            URL::forceScheme('https');
+        }
     }
 
     /**

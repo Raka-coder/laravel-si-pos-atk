@@ -15,7 +15,9 @@ export default function Welcome() {
                 <meta property="og:description" content="Sistem Point of Sale modern untuk toko ATK." />
                 <meta property="og:type" content="website" />
                 <meta property="og:site_name" content="ATK-Sync POS" />
+                <meta property="og:image" content="/og-image.png" />
                 <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:image" content="/og-image.png" />
                 <meta name="twitter:title" content="ATK-Sync POS - Sistem POS Modern" />
                 <meta name="twitter:description" content="Sistem Point of Sale modern untuk toko ATK." />
             </Head>

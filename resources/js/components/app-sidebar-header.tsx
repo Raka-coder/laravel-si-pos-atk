@@ -1,6 +1,6 @@
+import { usePage } from '@inertiajs/react';
 import { BotMessageSquare } from 'lucide-react';
 import { useState } from 'react';
-import { usePage } from '@inertiajs/react';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { ChatWidget } from '@/components/chat/chat-widget';
 import { Button } from '@/components/ui/button';

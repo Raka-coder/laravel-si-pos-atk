@@ -81,7 +81,10 @@ export default function ProductIndex() {
             forceFormData: !!payload.image,
             onSuccess: () => {
                 setIsFormOpen(false);
-                if (productId) setEditingProduct(null);
+
+                if (productId) {
+                    setEditingProduct(null);
+                }
             },
             onFinish: () => setIsProcessing(false),
         });

@@ -19,10 +19,10 @@ class TransactionService
             ->first();
 
         $sequence = $lastTransaction
-            ? (int) substr($lastTransaction->receipt_number, -4) + 1
+            ? (int) substr($lastTransaction->receipt_number, 13, 4) + 1
             : 1;
 
-        return 'TRX-'.$date.'-'.str_pad($sequence, 4, '0', STR_PAD_LEFT);
+        return 'TRX-'.$date.'-'.str_pad($sequence, 4, '0', STR_PAD_LEFT).strtoupper(substr(uniqid(), -4));
     }
 
     public function getTaxRate(): float

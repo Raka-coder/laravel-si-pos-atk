@@ -1,5 +1,5 @@
 import { Head, usePage, router } from '@inertiajs/react';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, ArrowUpDown } from 'lucide-react';
 import { useEffect, useState, useRef, useCallback } from 'react';
 
 import { ConfirmAlert } from '@/components/common/confirm-alert';
@@ -9,6 +9,13 @@ import { PageHeader } from '@/components/common/page-header';
 import { ProductDetailDialog } from '@/components/product-detail-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { ProductActions } from '@/features/product/components/ProductActions';
 import { ProductFormDialog } from '@/features/product/components/ProductFormDialog';
 import { ProductImageCell } from '@/features/product/components/ProductImageCell';
@@ -30,6 +37,7 @@ interface Props {
     units: Unit[];
     filters: {
         search: string;
+        sort_by: string;
     };
 }
 
@@ -44,6 +52,7 @@ export default function ProductIndex() {
     const [showingProduct, setShowingProduct] = useState<Product | null>(null);
     const [searchQuery, setSearchQuery] = useState(filters.search || '');
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
+    const [sortBy, setSortBy] = useState(filters.sort_by || '');
     const isFirstRender = useRef(true);
     const [isProcessing, setIsProcessing] = useState(false);
 
@@ -54,20 +63,20 @@ export default function ProductIndex() {
             return;
         }
 
-        if (searchTerm === (filters.search || '')) {
+        if (searchTerm === (filters.search || '') && sortBy === (filters.sort_by || '')) {
             return;
         }
 
         const timer = setTimeout(() => {
             router.get(
                 '/products',
-                { search: searchTerm },
+                { search: searchTerm, sort_by: sortBy || undefined },
                 { preserveState: true, preserveScroll: true, replace: true },
             );
         }, 500);
 
         return () => clearTimeout(timer);
-    }, [searchTerm, filters.search]);
+    }, [searchTerm, sortBy, filters.search, filters.sort_by]);
 
     const handleFormSubmit = (data: ProductForm, productId?: number) => {
         setIsProcessing(true);
@@ -117,6 +126,10 @@ export default function ProductIndex() {
 
         if (filters.search) {
             params.set('search', filters.search);
+        }
+
+        if (filters.sort_by) {
+            params.set('sort_by', filters.sort_by);
         }
 
         if (page > 1) {
@@ -227,6 +240,25 @@ export default function ProductIndex() {
                                 }}
                                 className="pl-9"
                             />
+                        </div>
+                        <div className="w-48">
+                            <Select
+                                value={sortBy}
+                                onValueChange={(val) => {
+                                    setSortBy(val);
+                                    setSearchTerm(searchTerm);
+                                }}
+                            >
+                                <SelectTrigger>
+                                    <ArrowUpDown className="mr-2 h-4 w-4" />
+                                    <SelectValue placeholder="Sort by price" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="">Default</SelectItem>
+                                    <SelectItem value="price_asc">Termurah</SelectItem>
+                                    <SelectItem value="price_desc">Termahal</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                     </div>
                     <DataTable

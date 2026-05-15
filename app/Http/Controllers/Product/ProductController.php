@@ -23,6 +23,7 @@ class ProductController extends Controller
     public function index(Request $request): Response
     {
         $search = $request->input('search', '');
+        $sortBy = $request->input('sort_by', '');
         $perPage = 15;
 
         // Get categories and units (cached for performance)
@@ -37,7 +38,9 @@ class ProductController extends Controller
                         ->orWhere('barcode', 'like', "%{$search}%");
                 });
             })
-            ->orderBy('name')
+            ->when($sortBy === 'price_asc', fn ($q) => $q->orderBy('sell_price'))
+            ->when($sortBy === 'price_desc', fn ($q) => $q->orderByDesc('sell_price'))
+            ->unless($sortBy, fn ($q) => $q->orderBy('name'))
             ->paginate($perPage)
             ->withQueryString();
 
@@ -47,6 +50,7 @@ class ProductController extends Controller
             'units' => $units,
             'filters' => [
                 'search' => $search,
+                'sort_by' => $sortBy,
             ],
         ]);
     }

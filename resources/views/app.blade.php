@@ -43,9 +43,7 @@
 
         @viteReactRefresh
         @vite(['resources/css/app.css', 'resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
-        <x-inertia::head>
-            <title>POS ATK - {{ config('app.name') }}</title>
-        </x-inertia::head>
+        <x-inertia::head />
     </head>
     <body class="font-sans antialiased">
         <x-inertia::app />

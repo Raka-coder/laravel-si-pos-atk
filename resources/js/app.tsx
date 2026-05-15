@@ -7,7 +7,7 @@ import AuthLayout from '@/layouts/auth-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import { QueryProvider } from '@/providers/query-provider';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+const appName = import.meta.env.VITE_APP_NAME || 'POS ATK';
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),

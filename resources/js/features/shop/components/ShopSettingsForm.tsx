@@ -1,7 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router } from '@inertiajs/react';
-import { Check, Receipt, Store, Trash2, Upload } from 'lucide-react';
+import { Receipt, Store, Trash2, Upload } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
+import type { RefObject } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import type { z } from 'zod';
 
@@ -26,6 +27,7 @@ type ShopSettingsFormValues = z.infer<typeof shopSettingsSchema>;
 
 interface ShopSettingsFormProps {
     shop: ShopSettings;
+    formRef?: RefObject<HTMLFormElement | null>;
 }
 
 const receiptItems = [
@@ -34,8 +36,8 @@ const receiptItems = [
     { name: 'Penghapus', quantity: 1, unitPrice: 3500 },
 ];
 
-export function ShopSettingsForm({ shop }: ShopSettingsFormProps) {
-    const [isProcessing, setIsProcessing] = useState(false);
+export function ShopSettingsForm({ shop, formRef }: ShopSettingsFormProps) {
+    const [, setIsProcessing] = useState(false);
 
     const [logoPreview, setLogoPreview] = useState<string | null>(
         shop.logo_url ?? null,
@@ -194,19 +196,7 @@ export function ShopSettingsForm({ shop }: ShopSettingsFormProps) {
     };
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div className="flex items-center justify-end">
-                <Button type="submit" disabled={isProcessing} size="lg">
-                    {isProcessing ? (
-                        'Saving...'
-                    ) : (
-                        <>
-                            <Check className="mr-0.5 h-4 w-4" />
-                            Save Changes
-                        </>
-                    )}
-                </Button>
-            </div>
+        <form id="shop-settings-form" ref={formRef} onSubmit={handleSubmit(onSubmit)} className="space-y-6">
 
             <div className="rounded-xl border bg-card p-6 shadow-sm">
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">

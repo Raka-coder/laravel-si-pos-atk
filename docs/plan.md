@@ -1,1 +1,1 @@
-Terdapat kendala ketika saya uji coba pembayaran dengan midtrans meski sudah hosting dengan laravel cloud, saya sengaja agar midtrans tetap dalam mode testing/untuk demo, saya sudah lakukan transaksi berhasil tetapi status di table transaksi masih pending
+Perbaiki button save changes pada halaman shop setting dan buat sejajar dengan title dashboard "shop settings", yang sekarang ada dibawahnya untuk button

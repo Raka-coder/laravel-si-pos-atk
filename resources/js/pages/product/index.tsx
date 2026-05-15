@@ -140,7 +140,7 @@ export default function ProductIndex() {
         {
             header: 'Name',
             accessorKey: 'name',
-            className: 'text-sm font-medium',
+            className: 'max-w-[200px] truncate text-sm font-medium',
         },
         {
             header: 'Category',

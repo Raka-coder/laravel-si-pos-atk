@@ -1,1 +1,1 @@
-saya tidak upload image ke bucket laravel cloud, saya sudah buat folder "products" dan "profiles" pada file explorer jadinya saya tidak bisa upload atau create product pada project laravel yang sudah di deploy
+Terdapat bug ketika nama produknya panjang, pada tabel produk jadi terlihat panjang dan pada card di menu POS jadi offsite, perbaiki isu

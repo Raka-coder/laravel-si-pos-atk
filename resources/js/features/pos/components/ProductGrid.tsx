@@ -85,7 +85,7 @@ export function ProductGrid({
                             onClick={() => handleAddToCart(product)}
                             disabled={product.stock <= 0}
                             variant="outline"
-                            className="flex h-auto flex-col items-center justify-center rounded-lg border border-sidebar-border/70 bg-background p-3 transition-colors hover:bg-accent disabled:opacity-50"
+                            className="flex h-auto flex-col items-center justify-center overflow-hidden rounded-lg border border-sidebar-border/70 bg-background p-3 transition-colors hover:bg-accent disabled:opacity-50"
                         >
                             <div className="mb-2 flex h-20 w-20 items-center justify-center overflow-hidden rounded-lg bg-muted">
                                 {product.image_url ? (

@@ -1,1 +1,1 @@
-Terdapat bug ketika nama produknya panjang, pada tabel produk jadi terlihat panjang dan pada card di menu POS jadi offsite, perbaiki isu
+Terdapat kendala ketika saya uji coba pembayaran dengan midtrans meski sudah hosting dengan laravel cloud, saya sengaja agar midtrans tetap dalam mode testing/untuk demo, saya sudah lakukan transaksi berhasil tetapi status di table transaksi masih pending

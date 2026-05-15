@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 import {
     cancelMidtrans,
+    confirmMidtrans,
     store as storeTransaction,
 } from '@/routes/transactions';
 import { useCartStore } from '@/stores/cartStore';
@@ -107,11 +108,18 @@ export function usePos(shop: Shop, midtransClientKey?: string) {
                 window.setTimeout(() => {
                     window.snap?.pay(snapToken, {
                         onSuccess: function () {
-                            setIsProcessing(false);
-                            cart.clearCart();
-                            router.visit(
-                                `/transactions/${resData.transaction_id}`,
-                            );
+                            fetch(confirmMidtrans.url({ transaction: transactionId }), {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRF-TOKEN':
+                                        document.querySelector('meta[name="csrf-token"]')
+                                            ?.getAttribute('content') || '',
+                                },
+                            }).finally(() => {
+                                setIsProcessing(false);
+                                cart.clearCart();
+                                router.visit(`/transactions/${resData.transaction_id}`);
+                            });
                         },
                         onPending: function () {
                             setIsProcessing(false);

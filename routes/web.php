@@ -77,6 +77,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::resource('transactions', TransactionController::class)->only(['index', 'store', 'show', 'update']);
     Route::post('transactions/{transaction}/print-direct', [TransactionController::class, 'printDirect'])->name('transactions.print-direct');
+    Route::post('transactions/{transaction}/confirm-midtrans', [TransactionController::class, 'confirmMidtransPayment'])->name('transactions.confirm-midtrans');
     Route::delete('transactions/{transaction}/cancel-midtrans', [TransactionController::class, 'cancelMidtrans'])
         ->name('transactions.cancel-midtrans');
     Route::get('transactions/receipt/{transaction}', [TransactionController::class, 'receipt'])->name('transactions.receipt');

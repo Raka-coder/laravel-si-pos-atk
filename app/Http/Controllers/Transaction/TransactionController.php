@@ -328,4 +328,16 @@ class TransactionController extends Controller
                 ->with('success', 'Transaksi berhasil diperbarui.');
         });
     }
+
+    public function confirmMidtransPayment(Transaction $transaction): JsonResponse
+    {
+        if ($transaction->payment_status === 'paid') {
+            return response()->json(['success' => true, 'message' => 'Already paid']);
+        }
+
+        $transaction->update(['payment_status' => 'paid']);
+        app(TransactionService::class)->confirmPayment($transaction->fresh('items'));
+
+        return response()->json(['success' => true, 'message' => 'Payment confirmed']);
+    }
 }

@@ -52,7 +52,7 @@ export default function ProductIndex() {
     const [showingProduct, setShowingProduct] = useState<Product | null>(null);
     const [searchQuery, setSearchQuery] = useState(filters.search || '');
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
-    const [sortBy, setSortBy] = useState(filters.sort_by || '');
+    const [sortBy, setSortBy] = useState(filters.sort_by || 'name');
     const isFirstRender = useRef(true);
     const [isProcessing, setIsProcessing] = useState(false);
 
@@ -70,7 +70,7 @@ export default function ProductIndex() {
         const timer = setTimeout(() => {
             router.get(
                 '/products',
-                { search: searchTerm, sort_by: sortBy || undefined },
+                { search: searchTerm, sort_by: sortBy === 'name' ? undefined : sortBy },
                 { preserveState: true, preserveScroll: true, replace: true },
             );
         }, 500);
@@ -128,7 +128,7 @@ export default function ProductIndex() {
             params.set('search', filters.search);
         }
 
-        if (filters.sort_by) {
+        if (filters.sort_by && filters.sort_by !== 'name') {
             params.set('sort_by', filters.sort_by);
         }
 
@@ -254,7 +254,7 @@ export default function ProductIndex() {
                                     <SelectValue placeholder="Sort by price" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="">Default</SelectItem>
+                                    <SelectItem value="name">Default</SelectItem>
                                     <SelectItem value="price_asc">Termurah</SelectItem>
                                     <SelectItem value="price_desc">Termahal</SelectItem>
                                 </SelectContent>

@@ -40,7 +40,7 @@ class ProductController extends Controller
             })
             ->when($sortBy === 'price_asc', fn ($q) => $q->orderBy('sell_price'))
             ->when($sortBy === 'price_desc', fn ($q) => $q->orderByDesc('sell_price'))
-            ->unless($sortBy, fn ($q) => $q->orderBy('name'))
+            ->unless(in_array($sortBy, ['price_asc', 'price_desc']), fn ($q) => $q->orderBy('name'))
             ->paginate($perPage)
             ->withQueryString();
 
